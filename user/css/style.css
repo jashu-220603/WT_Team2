@@ -1,0 +1,154 @@
+/* Custom Styles for Citizen Dashboard */
+
+:root {
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 70px;
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --bg-light: #f4f6f9;
+    --transition-speed: 0.3s;
+}
+
+[data-theme="dark"] {
+    --bg-light: #121212;
+    --bs-body-bg: #121212;
+    --bs-body-color: #e0e0e0;
+    --bs-card-bg: #1e1e1e;
+    --bs-border-color: #333;
+    --bs-table-color: #e0e0e0;
+    --bs-table-bg: #1e1e1e;
+    --bs-modal-bg: #1e1e1e;
+}
+
+[data-theme="dark"] .navbar .text-dark,
+[data-theme="dark"] h3, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+    color: #ffffff !important;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    overflow-x: hidden;
+}
+
+/* Sidebar */
+#sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background-color: #1a233a; /* Dark sleek blue for citizen side */
+    color: white;
+    transition: all var(--transition-speed);
+}
+
+#sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+#sidebar .sidebar-header {
+    padding: 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#sidebar.collapsed .sidebar-header h5,
+#sidebar.collapsed .nav-link span {
+    display: none;
+}
+
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+}
+
+#sidebar .nav-link:hover,
+#sidebar .nav-link.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar .nav-link.active {
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Main Content */
+#main-content {
+    margin-left: var(--sidebar-width);
+    transition: all var(--transition-speed);
+    min-height: 100vh;
+}
+
+#main-content.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Navbar */
+.navbar {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 1.5rem;
+}
+
+[data-theme="dark"] .navbar {
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
+}
+
+/* Stats Cards */
+.stat-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+/* Table */
+.table-container {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .table-container {
+    background: #1e1e1e;
+}
+
+.badge.bg-warning {
+    color: #000 !important;
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        left: calc(var(--sidebar-width) * -1);
+    }
+    #sidebar.show {
+        left: 0;
+    }
+    #main-content {
+        margin-left: 0 !important;
+    }
+}
