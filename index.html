@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>Citizen Complaint Portal</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="overlay">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar" id="sidebar">
+
+<span class="sidebar-close" onclick="closeSidebar()">✖</span>
+
+<h2>Citizen Complaint Portal</h2>
+
+<ul>
+
+<div class="menu-title">Home</div>
+<li>Overview</li>
+<li onclick="openLogin('citizen')">Register Complaint</li>
+<li onclick="openLogin('citizen')">Track Complaint</li>
+<li>Complaint Categories</li>
+<li>Latest Announcements</li>
+<li>Complaint Statistics</li>
+
+<div class="menu-title">Citizen</div>
+<li onclick="openLogin('citizen')">Citizen Login</li>
+<li onclick="openLogin('citizen')">Register Complaint</li>
+<li onclick="openLogin('citizen')">My Complaints</li>
+<li onclick="openLogin('citizen')">Track Complaint</li>
+<li onclick="openLogin('citizen')">Notifications</li>
+<li onclick="openLogin('citizen')">Feedback</li>
+
+<div class="menu-title">Officer</div>
+<li onclick="openLogin('officer')">Officer Login</li>
+<li onclick="openLogin('officer')">View Assigned Complaints</li>
+<li onclick="openLogin('officer')">Update Complaint Status</li>
+<li onclick="openLogin('officer')">Resolve Complaint</li>
+<li onclick="openLogin('officer')">Send Notifications</li>
+
+<div class="menu-title">Admin</div>
+<li onclick="openLogin('admin')">Admin Login</li>
+<li onclick="openLogin('admin')">Manage Users</li>
+<li onclick="openLogin('admin')">Manage Departments</li>
+<li onclick="openLogin('admin')">View All Complaints</li>
+<li onclick="openLogin('admin')">Assign Complaints to Officers</li>
+<li onclick="openLogin('admin')">Complaint Analytics</li>
+<li onclick="openLogin('admin')">System Settings</li>
+
+</ul>
+
+</div>
+
+
+
+<!-- HEADER -->
+
+<div class="header">
+
+<div class="left-header">
+
+<span class="menu-btn" onclick="toggleMenu()">☰</span>
+
+<img src="images/logo.png" class="logo">
+
+<div class="portal-name">Citizen Complaint Portal</div>
+
+</div>
+
+
+<div class="right-header">
+
+<button class="header-btn" onclick="toggleHelpline()">Helpline</button>
+
+<button class="header-btn" onclick="openFAQ()">FAQs</button>
+
+<button class="login-btn" onclick="openLogin('citizen')">Login / Signup</button>
+
+</div>
+
+</div>
+
+<!-- HELPLINE POPUP -->
+
+<div id="helplineBox" class="helpline-box">
+
+<h4>Contact Support</h4>
+
+<p><b>Helpline Number:</b> +91 9876543210</p>
+
+<p><b>Email:</b> support@citizenportal.gov</p>
+
+</div>
+
+<!-- IMAGE SLIDER -->
+<div class="page-content">
+
+<div class="slider">
+
+<button class="slider-btn prev" onclick="prevSlide()">❮</button>
+
+<div class="slider-container">
+
+<div class="slides">
+
+<img src="images/banner1.jpg">
+<img src="images/banner2.jpg">
+<img src="images/banner3.jpg">
+
+</div>
+
+</div>
+
+<button class="slider-btn next" onclick="nextSlide()">❯</button>
+
+</div>
+
+<!-- MAIN -->
+
+<!-- MAIN -->
+
+<div class="main">
+
+<h1>Register Your Complaint Easily</h1>
+
+<p>Government Complaint Management System</p>
+
+
+<button class="file-btn" onclick="openLogin('citizen')">File Complaint</button>
+
+<button class="track-btn" onclick="openLogin('citizen')">Track Complaint</button>
+</div>
+
+
+<!-- ROLE BLOCKS -->
+
+<div class="role-section">
+
+<div class="role-card citizen" onclick="openLogin('citizen')">
+<h3>Citizen</h3>
+<p>Register and track your complaints</p>
+</div>
+
+<div class="role-card officer" onclick="openLogin('officer')">
+<h3>Officer</h3>
+<p>Manage and resolve assigned complaints</p>
+</div>
+
+<div class="role-card admin" onclick="openLogin('admin')">
+<h3>Admin</h3>
+<p>Monitor system and assign complaints</p>
+</div>
+
+</div>
+
+
+<!-- HOW IT WORKS -->
+
+<div class="how">
+
+<!-- HOW IT WORKS -->
+
+<div class="how">
+
+<h2>How It Works</h2>
+
+<div class="steps">
+
+<div class="step">
+<div class="circle">1</div>
+<h4>Submit Complaint</h4>
+<p>Citizen registers complaint with details.</p>
+</div>
+
+<div class="step">
+<div class="circle">2</div>
+<h4>Admin Review</h4>
+<p>Admin verifies the complaint.</p>
+</div>
+
+<div class="step">
+<div class="circle">3</div>
+<h4>Assign Officer</h4>
+<p>Complaint assigned to department officer.</p>
+</div>
+
+<div class="step">
+<div class="circle">4</div>
+<h4>Investigation</h4>
+<p>Officer investigates the issue.</p>
+</div>
+
+<div class="step">
+<div class="circle">5</div>
+<h4>Resolution</h4>
+<p>Citizen gets notification after resolution.</p>
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- FOOTER -->
+
+<div class="footer">
+
+<p>Contact: +91 9876543210</p>
+<p>Email: support@citizenportal.gov</p>
+<p>Location: Vijayawada, India</p>
+
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+<!-- LOGIN MODAL -->
+
+<div id="loginModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeLogin()">✖</span>
+
+<h2>Sign In</h2>
+
+<div class="tabs">
+
+<button class="tab active" onclick="switchTab('citizen')">Citizen</button>
+<button class="tab" onclick="switchTab('officer')">Officer</button>
+<button class="tab" onclick="switchTab('admin')">Admin</button>
+
+</div>
+
+
+<form id="loginForm">
+
+<div class="input-group" id="userField">
+
+<label>Email</label>
+<input type="text" placeholder="your@email.com">
+
+</div>
+
+<div class="input-group">
+
+<label>Password</label>
+<input type="password" placeholder="********">
+
+</div>
+
+<button class="signin-btn">Sign In</button>
+
+<p class="signup-text">Don't have an account? <span>Sign Up</span></p>
+
+</form>
+
+</div>
+
+</div>
+
+
+<!-- FAQ POPUP -->
+
+<div id="faqBox" class="faq-box">
+
+<div class="faq-header">
+
+<h3>Frequently Asked Questions</h3>
+
+<span class="faq-close" onclick="closeFAQ()">✖</span>
+
+</div>
+
+<div class="faq-content">
+
+<div class="faq-item">
+<p><b>1. How can I register a complaint?</b></p>
+<p>Click on the <b>File Complaint</b> button and fill the complaint form.</p>
+</div>
+
+<div class="faq-item">
+<p><b>2. How can I track my complaint?</b></p>
+<p>Use the <b>Track Complaint</b> option and enter your complaint ID.</p>
+</div>
+
+<div class="faq-item">
+<p><b>3. How long does it take to resolve a complaint?</b></p>
+<p>Most complaints are resolved within 3-7 working days.</p>
+</div>
+
+<div class="faq-item">
+<p><b>4. Can I upload evidence with my complaint?</b></p>
+<p>Yes, you can upload documents, photos, or proof while submitting a complaint.</p>
+</div>
+
+<div class="faq-item">
+<p><b>5. Who reviews my complaint?</b></p>
+<p>The complaint is first reviewed by admin and then assigned to an officer.</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- CHATBOT -->
+
+<div class="chatbot-icon" onclick="toggleChat()">
+💬 
+</div>
+
+<div id="chatbox" class="chatbox">
+
+<div class="chat-header">
+Complaint Help Bot
+<span onclick="toggleChat()">✖</span>
+</div>
+
+<div class="chat-body" id="chatBody">
+<p>Hello 👋</p>
+<p>How can I help you?</p>
+</div>
+
+<div class="chat-input">
+
+<input type="text" id="userInput" placeholder="Type your question...">
+
+<button onclick="sendMessage()">Send</button>
+
+</div>
+
+</div>
+</body>
+</html>
