@@ -167,3 +167,41 @@ box.style.display = "block";
 }
 
 }
+
+function scrollToAnnouncements(){
+
+document.getElementById("announcements").scrollIntoView({
+behavior:"smooth"
+});
+
+closeSidebar();
+
+}
+
+function showDepartments(){
+
+document.getElementById("departments").scrollIntoView({
+behavior:"smooth"
+});
+
+closeSidebar();
+
+}
+
+function openFeedback(){
+
+document.getElementById("feedbackSection").scrollIntoView({
+behavior:"smooth"
+});
+
+closeSidebar();
+
+}
+
+function openSignup(){
+document.getElementById("signupModal").style.display="flex";
+}
+
+function closeSignup(){
+document.getElementById("signupModal").style.display="none";
+}

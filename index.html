@@ -27,17 +27,14 @@
 <li>Overview</li>
 <li onclick="openLogin('citizen')">Register Complaint</li>
 <li onclick="openLogin('citizen')">Track Complaint</li>
-<li>Complaint Categories</li>
-<li>Latest Announcements</li>
-<li>Complaint Statistics</li>
+<li onclick="scrollToAnnouncements()">Latest Announcements</li>
 
 <div class="menu-title">Citizen</div>
 <li onclick="openLogin('citizen')">Citizen Login</li>
 <li onclick="openLogin('citizen')">Register Complaint</li>
 <li onclick="openLogin('citizen')">My Complaints</li>
 <li onclick="openLogin('citizen')">Track Complaint</li>
-<li onclick="openLogin('citizen')">Notifications</li>
-<li onclick="openLogin('citizen')">Feedback</li>
+<li onclick="openFeedback()">Feedback</li>
 
 <div class="menu-title">Officer</div>
 <li onclick="openLogin('officer')">Officer Login</li>
@@ -56,10 +53,7 @@
 <li onclick="openLogin('admin')">System Settings</li>
 
 </ul>
-
 </div>
-
-
 
 <!-- HEADER -->
 
@@ -209,6 +203,80 @@
 </div>
 
 
+<!-- ANNOUNCEMENTS & NEWS -->
+
+<section id="announcements" class="announcements-section">
+
+<h2>Latest Announcements & News</h2>
+
+<div class="announcement-container">
+
+<div class="announcement-card">
+<h4>New Complaint Tracking System</h4>
+<p>Citizens can now track their complaint status in real-time using the Track Complaint feature.</p>
+<span>Posted: 10 June 2026</span>
+</div>
+
+<div class="announcement-card">
+<h4>Cyber Crime Awareness Campaign</h4>
+<p>The government has launched a cyber safety awareness campaign to protect citizens from online fraud.</p>
+<span>Posted: 5 June 2026</span>
+</div>
+
+<div class="announcement-card">
+<h4>Faster Complaint Resolution</h4>
+<p>Complaints will now be assigned to officers within 24 hours for quicker resolution.</p>
+<span>Posted: 1 June 2026</span>
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+<!-- FEEDBACK FORM -->
+
+<section id="feedbackSection" class="feedback-section">
+
+<h2>Citizen Feedback</h2>
+
+<form class="feedback-form">
+
+<label>Name</label>
+<input type="text" placeholder="Enter your name">
+
+<label>Email</label>
+<input type="email" placeholder="Enter your email">
+
+<label>Your Feedback</label>
+<textarea placeholder="Write your feedback"></textarea>
+
+<button type="submit">Submit Feedback</button>
+
+</form>
+
+</section>
+
+<!-- POLICY LINKS SECTION -->
+
+<div class="policy-links">
+
+<a href="#">Copyright Policy</a> |
+<a href="#">Privacy Policy</a> |
+<a href="#">Terms and Conditions</a> |
+<a href="#">Disclaimer</a> |
+<a href="#">Hyperlink Policy</a> |
+<a href="#">Site Map</a>
+
+</div>
+
+<div class="policy-info">
+
+<p>Last update on October 2025</p>
+<p>The original text is in English. Translation into other languages is powered by the Bhashini service.</p>
+
+</div>
 
 <!-- FOOTER -->
 
@@ -261,7 +329,7 @@
 
 <button class="signin-btn">Sign In</button>
 
-<p class="signup-text">Don't have an account? <span>Sign Up</span></p>
+<p>Don't have an account? <span class="signup-link" onclick="openSignup()">Sign Up</span></p>
 
 </form>
 
@@ -269,6 +337,35 @@
 
 </div>
 
+
+<!-- SIGNUP MODAL -->
+
+<div id="signupModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeSignup()">✖</span>
+
+<h2>Sign Up</h2>
+
+<form class="signup-form">
+
+<label>Username</label>
+<input type="text" placeholder="Enter your name" required>
+
+<label>Email</label>
+<input type="email" placeholder="Enter your email" required>
+
+<label>Create Password</label>
+<input type="password" placeholder="Create password" required>
+
+<button type="submit" class="signup-btn">Sign Up</button>
+
+</form>
+
+</div>
+
+</div>
 
 <!-- FAQ POPUP -->
 
@@ -339,6 +436,5 @@ Complaint Help Bot
 
 </div>
 
-</div>
 </body>
 </html>
