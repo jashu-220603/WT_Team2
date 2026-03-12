@@ -168,6 +168,7 @@ body {
 .stat-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
 }
 
 .stat-icon {
@@ -244,4 +245,14 @@ body {
     #main-content {
         margin-left: 0 !important;
     }
+    /* make sure sidebar covers content smoothly */
+    #sidebar {
+        transition: left 0.3s ease;
+    }
+}
+
+/* department table row hover */
+#departments-table-body tr:hover {
+    background-color: rgba(13,110,253,0.05);
+    cursor: pointer;
 }
