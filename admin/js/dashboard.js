@@ -46,6 +46,9 @@ let priorityFilter = "All";
 let officerFilter = "All";
 let charts = {};
 
+// placeholder admin name (would come from backend)
+const adminName = "Admin User";
+
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
@@ -54,13 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     initOfficerFilter();
     renderTable();
+    renderDepartmentInfo();
+    renderAssignmentTable();
     renderOfficersTable();
     renderWorkload();
     renderActivityLog();
+    renderDepartmentsTable();
     updateStats();
     initModalHandlers();
 
-    // Event Listeners for Filters
+    // set greeting name
+    const greetEl = document.getElementById('admin-greeting');
+    if (greetEl) greetEl.innerText = `Hello, ${adminName}`;
+    updateGreetingSubtitle();
+
     document.getElementById('search-box').addEventListener('input', (e) => {
         searchTerm = e.target.value.toLowerCase();
         renderTable();
@@ -91,8 +101,13 @@ function initSidebar() {
     const deptLinks = document.querySelectorAll('#sidebar .submenu-list .nav-link[data-dept]');
 
     toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
+        if (window.innerWidth < 768) {
+            // mobile: slide sidebar in/out
+            sidebar.classList.toggle('show');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
     });
 
     navLinks.forEach(link => {
@@ -104,6 +119,11 @@ function initSidebar() {
             // Update active link
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
+
+            // collapse/hide sidebar on mobile
+            if (window.innerWidth < 768) {
+                sidebar.classList.remove('show');
+            }
         });
     });
 
@@ -115,12 +135,15 @@ function initSidebar() {
             // Update state and UI
             currentDepartment = dept;
             document.getElementById('current-dept-display').innerText = dept;
+            updateGreetingSubtitle();
             
             // Ensure we are on dashboard to see the changes
             switchSection('dashboard');
             
             updateStats();
             renderTable();
+            renderDepartmentInfo();
+            renderAssignmentTable();
             updateCharts();
             
             // Close sidebar on mobile if open
@@ -136,6 +159,7 @@ function switchSection(sectionId) {
         'dashboard-section', 
         'complaints-section', 
         'officers-section', 
+        'departments-section',
         'tasks-section', 
         'analytics-section', 
         'reports-section', 
@@ -163,10 +187,14 @@ function switchSection(sectionId) {
         } else if (sectionId === 'officers') {
             renderOfficersTable();
             renderWorkload();
+        } else if (sectionId === 'departments') {
+            renderDepartmentsTable();
         } else if (sectionId === 'tasks') {
-            renderTasks();
+            renderAssignmentTable();
         } else if (sectionId === 'analytics') {
             renderDetailedAnalytics();
+        } else if (sectionId === 'departments') {
+            renderDepartmentsTable();
         }
     }
 
@@ -202,76 +230,82 @@ function renderTasks() {
 }
 
 // Detailed Analytics Charts
-let detailedPriorityChart = null;
+let detailedDeptChart = null;
+let detailedStatusChart = null;
+let detailedTrendChart = null;
 let deptResolutionChart = null;
 
 function renderDetailedAnalytics() {
-    const ctxPriority = document.getElementById('priorityChart-detailed');
-    const ctxDept = document.getElementById('deptResolutionChart');
+    const ctxDept = document.getElementById('detailedDeptChart');
+    const ctxStatus = document.getElementById('detailedStatusChart');
+    const ctxTrend = document.getElementById('detailedTrendChart');
+    const ctxRes = document.getElementById('deptResolutionChart');
     
-    if (!ctxPriority || !ctxDept) return;
+    if (!ctxDept || !ctxStatus || !ctxTrend || !ctxRes) return;
 
-    // Destroy existing if they exist
-    if (detailedPriorityChart) detailedPriorityChart.destroy();
+    if (detailedDeptChart) detailedDeptChart.destroy();
+    if (detailedStatusChart) detailedStatusChart.destroy();
+    if (detailedTrendChart) detailedTrendChart.destroy();
     if (deptResolutionChart) deptResolutionChart.destroy();
 
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const textColor = isDark ? '#e0e0e0' : '#666';
 
-    // Priority Chart (Detailed)
-    detailedPriorityChart = new Chart(ctxPriority, {
-        type: 'doughnut',
-        data: {
-            labels: ['High', 'Medium', 'Low'],
-            datasets: [{
-                data: [
-                    complaintsData.filter(c => c.priority === 'High').length,
-                    complaintsData.filter(c => c.priority === 'Medium').length,
-                    complaintsData.filter(c => c.priority === 'Low').length
-                ],
-                backgroundColor: ['#dc3545', '#ffc107', '#198754'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: textColor } }
-            }
-        }
-    });
-
-    // Dept Resolution Chart
-    const depts = [...new Set(complaintsData.map(c => c.department))];
-    const resolutionRates = depts.map(d => {
-        const deptComplaints = complaintsData.filter(c => c.department === d);
-        const resolved = deptComplaints.filter(c => c.status === 'Resolved').length;
-        return (resolved / deptComplaints.length) * 100;
-    });
-
-    deptResolutionChart = new Chart(ctxDept, {
-        type: 'bar',
+    const depts = departments.filter(d => d !== "All Departments");
+    
+    // Dept Chart
+    detailedDeptChart = new Chart(ctxDept, {
+        type: 'pie',
         data: {
             labels: depts,
             datasets: [{
-                label: 'Resolution Rate (%)',
-                data: resolutionRates,
-                backgroundColor: '#0d6efd',
-                borderRadius: 8
+                data: depts.map(d => complaintsData.filter(c => c.dept === d).length),
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0'],
+                borderWidth: 0
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, max: 100, grid: { color: isDark ? '#333' : '#eee' }, ticks: { color: textColor } },
-                x: { grid: { display: false }, ticks: { color: textColor } }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } }
+    });
+
+    // Status Chart
+    detailedStatusChart = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'In Progress', 'Resolved'],
+            datasets: [{
+                data: [
+                    complaintsData.filter(c => c.status === 'Pending').length,
+                    complaintsData.filter(c => c.status === 'In Progress').length,
+                    complaintsData.filter(c => c.status === 'Resolved').length
+                ],
+                backgroundColor: ['#6c757d', '#0d6efd', '#198754'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+    });
+
+    // Trend Chart
+    detailedTrendChart = new Chart(ctxTrend, {
+        type: 'line',
+        data: getTrendChartData(),
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } } }
+    });
+
+    // Resolution Rate
+    const resolutionRates = depts.map(d => {
+        const deptC = complaintsData.filter(c => c.dept === d);
+        if(deptC.length === 0) return 0;
+        return (deptC.filter(c => c.status === 'Resolved').length / deptC.length) * 100;
+    });
+
+    deptResolutionChart = new Chart(ctxRes, {
+        type: 'bar',
+        data: {
+            labels: depts,
+            datasets: [{ label: 'Resolution Rate (%)', data: resolutionRates, backgroundColor: '#0dcaf0', borderRadius: 4 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { color: textColor } }, x: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } }
     });
 }
 
@@ -287,9 +321,10 @@ function initDepartmentSelector() {
             e.preventDefault();
             currentDepartment = dept;
             document.getElementById('current-dept-display').innerText = dept;
+            updateGreetingSubtitle();
             updateStats();
-            renderTable();
-            updateCharts();
+            renderTable();            renderDepartmentInfo();
+            renderAssignmentTable();            updateCharts();
         });
         selector.appendChild(option);
     });
@@ -329,23 +364,13 @@ function renderOfficersTable() {
         row.innerHTML = `
             <td><span class="fw-bold">${o.id}</span></td>
             <td>${o.name}</td>
-            <td>${o.dept}</td>
-            <td>${o.active}</td>
-            <td>${o.resolved}</td>
-            <td>
-                <div class="d-flex align-items-center">
-                    <span class="me-2">${o.score}%</span>
-                    <div class="progress flex-grow-1" style="height: 5px;">
-                        <div class="progress-bar bg-success" style="width: ${o.score}%"></div>
-                    </div>
-                </div>
-            </td>
             <td><span class="badge bg-${o.status === 'Active' ? 'success' : 'danger'}">${o.status}</span></td>
+            <td>${o.dept}</td>
             <td>
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-primary" onclick="openOfficerProfile('${o.id}')">View</button>
-                    <button class="btn btn-sm btn-outline-success" onclick="openAssignModal('${o.id}')">Assign</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="toggleOfficerStatus('${o.id}')">${o.status === 'Active' ? 'Deactivate' : 'Activate'}</button>
+                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openAssignModal('${o.id}')"><i class="bi bi-person-plus"></i></button>
                 </div>
             </td>
         `;
@@ -406,6 +431,64 @@ function renderActivityLog() {
     });
 }
 
+// show department officers and their contact info
+function renderDepartmentInfo() {
+    const container = document.getElementById('department-info');
+    if (!container) return;
+    if (currentDepartment === 'All Departments') {
+        container.innerHTML = '';
+        return;
+    }
+    const officers = officersData.filter(o => o.dept === currentDepartment);
+    if (officers.length === 0) {
+        container.innerHTML = '<p class="text-muted small">No officers in this department.</p>';
+        return;
+    }
+    container.innerHTML = `<h6 class="fw-bold mb-2">Officers in ${currentDepartment}</h6>
+        <div class="list-group">
+            ${officers.map(o => `<div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${o.name}</strong><br>
+                    <small>${o.contact || 'N/A'}</small>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" onclick="openOfficerProfile('${o.id}')">View</button>
+            </div>`).join('')}
+        </div>`;
+}
+
+// assignment table for tasks section
+function renderAssignmentTable() {
+    const tbody = document.getElementById('assignment-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const unassigned = complaintsData.filter(c => {
+        return !c.officer || c.officer.trim() === '';
+    });
+
+    unassigned.forEach(c => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><span class="fw-bold text-primary">${c.id}</span></td>
+            <td>${c.title}</td>
+            <td>${c.dept}</td>
+            <td><span class="badge bg-${getPriorityColor(c.priority)}">${c.priority}</span></td>
+            <td><span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></td>
+            <td>${c.date}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="openAssignModal('${c.id}')">
+                    <i class="bi bi-person-plus"></i> Assign
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (unassigned.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No unassigned complaints.</td></tr>';
+    }
+}
+
 // Modal Handlers
 function openOfficerProfile(id) {
     const officer = officersData.find(o => o.id === id);
@@ -464,7 +547,7 @@ function openAssignModal(officerId) {
     // Populate unassigned complaints (mock: just any pending ones)
     const select = document.getElementById('assign-complaint-id');
     select.innerHTML = '';
-    complaintsData.filter(c => c.status === 'Pending').forEach(c => {
+    complaintsData.filter(c => !c.officer || c.officer.trim() === '').forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.innerText = `${c.id} - ${c.title}`;
@@ -472,6 +555,25 @@ function openAssignModal(officerId) {
     });
     
     new bootstrap.Modal(document.getElementById('assignComplaintModal')).show();
+}
+
+// called when assign button is clicked from complaints list
+function openAssignFromComplaint(complaintId) {
+    const complaint = complaintsData.find(c => c.id === complaintId);
+    if (!complaint) return;
+    document.getElementById('assign-complaint-fixed-id').value = complaint.id;
+    document.getElementById('assign-complaint-fixed-title').value = `${complaint.id} - ${complaint.title}`;
+    
+    const officerSelect = document.getElementById('assign-officer-select');
+    officerSelect.innerHTML = '';
+    officersData.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.name;
+        opt.innerText = o.name;
+        officerSelect.appendChild(opt);
+    });
+    
+    new bootstrap.Modal(document.getElementById('assignFromComplaintModal')).show();
 }
 
 function openReassignModal(complaintId) {
@@ -512,8 +614,45 @@ function initModalHandlers() {
             renderWorkload();
             renderActivityLog();
             updateStats();
+            renderAssignmentTable();
         }
     });
+
+    document.getElementById('assign-fromcomplaint-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const complaintId = document.getElementById('assign-complaint-fixed-id').value;
+        const officerName = document.getElementById('assign-officer-select').value;
+        const complaint = complaintsData.find(c => c.id === complaintId);
+        if (complaint) {
+            complaint.officer = officerName;
+            complaint.status = 'In Progress';
+            activityLog.unshift({ text: `Officer ${officerName} assigned to ${complaintId}`, time: "Just now" });
+            bootstrap.Modal.getInstance(document.getElementById('assignFromComplaintModal')).hide();
+            renderTable();
+            renderWorkload();
+            renderActivityLog();
+            updateStats();
+            renderAssignmentTable();
+        }
+    });
+
+    // department form handler
+    const deptForm = document.getElementById('department-form');
+    if (deptForm) {
+        deptForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('dept-name-input');
+            const name = nameInput.value.trim();
+            if (name && !departments.includes(name)) {
+                departments.push(name);
+                // also add to complaints/officers? no
+                renderDepartmentsTable();
+                initDepartmentSelector();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('addDepartmentModal')).hide();
+            nameInput.value = '';
+        });
+    }
 
     document.getElementById('reassign-form').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -561,18 +700,24 @@ function renderTable() {
 
     filtered.forEach(c => {
         const row = document.createElement('tr');
+        const assigned = c.officer && c.officer.trim().length > 0;
         row.innerHTML = `
             <td><span class="fw-bold text-primary">${c.id}</span></td>
             <td>${c.title}</td>
             <td>${c.dept}</td>
             <td><span class="badge bg-${getPriorityColor(c.priority)}">${c.priority}</span></td>
             <td><span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></td>
-            <td>${c.officer}</td>
+            <td>${assigned ? c.officer : '<span class="text-muted">Unassigned</span>'}</td>
             <td>${c.date}</td>
             <td>
-                <button class="btn btn-sm btn-outline-warning" onclick="openReassignModal('${c.id}')">
-                    <i class="bi bi-person-gear"></i> Reassign
-                </button>
+                ${assigned ?
+                    `<button class="btn btn-sm btn-outline-warning" onclick="openReassignModal('${c.id}')">
+                        <i class="bi bi-person-gear"></i> Reassign
+                    </button>` :
+                    `<button class="btn btn-sm btn-outline-primary" onclick="openAssignFromComplaint('${c.id}')">
+                        <i class="bi bi-person-plus"></i> Assign
+                    </button>`
+                }
             </td>
         `;
         tbody.appendChild(row);
@@ -651,8 +796,8 @@ function updateCharts() {
         charts.priority.update();
     }
     if (charts.trend) {
-        charts.trend.data = getTrendChartData();
-        charts.trend.update();
+        // respect filter selection
+        updateTrendChart();
     }
     if (charts.performance) {
         charts.performance.data = getPerformanceChartData();
@@ -741,13 +886,92 @@ window.updateChartsTheme = (theme) => {
 function updateStats() {
     const filtered = complaintsData.filter(c => currentDepartment === "All Departments" || c.dept === currentDepartment);
     
+    // update subtitle when stats refresh
+    updateGreetingSubtitle();
     const total = filtered.length;
     const pending = filtered.filter(c => c.status === 'Pending').length;
     const resolved = filtered.filter(c => c.status === 'Resolved').length;
-    const highPriority = filtered.filter(c => c.priority === 'High').length;
+    const assigned = filtered.filter(c => c.officer && c.officer.trim() !== '').length;
+    const unassigned = filtered.filter(c => !c.officer || c.officer.trim() === '').length;
 
-    document.getElementById('total-complaints').innerText = total;
-    document.getElementById('pending-complaints').innerText = pending;
-    document.getElementById('resolved-complaints').innerText = resolved;
-    document.getElementById('high-priority-complaints').innerText = highPriority;
+    const elTotal = document.getElementById('total-complaints');
+    if (elTotal) elTotal.innerText = total;
+    
+    const elPending = document.getElementById('pending-complaints');
+    if (elPending) elPending.innerText = pending;
+    
+    const elResolved = document.getElementById('resolved-complaints');
+    if (elResolved) elResolved.innerText = resolved;
+    
+    const elAssigned = document.getElementById('assigned-complaints');
+    if (elAssigned) elAssigned.innerText = assigned;
+    
+    const unassignedEl = document.getElementById('unassigned-complaints');
+    if (unassignedEl) unassignedEl.innerText = unassigned;
 }
+
+// adjust greeting subtitle based on selected department
+function updateGreetingSubtitle() {
+    const sub = document.getElementById('greeting-subtitle');
+    if (!sub) return;
+    if (currentDepartment && currentDepartment !== 'All Departments') {
+        sub.innerText = `Overview for ${currentDepartment}`;
+    } else {
+        sub.innerText = 'What do you want to manage today?';
+    }
+}
+
+// New Dashboard functions
+function renderDepartmentsTable() {
+    const tbody = document.getElementById('departments-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const depts = departments.filter(d => d !== "All Departments");
+    depts.forEach(dept => {
+        const deptComplaints = complaintsData.filter(c => c.dept === dept).length;
+        const deptOfficers = officersData.filter(o => o.dept === dept).length;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><span class="fw-bold">${dept}</span></td>
+            <td>${deptComplaints}</td>
+            <td>${deptOfficers}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Edit</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
+            </td>
+        `;
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+            currentDepartment = dept;
+            document.getElementById('current-dept-display').innerText = dept;
+            updateGreetingSubtitle();
+            switchSection('dashboard');
+            updateStats();
+            renderTable();
+            renderDepartmentInfo();
+            renderAssignmentTable();
+            updateCharts();
+        });
+        tbody.appendChild(row);
+    });
+}
+
+function updateTrendChart() {
+    const filter = document.getElementById('trend-time-filter').value;
+    if (charts.trend) {
+        if (filter === 'Weekly') {
+            charts.trend.data.labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            charts.trend.data.datasets[0].data = [5, 8, 3, 10, 7, 2, 4];
+        } else if (filter === 'Monthly') {
+            charts.trend.data.labels = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            charts.trend.data.datasets[0].data = [12, 19, 15, 25, 22, 30];
+        } else if (filter === 'Yearly') {
+            charts.trend.data.labels = ['2023', '2024', '2025', '2026'];
+            charts.trend.data.datasets[0].data = [120, 180, 210, 250];
+        }
+        charts.trend.update();
+    }
+}
+
