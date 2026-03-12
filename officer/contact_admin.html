@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Admin | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link active"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">Contact Administrator</h3>
+            <div class="row g-4 mb-5">
+                <div class="col-12 col-lg-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4">Admin Contact Details</h5>
+                            
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3 flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1 small">Email Support</h6>
+                                    <h6 class="fw-bold mb-0">admin@complaintsys.gov</h6>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="stat-icon bg-success bg-opacity-10 text-success me-3 flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1 small">Phone Directory</h6>
+                                    <h6 class="fw-bold mb-0">+1 (800) 555-0199</h6>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3 flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                    <i class="bi bi-geo-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1 small">Office Address</h6>
+                                    <h6 class="fw-bold mb-0">City Hall, Room 402<br>Main Street, Cityville</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-lg-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4">Send a Message</h5>
+                            <form id="contact-admin-form">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Name</label>
+                                    <input type="text" class="form-control" placeholder="Officer Smith" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <input type="email" class="form-control" placeholder="smith@officer.gov" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Message</label>
+                                    <textarea class="form-control" rows="5" placeholder="Write your urgent message or inquiry here..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary px-4">Submit Message</button>
+                                <div id="contact-success" class="alert alert-success d-none mt-3 mb-0">Your message has been sent to the admin successfully.</div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.getElementById("contact-admin-form").addEventListener("submit", function(e) { 
+            e.preventDefault(); 
+            document.getElementById("contact-success").classList.remove("d-none"); 
+            setTimeout(() => { 
+                document.getElementById("contact-success").classList.add("d-none"); 
+                e.target.reset(); 
+            }, 3000); 
+        });
+    </script>
+</body>
+</html>

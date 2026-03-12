@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Analytics | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link active"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link active"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">Your Analytics Dashboard</h3>
+            
+            <div class="row g-4 mb-5">
+                <!-- Pie Chart -->
+                <div class="col-12 col-md-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
+                            <h5 class="fw-bold mb-4 w-100">Case Distribution</h5>
+                            <div style="width: 100%; max-width: 300px;">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Line Chart -->
+                <div class="col-12 col-md-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4">Complaints Solved Over Time</h5>
+                            <div style="width: 100%; height: 300px;">
+                                <canvas id="lineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data for charts
+            let pendingCount = 0;
+            let solvedCount = 0;
+            
+            if (window.dummyAssigned) {
+                pendingCount = window.dummyAssigned.filter(c => c.status === 'Pending' || c.status === 'In Progress').length;
+                solvedCount = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved').length;
+            } else {
+                pendingCount = 10;
+                solvedCount = 25;
+            }
+
+            // Pie Chart Configuration
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending / In Progress', 'Solved Cases'],
+                    datasets: [{
+                        data: [pendingCount, solvedCount],
+                        backgroundColor: [
+                            '#ffc107', // Warning/Pending
+                            '#198754'  // Success/Solved
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Line Chart Configuration
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            
+            // Dummy data for line chart
+            const labels = ['Jan 1', 'Jan 8', 'Jan 15', 'Jan 22', 'Feb 1', 'Feb 8', 'Feb 15', 'Feb 22', 'Mar 1', 'Mar 8'];
+            const dataPoints = [2, 3, 5, 4, 7, 6, 9, 11, 15, 12];
+
+            new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Complaints Solved',
+                        data: dataPoints,
+                        fill: true,
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        borderColor: '#198754',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointBackgroundColor: '#198754',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                family: "'Inter', sans-serif",
+                                size: 13
+                            },
+                            bodyFont: {
+                                family: "'Inter', sans-serif",
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Inter', sans-serif"
+                                },
+                                stepSize: 5
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

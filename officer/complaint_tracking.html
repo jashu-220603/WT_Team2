@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Tracking | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tracking-progress {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+        .tracking-progress::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: #e9ecef;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+        .tracking-progress-bar {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 4px;
+            background-color: #198754;
+            z-index: 1;
+            transform: translateY(-50%);
+            transition: width 0.4s ease;
+        }
+        .tracking-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        .tracking-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px auto;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        .tracking-step.active .tracking-icon,
+        .tracking-step.completed .tracking-icon {
+            background-color: #198754;
+            color: white;
+            box-shadow: 0 0 0 5px rgba(25, 135, 84, 0.2);
+        }
+        .tracking-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .tracking-step.active .tracking-label,
+        .tracking-step.completed .tracking-label {
+            color: #198754;
+        }
+        [data-theme="dark"] .tracking-progress::before {
+            background-color: #333;
+        }
+        [data-theme="dark"] .tracking-icon {
+            background-color: #333;
+        }
+        [data-theme="dark"] .tracking-label {
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link active"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">Complaint Tracking</h3>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <form id="tracking-form" class="d-flex gap-3 align-items-end">
+                        <div class="flex-grow-1">
+                            <label class="form-label fw-bold">Enter Complaint ID</label>
+                            <input type="text" id="track-id" class="form-control form-control-lg" placeholder="e.g. CMP-2026-001" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg px-4"><i class="bi bi-search me-2"></i>Track</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="tracking-result" class="card border-0 shadow-sm d-none">
+                <div class="card-body p-5">
+                    <h5 class="fw-bold mb-4" id="tracking-title">Status for: <span class="text-primary" id="tracking-display-id"></span></h5>
+                    
+                    <div class="tracking-progress">
+                        <div class="tracking-progress-bar" id="progress-bar" style="width: 0%;"></div>
+                        
+                        <div class="tracking-step" id="step-assigned">
+                            <div class="tracking-icon"><i class="bi bi-clipboard-check"></i></div>
+                            <div class="tracking-label">Assigned</div>
+                        </div>
+                        <div class="tracking-step" id="step-pending">
+                            <div class="tracking-icon"><i class="bi bi-hourglass-split"></i></div>
+                            <div class="tracking-label">Pending</div>
+                        </div>
+                        <div class="tracking-step" id="step-inprogress">
+                            <div class="tracking-icon"><i class="bi bi-tools"></i></div>
+                            <div class="tracking-label">In Progress</div>
+                        </div>
+                        <div class="tracking-step" id="step-solved">
+                            <div class="tracking-icon"><i class="bi bi-check-circle"></i></div>
+                            <div class="tracking-label">Solved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="tracking-error" class="alert alert-danger d-none mt-4">
+                Complaint not found. Please check the ID.
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.getElementById('tracking-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('track-id').value.trim();
+            const resultDiv = document.getElementById('tracking-result');
+            const errorDiv = document.getElementById('tracking-error');
+            
+            errorDiv.classList.add('d-none');
+            resultDiv.classList.remove('d-none');
+            document.getElementById('tracking-display-id').textContent = id;
+            
+            let status = 'In Progress'; // Default
+            if (window.dummyAssigned) {
+                const complaint = window.dummyAssigned.find(c => c.id === id);
+                if (complaint) {
+                    status = complaint.status;
+                }
+            }
+            if(status === 'Resolved') status = 'Solved';
+            
+            const stepAssigned = document.getElementById('step-assigned');
+            const stepPending = document.getElementById('step-pending');
+            const stepInprogress = document.getElementById('step-inprogress');
+            const stepSolved = document.getElementById('step-solved');
+            const progressBar = document.getElementById('progress-bar');
+            
+            stepAssigned.className = 'tracking-step';
+            stepPending.className = 'tracking-step';
+            stepInprogress.className = 'tracking-step';
+            stepSolved.className = 'tracking-step';
+            
+            stepAssigned.classList.add('completed');
+            
+            if (status === 'Assigned') {
+                progressBar.style.width = '0%';
+            } else if (status === 'Pending') {
+                stepPending.classList.add('completed');
+                progressBar.style.width = '33%';
+            } else if (status === 'In Progress') {
+                stepPending.classList.add('completed');
+                stepInprogress.classList.add('completed');
+                progressBar.style.width = '66%';
+            } else if (status === 'Solved') {
+                stepPending.classList.add('completed');
+                stepInprogress.classList.add('completed');
+                stepSolved.classList.add('completed');
+                progressBar.style.width = '100%';
+            }
+        });
+    </script>
+</body>
+</html>

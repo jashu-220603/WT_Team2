@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Ratings | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link active"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">Your Ratings & Feedback</h3>
+            
+            <div class="row g-4 mb-5">
+                <div class="col-12 col-md-5">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body p-5">
+                            <h5 class="fw-bold mb-2">Overall Performance</h5>
+                            <h1 class="display-3 fw-bold text-dark my-4">4.3<span class="fs-4 text-muted">/5</span></h1>
+                            <div class="text-warning fs-1 mb-3">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                            </div>
+                            <p class="text-muted fw-medium mb-0">Based on 142 Citizen Reviews</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4">Feedback Summary</h5>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fw-bold text-muted me-3" style="min-width: 40px;">5 <i class="bi bi-star-fill text-warning"></i></span>
+                                <div class="progress flex-grow-1" style="height: 12px;">
+                                    <div class="progress-bar bg-success" style="width: 65%"></div>
+                                </div>
+                                <span class="text-muted ms-3" style="min-width: 40px;">65%</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fw-bold text-muted me-3" style="min-width: 40px;">4 <i class="bi bi-star-fill text-warning"></i></span>
+                                <div class="progress flex-grow-1" style="height: 12px;">
+                                    <div class="progress-bar bg-primary" style="width: 20%"></div>
+                                </div>
+                                <span class="text-muted ms-3" style="min-width: 40px;">20%</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fw-bold text-muted me-3" style="min-width: 40px;">3 <i class="bi bi-star-fill text-warning"></i></span>
+                                <div class="progress flex-grow-1" style="height: 12px;">
+                                    <div class="progress-bar bg-info" style="width: 10%"></div>
+                                </div>
+                                <span class="text-muted ms-3" style="min-width: 40px;">10%</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fw-bold text-muted me-3" style="min-width: 40px;">2 <i class="bi bi-star-fill text-warning"></i></span>
+                                <div class="progress flex-grow-1" style="height: 12px;">
+                                    <div class="progress-bar bg-warning" style="width: 4%"></div>
+                                </div>
+                                <span class="text-muted ms-3" style="min-width: 40px;">4%</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold text-muted me-3" style="min-width: 40px;">1 <i class="bi bi-star-fill text-warning"></i></span>
+                                <div class="progress flex-grow-1" style="height: 12px;">
+                                    <div class="progress-bar bg-danger" style="width: 1%"></div>
+                                </div>
+                                <span class="text-muted ms-3" style="min-width: 40px;">1%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="fw-bold mb-4">Recent Feedback Comments</h5>
+            <div class="table-container border-0 border-top border-4 border-warning">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Citizen</th>
+                                <th>Complaint ID</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2026-03-01</td>
+                                <td>Anonymous</td>
+                                <td>CMP-2026-009</td>
+                                <td class="text-warning">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                </td>
+                                <td class="fst-italic text-muted">"Very fast response! The barrier was fixed immediately."</td>
+                            </tr>
+                            <tr>
+                                <td>2026-02-28</td>
+                                <td>Mike Davis</td>
+                                <td>CMP-2026-011</td>
+                                <td class="text-warning">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                                </td>
+                                <td class="fst-italic text-muted">"Good work on the street light, took a couple of days but solved."</td>
+                            </tr>
+                            <tr>
+                                <td>2026-02-15</td>
+                                <td>Jane Smith</td>
+                                <td>CMP-2025-998</td>
+                                <td class="text-warning">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i>
+                                </td>
+                                <td class="fst-italic text-muted">"Pothole patched perfectly, but could improve communication speed."</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
