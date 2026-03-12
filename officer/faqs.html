@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ's | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link active"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">Frequently Asked Questions</h3>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            How to handle assigned complaints?
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Check the <strong>Assigned Cases</strong> section on your dashboard. Prioritize cases marked as "High". Visit the location, gather necessary materials, and coordinate with your team to address the issue. Open the complaint and update its status appropriately.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            How to update complaint status?
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Click the "Update" button next to any active complaint on your dashboard. A modal will appear where you can select the new status (e.g., In Progress, Solved) and add remarks regarding the action taken.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            How priority is assigned?
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Priority is generally assigned automatically by the system or the Admin during triage, based on factors like safety risks, traffic impact, and the number of similar complaints in the area.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            What to do if a complaint is invalid?
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            If you find a complaint to be a duplicate or physically invalid upon inspection, status it as "Resolved/Solved" and provide clear notes in the remarks specifying why it is invalid so the Admin and citizen are notified.
+                        </div>
+                    </div>
+                </div>
+                <!-- Additional FAQs -->
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive">
+                            How to contact the admin?
+                        </button>
+                    </h2>
+                    <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Use the <a href="contact_admin.html">Contact Admin</a> page from your sidebar menu to fill out the contact form or view direct email and phone number details.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix">
+                            How analytics work?
+                        </button>
+                    </h2>
+                    <div id="collapseSix" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Analytics automatically gather data from the complaints assigned to you. The system compiles your resolved vs pending ratio and tracks resolution times over the month to display in chart format on the Analytics page.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                    <h2 class="accordion-header" id="headingSeven">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven">
+                            What is complaint tracking?
+                        </button>
+                    </h2>
+                    <div id="collapseSeven" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Complaint tracking lets you input a specific Complaint ID and visually see its journey through the workflow steps (Assigned, Pending, In Progress, Solved), helping you quickly check current state.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

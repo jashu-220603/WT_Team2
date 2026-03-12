@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Performance | Officer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
+            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
+            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
+            <a href="my_performance.html" class="nav-link active"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
+            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
+            <a href="contact_admin.html" class="nav-link"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
+            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
+            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
+            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <hr class="mx-3 opacity-25">
+            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+        </div>
+    </nav>
+    <main id="main-content">
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+                <div class="d-flex align-items-center me-auto">
+                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid py-4 px-md-5">
+            <h3 class="fw-bold mb-4">My Performance</h3>
+            <div class="row g-4 mb-5">
+                <div class="col-12 col-md-3">
+                    <div class="card stat-card h-100 bg-primary bg-opacity-10 border-0">
+                        <div class="card-body text-center py-4">
+                            <h1 class="display-4 fw-bold text-primary mb-0" id="perf-percentage">0%</h1>
+                            <p class="text-muted fw-medium mt-2 mb-0">Performance Score</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card stat-card h-100 border-0 text-center py-4">
+                        <h2 class="fw-bold mb-0" id="perf-assigned">0</h2>
+                        <p class="text-muted fw-medium mt-2 mb-0">Total Assigned Cases</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card stat-card h-100 border-0 text-center py-4">
+                        <h2 class="fw-bold text-warning mb-0" id="perf-pending">0</h2>
+                        <p class="text-muted fw-medium mt-2 mb-0">Total Pending Cases</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card stat-card h-100 border-0 text-center py-4">
+                        <h2 class="fw-bold text-success mb-0" id="perf-solved">0</h2>
+                        <p class="text-muted fw-medium mt-2 mb-0">Total Solved Cases</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.dummyAssigned) {
+                const total = window.dummyAssigned.length;
+                const pending = window.dummyAssigned.filter(c => c.status === 'Pending').length;
+                const solved = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved').length;
+                
+                const perf = total > 0 ? Math.round((solved / total) * 100) : 0;
+                
+                document.getElementById('perf-percentage').textContent = perf + '%';
+                document.getElementById('perf-assigned').textContent = total;
+                document.getElementById('perf-pending').textContent = pending;
+                document.getElementById('perf-solved').textContent = solved;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -86,111 +86,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Dummy Assigned Data Generation & Rendering
-    let dummyAssigned = [
-        { id: 'CMP-2026-001', title: 'Potholes on Main Street', location: 'Main St.', priority: 'Medium', status: 'Pending', date: '2026-03-01', deadline: '2026-03-05' },
-        { id: 'CMP-2026-003', title: 'Blocked drain flooding road', location: 'Oak Avenue', priority: 'High', status: 'In Progress', date: '2026-03-02', deadline: '2026-03-04' },
-        { id: 'CMP-2026-008', title: 'Damage to sidewalk', location: 'Pine St.', priority: 'Low', status: 'Pending', date: '2026-03-10', deadline: '2026-03-20' },
-        { id: 'CMP-2026-009', title: 'Bridge barrier broken', location: 'River Bridge', priority: 'High', status: 'Resolved', date: '2026-02-28', deadline: '2026-03-02', notes: 'Replaced broken barrier with steel rail.' }
+    window.dummyAssigned = [
+        { id: 'CMP-2026-001', citizenName: 'John Doe', title: 'Potholes on Main Street', location: 'Main St.', priority: 'Medium', status: 'Pending', date: '2026-03-01', deadline: '2026-03-05' },
+        { id: 'CMP-2026-003', citizenName: 'Jane Smith', title: 'Blocked drain flooding road', location: 'Oak Avenue', priority: 'High', status: 'In Progress', date: '2026-03-02', deadline: '2026-03-04' },
+        { id: 'CMP-2026-008', citizenName: 'Alice Johnson', title: 'Damage to sidewalk', location: 'Pine St.', priority: 'Low', status: 'Pending', date: '2026-03-10', deadline: '2026-03-20' },
+        { id: 'CMP-2026-009', citizenName: 'Bob Brown', title: 'Bridge barrier broken', location: 'River Bridge', priority: 'High', status: 'Resolved', date: '2026-02-28', deadline: '2026-03-02', notes: 'Replaced broken barrier with steel rail.' },
+        { id: 'CMP-2026-011', citizenName: 'Mike Davis', title: 'Street light not working', location: 'Elm St.', priority: 'Low', status: 'Solved', date: '2026-02-25', deadline: '2026-03-01', notes: 'Bulb replaced.' }
     ];
 
-    function renderOfficerComplaints() {
-        const urgentTbody = document.getElementById('urgent-complaints');
-        const recentTbody = document.getElementById('recent-assigned-complaints');
-        const allAssignedTbody = document.getElementById('all-assigned-complaints');
-        const resolvedTbody = document.getElementById('resolved-complaints-list');
+    let currentFilter = 'Total Cases';
 
-        let activeCount = 0;
-        let urgentCount = 0;
-        let resolvedCount = 0;
+    window.showTable = function(filter) {
+        currentFilter = filter;
+        const titleEl = document.getElementById('dynamic-table-title');
+        if (titleEl) titleEl.textContent = filter;
+        renderOfficerComplaints();
+    };
 
-        let urgentHtml = '';
-        let recentHtml = '';
-        let allHtml = '';
-        let resolvedHtml = '';
+    window.renderOfficerComplaints = function() {
+        if (!document.getElementById('card-total-cases') || !document.getElementById('dynamic-table-body')) return;
 
-        dummyAssigned.forEach((c, index) => {
+        const totalCases = window.dummyAssigned.length;
+        const pendingCases = window.dummyAssigned.filter(c => c.status === 'Pending').length;
+        const solvedCases = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved').length;
+        const assignedCases = window.dummyAssigned.length; // Active assigned or all cases
 
-            // Badge logic
+        document.getElementById('card-total-cases').textContent = totalCases;
+        document.getElementById('card-assigned-cases').textContent = assignedCases;
+        document.getElementById('card-pending-cases').textContent = pendingCases;
+        document.getElementById('card-solved-cases').textContent = solvedCases;
+
+        let displayData = [];
+        if (currentFilter === 'Total Cases') {
+            displayData = window.dummyAssigned;
+        } else if (currentFilter === 'Assigned Cases') {
+            displayData = window.dummyAssigned;
+        } else if (currentFilter === 'Pending Cases') {
+            displayData = window.dummyAssigned.filter(c => c.status === 'Pending');
+        } else if (currentFilter === 'Solved Cases') {
+            displayData = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved');
+        }
+
+        const tbody = document.getElementById('dynamic-table-body');
+        let html = '';
+
+        displayData.forEach(c => {
             let badgeClass = 'bg-secondary';
             if (c.status === 'Pending') badgeClass = 'bg-warning text-dark';
             else if (c.status === 'In Progress') badgeClass = 'bg-primary';
-            else if (c.status === 'Resolved') badgeClass = 'bg-success';
+            else if (c.status === 'Resolved' || c.status === 'Solved') badgeClass = 'bg-success';
 
             let priorityClass = 'bg-secondary';
             if (c.priority === 'High') priorityClass = 'bg-danger';
             else if (c.priority === 'Medium') priorityClass = 'bg-warning text-dark';
             else if (c.priority === 'Low') priorityClass = 'bg-info text-dark';
 
-            // HTML for "Update" button
-            const updateBtn = `<button class="btn btn-sm btn-outline-success update-btn" data-id="${c.id}" ${c.status === 'Resolved' ? 'disabled' : ''}>
+            const updateBtn = `<button class="btn btn-sm btn-outline-success update-btn" data-id="${c.id}" ${(c.status === 'Resolved' || c.status === 'Solved') ? 'disabled' : ''}>
                                     <i class="bi bi-pencil-square"></i> Update 
                                </button>`;
 
-            // Categorization & Stats
-            if (c.status !== 'Resolved') {
-                activeCount++;
-
-                allHtml += `
-                    <tr>
-                        <td class="fw-medium">${c.id}</td>
-                        <td>${c.title}</td>
-                        <td>${c.location}</td>
-                        <td><span class="badge ${priorityClass}">${c.priority}</span></td>
-                        <td><span class="badge ${badgeClass}">${c.status}</span></td>
-                        <td class="${c.priority === 'High' ? 'text-danger fw-bold' : ''}">${c.deadline}</td>
-                        <td>${updateBtn}</td>
-                    </tr>
-                `;
-
-                if (activeCount <= 3) {
-                    recentHtml += `
-                        <tr>
-                            <td class="fw-medium">${c.id}</td>
-                            <td>${c.title}</td>
-                            <td>${c.date}</td>
-                            <td><span class="badge ${badgeClass}">${c.status}</span></td>
-                            <td>${updateBtn}</td>
-                        </tr>
-                    `;
-                }
-
-                if (c.priority === 'High') {
-                    urgentCount++;
-                    urgentHtml += `
-                        <tr>
-                            <td class="fw-medium text-danger">${c.id}</td>
-                            <td>${c.title}</td>
-                            <td class="text-danger fw-bold">${c.deadline}</td>
-                            <td><span class="badge ${badgeClass}">${c.status}</span></td>
-                            <td>${updateBtn}</td>
-                        </tr>
-                    `;
-                }
-
-            } else {
-                resolvedCount++;
-                resolvedHtml += `
-                    <tr>
-                        <td class="fw-medium text-success">${c.id}</td>
-                        <td>${c.title}</td>
-                        <td>${c.date}</td>
-                        <td class="fst-italic">"${c.notes}"</td>
-                        <td><span class="badge bg-success">Resolved</span></td>
-                    </tr>
-                `;
-            }
+            html += `
+                <tr>
+                    <td class="fw-medium">${c.id}</td>
+                    <td>${c.citizenName || 'N/A'}</td>
+                    <td>${c.title}</td>
+                    <td><span class="badge ${priorityClass}">${c.priority}</span></td>
+                    <td><span class="badge ${badgeClass}">${c.status}</span></td>
+                    <td>${c.date}</td>
+                    <td>${updateBtn}</td>
+                </tr>
+            `;
         });
 
-        // Inject HTML
-        if (urgentTbody) urgentTbody.innerHTML = urgentHtml || '<tr><td colspan="5" class="text-center text-muted">No urgent tasks right now.</td></tr>';
-        if (recentTbody) recentTbody.innerHTML = recentHtml || '<tr><td colspan="5" class="text-center text-muted">No active assignments.</td></tr>';
-        if (allAssignedTbody) allAssignedTbody.innerHTML = allHtml || '<tr><td colspan="7" class="text-center text-muted">No active assignments.</td></tr>';
-        if (resolvedTbody) resolvedTbody.innerHTML = resolvedHtml || '<tr><td colspan="5" class="text-center text-muted">No resolved cases yet.</td></tr>';
-
-        // Stats
-        document.getElementById('officer-active-cases').textContent = activeCount;
-        document.getElementById('officer-urgent-cases').textContent = urgentCount;
-        document.getElementById('officer-resolved-cases').textContent = resolvedCount;
+        tbody.innerHTML = html || '<tr><td colspan="7" class="text-center text-muted">No cases found.</td></tr>';
 
         // Re-attach update btn events
         document.querySelectorAll('.update-btn').forEach(btn => {
@@ -206,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('update-complaint-id').value = id;
         document.getElementById('display-complaint-id').textContent = id;
 
-        const complaint = dummyAssigned.find(c => c.id === id);
+        const complaint = window.dummyAssigned.find(c => c.id === id);
         if (complaint) {
             document.getElementById('new-status').value = complaint.status;
             document.getElementById('action-remarks').value = '';
@@ -225,12 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const remarks = document.getElementById('action-remarks').value;
 
             // Find and update
-            const index = dummyAssigned.findIndex(c => c.id === id);
+            const index = window.dummyAssigned.findIndex(c => c.id === id);
             if (index !== -1) {
-                dummyAssigned[index].status = newStatus;
+                window.dummyAssigned[index].status = newStatus;
 
-                if (newStatus === 'Resolved') {
-                    dummyAssigned[index].notes = remarks;
+                if (newStatus === 'Resolved' || newStatus === 'Solved') {
+                    window.dummyAssigned[index].notes = remarks;
                 }
             }
 
