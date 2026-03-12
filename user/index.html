@@ -1,277 +1,321 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Citizen Dashboard, Citizen Complaint System</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Citizen Complaint Portal</title>
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Boxicons for Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-person-badge me-2"></i>Citizen Portal</h5>
-            <button id="sidebar-toggle" class="btn btn-link text-white p-0 d-none d-md-block">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-        </div>
-        
-        <div class="nav flex-column mt-3">
-            <a href="#" class="nav-link active" data-section="dashboard">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="#" class="nav-link" data-section="my-complaints">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>My Complaints</span>
-            </a>
-            <a href="#" class="nav-link" data-section="file-complaint" data-bs-toggle="modal" data-bs-target="#fileComplaintModal">
-                <i class="bi bi-plus-circle"></i>
-                <span>File Complaint</span>
-            </a>
-            <hr class="mx-3 opacity-25">
-            <a href="../homepage/index.html" class="nav-link mt-auto text-danger">
-                <i class="bi bi-box-arrow-left"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main id="main-content">
-        <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg sticky-top">
-            <div class="container-fluid">
-                <span class="navbar-brand d-md-none fw-bold">Citizen Portal</span>
-                
-                <div class="d-flex align-items-center me-auto">
-                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Welcome, John Doe</h5>
-                </div>
-
-                <div class="d-flex align-items-center">
-                    <!-- Dark Mode Toggle -->
-                    <button id="theme-toggle" class="btn btn-link text-dark me-2">
-                        <i class="bi bi-moon-fill fs-5"></i>
-                    </button>
-
-                    <!-- User Profile -->
-                    <div class="dropdown">
-                        <button class="btn btn-link p-0 d-flex align-items-center text-decoration-none" type="button" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=0d6efd&color=fff" alt="Profile" class="rounded-circle me-2" width="32" height="32">
-                            <span class="d-none d-md-inline text-dark fw-medium">John Doe</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="../homepage/index.html"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
-                </div>
+    <!-- LOGIN PAGE (Default) -->
+    <div id="login-section" class="page-section active fullscreen-center">
+        <div class="login-card">
+            <div class="login-header">
+                <i class='bx bx-building-house'></i>
+                <h2>Citizen Portal</h2>
+                <p>Login to file and track complaints</p>
             </div>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class='bx bx-envelope'></i>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                    <span class="error-text" id="emailError">Please enter a valid email.</span>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class='bx bx-lock-alt'></i>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                    </div>
+                    <span class="error-text" id="passwordError">Details are incorrect or missing.</span>
+                </div>
+                <button type="submit" class="btn-primary animate-btn">
+                    <span>Login Securely</span>
+                    <i class='bx bx-right-arrow-alt'></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Hidden initially) -->
+    <div id="app-wrapper" class="hidden">
+        
+        <!-- SIDEBAR -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bx-shield-quarter'></i>
+                <span class="logo-name">Citizen Portal</span>
+                <i class='bx bx-menu' id="btn-menu"></i>
+            </div>
+            <ul class="nav-list">
+                <li>
+                    <a href="#" class="nav-link" data-target="file-complaint-section">
+                        <i class='bx bx-edit'></i>
+                        <span class="links_name">File Complaint</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="track-complaint-section">
+                        <i class='bx bx-current-location'></i>
+                        <span class="links_name">Track Complaint</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="dashboard-section">
+                        <i class='bx bx-grid-alt'></i>
+                        <span class="links_name">Dashboard</span>
+                    </a>
+                </li>
+                <li class="logout-item">
+                    <a href="#" id="logoutBtn">
+                        <i class='bx bx-log-out'></i>
+                        <span class="links_name">Logout</span>
+                    </a>
+                </li>
+            </ul>
         </nav>
 
-        <!-- Dashboard Content -->
-        <div id="dashboard-section" class="container-fluid py-4 px-md-5">
-            <div class="d-flex justify-content-between align-items-center mb-5">
-                <div>
-                    <h3 class="fw-bold mb-1">My Dashboard</h3>
-                    <p class="text-muted small mb-0">Track your complaints and file new ones.</p>
-                </div>
-                <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#fileComplaintModal">
-                    <i class="bi bi-plus-circle me-2"></i>File New Complaint
-                </button>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="row g-4 mb-5">
-                <div class="col-12 col-sm-6 col-xl-4">
-                    <div class="card stat-card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
-                                <i class="bi bi-file-earmark-text"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total Complaints Filed</h6>
-                                <h3 class="fw-bold mb-0" id="user-total-complaints">0</h3>
-                            </div>
-                        </div>
+        <!-- MAIN CONTENT AREA -->
+        <main class="home-section">
+            
+            <!-- HEADER -->
+            <header class="top-header">
+                <div class="user-info">
+                    <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
+                    <div class="user-avatar">
+                        <i class='bx bxs-user'></i>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-4">
-                    <div class="card stat-card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
-                                <i class="bi bi-clock-history"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Pending Processing</h6>
-                                <h3 class="fw-bold mb-0" id="user-pending-complaints">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-xl-4">
-                    <div class="card stat-card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Resolved Successfully</h6>
-                                <h3 class="fw-bold mb-0" id="user-resolved-complaints">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </header>
 
-            <!-- Recent Complaints -->
-            <div class="row g-4 mb-5">
-                <div class="col-12">
-                    <div class="table-container border-0">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold mb-0">My Recent Complaints</h5>
-                            <button class="btn btn-sm btn-outline-primary" onclick="switchSection('my-complaints')">View All</button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Complaint ID</th>
-                                        <th>Title</th>
-                                        <th>Department</th>
-                                        <th>Status</th>
-                                        <th>Date Filed</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="user-recent-complaints">
-                                    <!-- Populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <!-- FILE COMPLAINT PAGE -->
+            <section id="file-complaint-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>File a Complaint</h2>
+                    <p>Submit your grievance with necessary evidence and details.</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- My Complaints Section -->
-        <div id="my-complaints-section" class="container-fluid py-4 px-md-5 d-none">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h3 class="fw-bold mb-1">Complaint History</h3>
-                    <p class="text-muted small mb-0">View all your past and active complaints.</p>
-                </div>
-            </div>
-
-            <div class="table-container border-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Complaint ID</th>
-                                <th>Title</th>
-                                <th>Department</th>
-                                <th>Status</th>
-                                <th>Date Filed</th>
-                                <th>Last Updated</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-all-complaints">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modals -->
-    <!-- File Complaint Modal -->
-    <div class="modal fade" id="fileComplaintModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Register New Complaint</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="file-complaint-form">
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Complaint Title</label>
-                                <input type="text" id="complaint-title" class="form-control" placeholder="Brief summary of the issue" required>
+                <div class="card form-card">
+                    <form id="complaintForm">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="fullName">Full Name</label>
+                                <input type="text" id="fullName" placeholder="Rahul Sharma" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" placeholder="+91 9876543210" required>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Department</label>
-                                <select id="complaint-dept" class="form-select" required>
-                                    <option value="" disabled selected>Select Department</option>
-                                    <option value="Roads">Roads & Infrastructure</option>
-                                    <option value="Water Supply">Water Supply</option>
-                                    <option value="Electricity">Electricity Board</option>
-                                    <option value="Sanitation">Sanitation & Waste</option>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="category">Complaint Category</label>
+                                <select id="category" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="Cyber Crime">Cyber Crime</option>
+                                    <option value="Water Issue">Water Issue</option>
+                                    <option value="Electricity Issue">Electricity Issue</option>
+                                    <option value="Road Damage">Road Damage</option>
                                     <option value="Public Safety">Public Safety</option>
+                                    <option value="Garbage Issue">Garbage Issue</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Location / Area</label>
-                                <input type="text" id="complaint-location" class="form-control" placeholder="Where did this occur?" required>
+                            <div class="input-group">
+                                <label for="subcategory">Subcategory</label>
+                                <select id="subcategory" required disabled>
+                                    <option value="" disabled selected>Select category first</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Detailed Description</label>
-                            <textarea id="complaint-desc" class="form-control" rows="5" placeholder="Please provide as much detail as possible..." required></textarea>
+
+                        <div class="input-group">
+                            <label for="location">Current Location</label>
+                            <div class="location-wrapper">
+                                <input type="text" id="location" placeholder="City, State (Fetching...)" readonly required>
+                                <button type="button" id="getLocationBtn" class="btn-secondary">
+                                    <i class='bx bx-target-lock'></i> Enable Location
+                                </button>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Supporting Evidence (Optional)</label>
-                            <input type="file" class="form-control" id="complaint-evidence" accept="image/*,.pdf">
-                            <small class="text-muted">You can attach an image or PDF document to support your complaint.</small>
+
+                        <div class="input-group">
+                            <label for="description">Complaint Description</label>
+                            <textarea id="description" rows="4" placeholder="Briefly describe the issue..." required></textarea>
                         </div>
-                        <div class="text-end border-top pt-3">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Submit Complaint</button>
+
+                        <div class="input-group file-upload">
+                            <label for="evidence">Upload Evidence (Images/Docs)</label>
+                            <div class="upload-area">
+                                <i class='bx bx-cloud-upload'></i>
+                                <span class="upload-text">Click to browse or drag and drop</span>
+                                <input type="file" id="evidence" accept="image/*,.pdf,.doc,.docx" class="hidden-input">
+                            </div>
+                            <div id="fileNameDisplay" class="file-name-display"></div>
                         </div>
+
+                        <button type="submit" class="btn-primary full-width animate-btn mt-4">
+                            <span>Submit Complaint</span>
+                            <i class='bx bx-check-circle'></i>
+                        </button>
                     </form>
                 </div>
+            </section>
+
+            <!-- TRACK COMPLAINT PAGE -->
+            <section id="track-complaint-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Track Complaint Status</h2>
+                    <p>Enter your Complaint ID to view the latest updates.</p>
+                </div>
+
+                <div class="card track-card">
+                    <form id="trackForm" class="track-form">
+                        <div class="input-wrapper">
+                            <i class='bx bx-search'></i>
+                            <input type="text" id="trackIdInput" placeholder="Enter Complaint ID (e.g. CMP849201)" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Check Status</button>
+                    </form>
+
+                    <div id="trackingResult" class="tracking-result hidden">
+                        <div class="tracking-header">
+                            <h3>Complaint: <span id="displayTrackId" class="highlight-id"></span></h3>
+                            <span class="badge" id="displayBadge">In Progress</span>
+                        </div>
+                        
+                        <!-- Progress Stepper -->
+                        <div class="stepper">
+                            <div class="step" id="step-assigned">
+                                <div class="step-icon"><i class='bx bx-user-pin'></i></div>
+                                <div class="step-content">
+                                    <h4>Assigned</h4>
+                                    <p>Officer assigned to the issue</p>
+                                </div>
+                            </div>
+                            <div class="connector" id="conn-1"></div>
+                            
+                            <div class="step" id="step-inprogress">
+                                <div class="step-icon"><i class='bx bx-cog'></i></div>
+                                <div class="step-content">
+                                    <h4>In Progress</h4>
+                                    <p>Action is being taken</p>
+                                </div>
+                            </div>
+                            <div class="connector" id="conn-2"></div>
+                            
+                            <div class="step" id="step-pending">
+                                <div class="step-icon"><i class='bx bx-time'></i></div>
+                                <div class="step-content">
+                                    <h4>Pending</h4>
+                                    <p>Awaiting resolution</p>
+                                </div>
+                            </div>
+                            <div class="connector" id="conn-3"></div>
+                            
+                            <div class="step" id="step-resolved">
+                                <div class="step-icon"><i class='bx bx-check-double'></i></div>
+                                <div class="step-content">
+                                    <h4>Resolved</h4>
+                                    <p>Issue has been solved</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DASHBOARD PAGE -->
+            <section id="dashboard-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Dashboard Overview</h2>
+                    <p>Summary of your submitted complaints and their status.</p>
+                </div>
+
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue"><i class='bx bx-folder'></i></div>
+                        <div class="stat-details">
+                            <h3>Total Complaints</h3>
+                            <h2 id="stat-total">0</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-orange"><i class='bx bx-time-five'></i></div>
+                        <div class="stat-details">
+                            <h3>Pending Complaints</h3>
+                            <h2 id="stat-pending">0</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green"><i class='bx bx-check-shield'></i></div>
+                        <div class="stat-details">
+                            <h3>Solved Complaints</h3>
+                            <h2 id="stat-solved">0</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card mt-4">
+                    <div class="card-header">
+                        <h3>Recent Complaints</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Complaint ID</th>
+                                    <th>Citizen Name</th>
+                                    <th>Complaint Type</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardTableBody">
+                                <!-- Dynamic rows inserted here -->
+                            </tbody>
+                        </table>
+                        <div id="noDataMessage" class="no-data hidden">
+                            <i class='bx bx-folder-open'></i>
+                            <p>No complaints submitted yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- SUBMISSION SUCCESS MODAL -->
+    <div id="successModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-icon"><i class='bx bx-check-circle'></i></div>
+            <h2>Complaint Submitted!</h2>
+            <p>Your complaint has been successfully registered.</p>
+            <div class="id-box">
+                <span class="label">Complaint ID:</span>
+                <span id="popupComplaintId" class="generated-id">CMP-----</span>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" class="btn-secondary full-width" id="copyIdBtn">
+                    <i class='bx bx-copy'></i> Copy Complaint ID
+                </button>
+                <button class="btn-primary full-width" id="closeModalBtn">Continue</button>
             </div>
         </div>
     </div>
 
-    <!-- View Complaint Details Modal -->
-    <div class="modal fade" id="viewComplaintModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title">Complaint Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="complaint-details-content">
-                    <!-- Populated by JS -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
+    <div id="copyToast" class="right-toast">
+        <i class='bx bx-check'></i> Complaint ID copied to clipboard
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
