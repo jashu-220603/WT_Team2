@@ -25,15 +25,15 @@
 
 <div class="menu-title">Home</div>
 <li>Overview</li>
-<li onclick="openLogin('citizen')">Register Complaint</li>
-<li onclick="openLogin('citizen')">Track Complaint</li>
+<li onclick="openLogin('citizen','file-complaint-section')">Register Complaint</li>
+<li onclick="openLogin('citizen','track-complaint-section')">Track Complaint</li>
 <li onclick="scrollToAnnouncements()">Latest Announcements</li>
 
 <div class="menu-title">Citizen</div>
 <li onclick="openLogin('citizen')">Citizen Login</li>
-<li onclick="openLogin('citizen')">Register Complaint</li>
-<li onclick="openLogin('citizen')">My Complaints</li>
-<li onclick="openLogin('citizen')">Track Complaint</li>
+<li onclick="openLogin('citizen','file-complaint-section')">Register Complaint</li>
+<li onclick="openLogin('citizen','track-complaint-section')">My Complaints</li>
+<li onclick="openLogin('citizen','track-complaint-section')">Track Complaint</li>
 <li onclick="openFeedback()">Feedback</li>
 
 <div class="menu-title">Officer</div>
@@ -76,7 +76,7 @@
 
 <button class="header-btn" onclick="openFAQ()">FAQs</button>
 
-<button class="login-btn" onclick="openLogin('citizen')">Login / Signup</button>
+<button class="login-btn" onclick="openLogin('citizen','dashboard-section')">Login / Signup</button>
 
 </div>
 
@@ -128,9 +128,9 @@
 <p>Government Complaint Management System</p>
 
 
-<button class="file-btn" onclick="openLogin('citizen')">File Complaint</button>
+<button class="file-btn" onclick="openLogin('citizen','file-complaint-section')">File Complaint</button>
 
-<button class="track-btn" onclick="openLogin('citizen')">Track Complaint</button>
+<button class="track-btn" onclick="openLogin('citizen','track-complaint-section')">Track Complaint</button>
 </div>
 
 
@@ -293,79 +293,48 @@
 <script src="script.js"></script>
 
 <!-- LOGIN MODAL -->
-
 <div id="loginModal" class="modal">
-
-<div class="modal-content">
-
-<span class="close" onclick="closeLogin()">✖</span>
-
-<h2>Sign In</h2>
-
-<div class="tabs">
-
-<button class="tab active" onclick="switchTab('citizen')">Citizen</button>
-<button class="tab" onclick="switchTab('officer')">Officer</button>
-<button class="tab" onclick="switchTab('admin')">Admin</button>
-
+    <div class="modal-content">
+        <span class="close" onclick="closeLogin()">✖</span>
+        <h2>Sign In</h2>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('citizen')">Citizen</button>
+            <button class="tab" onclick="switchTab('officer')">Officer</button>
+            <button class="tab" onclick="switchTab('admin')">Admin</button>
+        </div>
+        <form id="loginForm">
+            <div class="input-group" id="userField">
+                <label>Email</label>
+                <input type="text" placeholder="your@email.com">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" placeholder="********">
+            </div>
+            <button class="signin-btn">Sign In</button>
+            <p>Don't have an account? <span class="signup-link" onclick="openSignup()">Sign Up</span></p>
+        </form>
+    </div>
 </div>
-
-
-<form id="loginForm">
-
-<div class="input-group" id="userField">
-
-<label>Email</label>
-<input type="text" placeholder="your@email.com">
-
-</div>
-
-<div class="input-group">
-
-<label>Password</label>
-<input type="password" placeholder="********">
-
-</div>
-
-<button class="signin-btn">Sign In</button>
-
-<p>Don't have an account? <span class="signup-link" onclick="openSignup()">Sign Up</span></p>
-
-</form>
-
-</div>
-
-</div>
-
 
 <!-- SIGNUP MODAL -->
-
 <div id="signupModal" class="modal">
-
-<div class="modal-content">
-
-<span class="close" onclick="closeSignup()">✖</span>
-
-<h2>Sign Up</h2>
-
-<form class="signup-form">
-
-<label>Username</label>
-<input type="text" placeholder="Enter your name" required>
-
-<label>Email</label>
-<input type="email" placeholder="Enter your email" required>
-
-<label>Create Password</label>
-<input type="password" placeholder="Create password" required>
-
-<button type="submit" class="signup-btn">Sign Up</button>
-
-</form>
-
+    <div class="modal-content">
+        <span class="close" onclick="closeSignup()">✖</span>
+        <h2>Sign Up</h2>
+        <form class="signup-form">
+            <label>Username</label>
+            <input type="text" placeholder="Enter your name" required>
+            <label>Email</label>
+            <input type="email" placeholder="Enter your email" required>
+            <label>Create Password</label>
+            <input type="password" placeholder="Create password" required>
+            <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+    </div>
 </div>
 
-</div>
+
 
 <!-- FAQ POPUP -->
 

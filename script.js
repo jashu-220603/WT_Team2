@@ -6,49 +6,122 @@ sidebar.classList.toggle("active");
 
 }
 
-function openLogin(role){
+// store desired section so we can redirect after login
+let pendingSection = '';
 
-document.getElementById("loginModal").style.display="flex";
+// show login modal and configure for role; optional section indicates which
+// area in the dashboard we want to open after authentication
+function openLogin(role, section){
+    pendingSection = section || '';
+    document.getElementById("loginModal").style.display="flex";
+    let tabs=document.querySelectorAll(".tab");
+    tabs.forEach(tab=>tab.classList.remove("active"));
+    let userField=document.getElementById("userField");
 
-let tabs=document.querySelectorAll(".tab");
-tabs.forEach(tab=>tab.classList.remove("active"));
-
-let userField=document.getElementById("userField");
-
-if(role==="citizen"){
-
-tabs[0].classList.add("active");
-
-userField.innerHTML=`
+    if(role==="citizen"){
+        tabs[0].classList.add("active");
+        userField.innerHTML=`
 <label>Email</label>
 <input type="text" placeholder="your@email.com">
 `;
-
-}
-
-if(role==="officer"){
-
-tabs[1].classList.add("active");
-
-userField.innerHTML=`
+    }
+    if(role==="officer"){
+        tabs[1].classList.add("active");
+        userField.innerHTML=`
 <label>Officer ID</label>
 <input type="text" placeholder="e.g. OFF-001">
 `;
-
-}
-
-if(role==="admin"){
-
-tabs[2].classList.add("active");
-
-userField.innerHTML=`
+    }
+    if(role==="admin"){
+        tabs[2].classList.add("active");
+        userField.innerHTML=`
 <label>Admin ID</label>
 <input type="text" placeholder="e.g. ADM-001">
 `;
-
+    }
 }
 
+function closeLogin(){
+    document.getElementById("loginModal").style.display="none";
 }
+
+function openSignup(){
+    document.getElementById("signupModal").style.display="flex";
+}
+
+function closeSignup(){
+    document.getElementById("signupModal").style.display="none";
+}
+
+function switchTab(role){
+    // reuse openLogin logic without showing modal again
+    const tabs=document.querySelectorAll(".tab");
+    tabs.forEach(tab=>tab.classList.remove("active"));
+    const userField=document.getElementById("userField");
+    if(role==="citizen"){
+        tabs[0].classList.add("active");
+        userField.innerHTML=`
+<label>Email</label>
+<input type="text" placeholder="your@email.com">
+`;
+    }
+    if(role==="officer"){
+        tabs[1].classList.add("active");
+        userField.innerHTML=`
+<label>Officer ID</label>
+<input type="text" placeholder="e.g. OFF-001">
+`;
+    }
+    if(role==="admin"){
+        tabs[2].classList.add("active");
+        userField.innerHTML=`
+<label>Admin ID</label>
+<input type="text" placeholder="e.g. ADM-001">
+`;
+    }
+}
+
+// redirect on form submit based on active tab
+function setupLoginRedirect(){
+    const loginForm=document.getElementById('loginForm');
+    if(!loginForm) return;
+    loginForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        const activeTab=document.querySelector('.tab.active');
+        if(!activeTab) return;
+        const role=activeTab.textContent.trim().toLowerCase();
+        let targetUrl = '';
+        switch(role){
+            case 'citizen':
+                targetUrl = 'user/index.html';
+                sessionStorage.setItem('authenticated','citizen');
+                break;
+            case 'officer':
+                targetUrl = 'officer/index.html';
+                sessionStorage.setItem('authenticated','officer');
+                break;
+            case 'admin':
+                targetUrl = 'admin/index.html';
+                sessionStorage.setItem('authenticated','admin');
+                break;
+        }
+        if(pendingSection && targetUrl){
+            targetUrl += '#' + pendingSection;
+        }
+        if(targetUrl){
+            // clear pendingSection after building url
+            pendingSection = '';
+            window.location.href = targetUrl;
+        }
+    });
+}
+
+if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', setupLoginRedirect);
+} else {
+    setupLoginRedirect();
+}
+
 
 /* FAQ POPUP */
 
@@ -107,9 +180,8 @@ chatBody.scrollTop=chatBody.scrollHeight;
 
 }
 
-function closeLogin(){
-document.getElementById("loginModal").style.display="none";
-}
+
+
 
 /* SLIDER */
 
@@ -196,12 +268,4 @@ behavior:"smooth"
 
 closeSidebar();
 
-}
-
-function openSignup(){
-document.getElementById("signupModal").style.display="flex";
-}
-
-function closeSignup(){
-document.getElementById("signupModal").style.display="none";
 }
