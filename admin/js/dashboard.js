@@ -27,9 +27,14 @@ const officersData = [
 ];
 
 const activityLog = [
-    { text: "Officer John Doe assigned to CMP-1001", time: "5 mins ago" },
-    { text: "Officer Jane Smith resolved CMP-1002", time: "1 hour ago" },
-    { text: "Admin reassigned CMP-1005 to James Bond", time: "3 hours ago" }
+    { text: "System Boot: CMS Admin Dashboard initialized.", time: "1 min ago" },
+    { text: "Officer John Doe assigned to high-priority case CMP-1001 (Pothole on Main St)", time: "5 mins ago" },
+    { text: "System Data Sync: department workloads updated.", time: "15 mins ago" },
+    { text: "Officer Jane Smith successfully resolved CMP-1002 (Water Leakage)", time: "1 hour ago" },
+    { text: "Admin reviewed weekly performance Analytics report", time: "2 hours ago" },
+    { text: "Admin reassigned CMP-1005 (Traffic Signal Malfunction) to James Bond due to priority change", time: "3 hours ago" },
+    { text: "Automated alert: 3 new complaints received in 'Roads' department", time: "4 hours ago" },
+    { text: "Daily backup completed successfully", time: "1 day ago" }
 ];
 
 const notifications = [
@@ -120,9 +125,12 @@ function initSidebar() {
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
 
-            // collapse/hide sidebar on mobile
+            // collapse/hide sidebar on mobile or desktop
             if (window.innerWidth < 768) {
                 sidebar.classList.remove('show');
+            } else {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
             }
         });
     });
@@ -146,9 +154,12 @@ function initSidebar() {
             renderAssignmentTable();
             updateCharts();
             
-            // Close sidebar on mobile if open
+            // Close sidebar on mobile or desktop if open
             if (window.innerWidth < 768) {
                 sidebar.classList.remove('show');
+            } else {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
             }
         });
     });
@@ -260,7 +271,7 @@ function renderDetailedAnalytics() {
             labels: depts,
             datasets: [{
                 data: depts.map(d => complaintsData.filter(c => c.dept === d).length),
-                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0'],
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'],
                 borderWidth: 0
             }]
         },
@@ -278,7 +289,7 @@ function renderDetailedAnalytics() {
                     complaintsData.filter(c => c.status === 'In Progress').length,
                     complaintsData.filter(c => c.status === 'Resolved').length
                 ],
-                backgroundColor: ['#6c757d', '#0d6efd', '#198754'],
+                backgroundColor: ['#6b7280', '#3b82f6', '#10b981'],
                 borderWidth: 0
             }]
         },
@@ -303,7 +314,7 @@ function renderDetailedAnalytics() {
         type: 'bar',
         data: {
             labels: depts,
-            datasets: [{ label: 'Resolution Rate (%)', data: resolutionRates, backgroundColor: '#0dcaf0', borderRadius: 4 }]
+            datasets: [{ label: 'Resolution Rate (%)', data: resolutionRates, backgroundColor: '#8b5cf6', borderRadius: 4 }]
         },
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { color: textColor } }, x: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } }
     });
@@ -391,6 +402,7 @@ function initOfficerFilter() {
 
 function renderWorkload() {
     const container = document.getElementById('workload-container');
+    if (!container) return;
     container.innerHTML = '';
     
     officersData.forEach(o => {
