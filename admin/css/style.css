@@ -256,3 +256,18 @@ body {
     background-color: rgba(13,110,253,0.05);
     cursor: pointer;
 }
+
+/* Hover highlight on dashboard cards */
+.hover-highlight {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.hover-highlight:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    background-color: #f0f7ff;
+}
+
+[data-theme="dark"] .hover-highlight:hover {
+    background-color: #252830;
+}
