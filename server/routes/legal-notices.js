@@ -1,18 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const LegalNotice = require('../models/LegalNotice');
-const auth = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 const User = require('../models/User');
 
 // @route   POST /api/legal-notices
 // @desc    Send a new legal notice (Admin only)
 // @access  Admin
-router.post('/', auth, async (req, res) => {
+router.post('/', protect, authorize('admin'), async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: "Access denied." });
-        }
-
         const { officerId, title, content } = req.body;
 
         if (!officerId || !title || !content) {
@@ -41,13 +37,9 @@ router.post('/', auth, async (req, res) => {
 // @route   GET /api/legal-notices/mine
 // @desc    Get my legal notices
 // @access  Officer
-router.get('/mine', auth, async (req, res) => {
+router.get('/mine', protect, authorize('officer'), async (req, res) => {
     try {
-        if (req.user.role !== 'officer') {
-            return res.status(403).json({ message: "Access denied." });
-        }
-
-        const notices = await LegalNotice.find({ officerId: req.user.id }).sort({ createdAt: -1 });
+        const notices = await LegalNotice.find({ officerId: req.user._id }).sort({ createdAt: -1 });
         res.json({ notices });
     } catch (err) {
         console.error("Fetch Legal Notices Error: ", err);
