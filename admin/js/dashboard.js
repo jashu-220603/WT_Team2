@@ -152,7 +152,8 @@ window.switchSection = function(sectionId) {
         "analytics-section",
         "departments-section",
         "reports-section",
-        "settings-section"
+        "settings-section",
+        "feedbacks-section"
     ];
 
     sections.forEach(id => {
@@ -161,7 +162,10 @@ window.switchSection = function(sectionId) {
     });
 
     const target = document.getElementById(sectionId + "-section");
-    if (target) target.classList.remove("d-none");
+    if (target) {
+        target.classList.remove("d-none");
+        if (sectionId === "feedbacks") loadFeedbacks();
+    }
     
     // Refresh data if needed when switching to specific sections
     if (sectionId === 'analytics') renderAnalytics();
@@ -306,7 +310,7 @@ function renderOfficers() {
             <td>${o.department || "-"}</td>
             <td>
                 <button class="btn btn-sm btn-outline-danger" onclick="terminateOfficer('${o._id}', '${o.name}')" title="Terminate Officer">
-                    <i class="bi bi-person-x-fill me-1"></i> Terminate
+                    <i class="bi bi-person-x-fill me-1"></i> Immediate Terminate
                 </button>
             </td>
         </tr>
@@ -841,13 +845,19 @@ window.terminateOfficer = function(id, name) {
     document.getElementById("res-target-name").textContent = name;
     document.getElementById("confirm-termination").checked = false;
     document.getElementById("confirm-terminate-btn").classList.add("disabled");
+    document.getElementById("send-legal-notice-btn").classList.add("disabled");
 
     const modal = new bootstrap.Modal(document.getElementById("terminationModal"));
     modal.show();
 
     document.getElementById("confirm-termination").onchange = function() {
-        if(this.checked) document.getElementById("confirm-terminate-btn").classList.remove("disabled");
-        else document.getElementById("confirm-terminate-btn").classList.add("disabled");
+        if(this.checked) {
+            document.getElementById("confirm-terminate-btn").classList.remove("disabled");
+            document.getElementById("send-legal-notice-btn").classList.remove("disabled");
+        } else {
+            document.getElementById("confirm-terminate-btn").classList.add("disabled");
+            document.getElementById("send-legal-notice-btn").classList.add("disabled");
+        }
     };
 
     document.getElementById("confirm-terminate-btn").onclick = async function() {
@@ -864,6 +874,30 @@ window.terminateOfficer = function(id, name) {
             loadDashboardData();
         } catch (err) {
             alert(err.message || "Termination failed");
+        }
+    };
+
+    document.getElementById("send-legal-notice-btn").onclick = async function() {
+        try {
+            const res = await fetch(`${API}/legal-notices`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token 
+                },
+                body: JSON.stringify({
+                    officerId: id,
+                    title: "Legal Notice: Dereliction of Duty",
+                    content: "This serves as an official legal notice regarding your performance."
+                })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.message || "Failed to send notice");
+
+            alert(`Legal Notice successfully dispatched to officer ${name}.`);
+            modal.hide();
+        } catch(err) {
+            alert(err.message || "Failed to send notice.");
         }
     };
 };
@@ -883,6 +917,46 @@ if(sidebarToggleBtn && sidebar) {
         e.preventDefault();
         sidebar.classList.toggle("collapsed");
         if(mainContent) mainContent.classList.toggle("expanded");
+    }
+}
+
+/* =========================
+   FEEDBACKS
+========================= */
+
+async function loadFeedbacks() {
+    const tbody = document.getElementById('feedbacks-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch(API + '/feedback/all', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+
+        if (!response.ok) throw new Error('Failed to load feedbacks');
+
+        const feedbacks = await response.json();
+        let html = '';
+
+        if (feedbacks.length === 0) {
+            html = '<tr><td colspan="4" class="text-center py-4">No feedbacks found.</td></tr>';
+        } else {
+            feedbacks.forEach(f => {
+                html += `
+                <tr>
+                    <td><strong>${f.name}</strong></td>
+                    <td>${f.email}</td>
+                    <td><div class="text-wrap" style="max-width: 400px;">${f.feedback}</div></td>
+                    <td><small>${new Date(f.createdAt).toLocaleDateString()}</small></td>
+                </tr>
+                `;
+            });
+        }
+
+        tbody.innerHTML = html;
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load feedbacks.</td></tr>';
     }
 }
 

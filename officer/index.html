@@ -58,6 +58,10 @@
                 <span>Analytics</span>
             </a>
             <hr class="mx-3 opacity-25">
+            <a href="#" class="nav-link text-warning" data-section="legal-notices">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Legal Notices</span>
+            </a>
             <a href="#" onclick="logout();" class="nav-link mt-auto text-danger">
                 <i class="bi bi-box-arrow-left"></i>
                 <span>Logout</span>
@@ -230,6 +234,20 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Legal Notices Section -->
+        <div id="legal-notices-section" class="container-fluid py-4 px-md-5 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h3 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Legal Notices</h3>
+                    <p class="text-muted small mb-0">Important administrative actions and official notices.</p>
+                </div>
+            </div>
+
+            <div class="row g-4" id="legal-notices-container">
+                <!-- Populated by JS -->
             </div>
         </div>
     </main>

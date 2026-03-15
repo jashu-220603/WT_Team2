@@ -46,6 +46,7 @@ body {
     /* Dark forest green for officers */
     color: white;
     transition: all var(--transition-speed);
+    overflow-y: auto;
 }
 
 #sidebar.collapsed {

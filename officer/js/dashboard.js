@@ -222,6 +222,51 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    async function loadLegalNotices() {
+        const container = document.getElementById("legal-notices-container");
+        if (!container) return;
+
+        try {
+            const res = await fetch(`${API}/legal-notices/mine`, {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch legal notices");
+
+            const data = await res.json();
+            const notices = data.notices;
+
+            let html = "";
+            if (notices.length === 0) {
+                html = '<div class="col-12 text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-3"></i>No legal notices found.</div>';
+            } else {
+                notices.forEach(n => {
+                    html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning shadow-sm">
+                            <div class="card-header bg-warning text-dark fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> ${n.title}
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">${n.content}</p>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Status: <span class="badge ${n.status === 'Read' ? 'bg-success' : 'bg-danger'}">${n.status}</span></small>
+                                    <small class="text-muted text-end">Received: ${new Date(n.createdAt).toLocaleDateString()}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<div class="col-12 text-center py-4 text-danger">Failed to load legal notices.</div>';
+        }
+    }
+
     /* =========================
        NOTIFICATIONS SYSTEM
     ========================= */
@@ -370,6 +415,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function filterComplaintsBySection(section) {
+        document.getElementById("dashboard-section").classList.remove("d-none");
+        document.getElementById("legal-notices-section").classList.add("d-none");
+
+        if (section === "legal-notices") {
+            document.getElementById("dashboard-section").classList.add("d-none");
+            document.getElementById("legal-notices-section").classList.remove("d-none");
+            loadLegalNotices();
+            return;
+        }
+
         let filtered = allComplaints;
         let title = "Total Cases";
 

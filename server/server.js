@@ -29,6 +29,8 @@ app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/legal-notices', require('./routes/legal-notices'));
 
 // error handler
 app.use((err, req, res, next) => {

@@ -48,6 +48,11 @@
                 <i class="bi bi-building"></i>
                 <span>Manage Departments</span>
             </a>
+            <!-- Feedbacks -->
+            <a href="#" class="nav-link" data-section="feedbacks">
+                <i class="bi bi-chat-text"></i>
+                <span>Citizen Feedbacks</span>
+            </a>
             <!-- Tasks -->
             <a href="#" class="nav-link" data-section="tasks">
                 <i class="bi bi-check2-square"></i>
@@ -458,6 +463,33 @@
             </div>
         </div>
 
+        <!-- Feedbacks Section -->
+        <div id="feedbacks-section" class="container-fluid py-4 px-md-5 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h3 class="fw-bold mb-1">Citizen Feedbacks</h3>
+                    <p class="text-muted small mb-0">Review feedback submitted by citizens from the portal homepage.</p>
+                </div>
+            </div>
+            <div class="table-container border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Feedback Message</th>
+                                <th>Submitted On</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbacks-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Reports Section -->
         <div id="reports-section" class="container-fluid py-4 px-md-5 d-none">
             <div class="d-flex justify-content-between align-items-center mb-5">
@@ -681,21 +713,21 @@
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Official Termination Notice</h5>
+                    <h5 class="modal-title">Official Action Notice</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
                         <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
                         <h4 class="mt-2 text-danger fw-bold">Action Required</h4>
-                        <p class="text-muted small">You are about to terminate the service of <br><strong id="terminate-off-name" class="text-dark"></strong>.</p>
+                        <p class="text-muted small">You are about to take action on the service of <br><strong id="terminate-off-name" class="text-dark"></strong>.</p>
                     </div>
                     
                     <div class="p-3 bg-light border rounded mb-3">
                         <label class="form-label fw-bold small text-uppercase text-danger"><i class="bi bi-envelope-paper me-1"></i> Legal Resignation Notice</label>
                         <div id="resignation-template" class="small italic text-muted" style="font-size: 0.85rem;">
                             "Dear <span id="res-target-name"></span>, <br><br> 
-                            Based on departmental requirements, your service as a Department Officer is being terminated effective immediately. Please consider this as a formal directive for the submission of your resignation letter. Your system access has been revoked.<br><br>
+                            Based on departmental requirements, your service as a Department Officer is being reviewed. Please consider this as a formal directive regarding your employment status.<br><br>
                             Regards, <br> System Administrator"
                         </div>
                     </div>
@@ -703,12 +735,13 @@
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="confirm-termination">
                         <label class="form-check-label small" for="confirm-termination">
-                            I confirm that I want to terminate this officer and send the notice.
+                            I confirm that I want to proceed with this action.
                         </label>
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button type="button" id="confirm-terminate-btn" class="btn btn-danger disabled">Send Resignation Notice & Terminate</button>
+                        <button type="button" id="confirm-terminate-btn" class="btn btn-danger disabled">Immediate Terminate</button>
+                        <button type="button" id="send-legal-notice-btn" class="btn btn-warning disabled">Send Legal Notice</button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>

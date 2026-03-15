@@ -297,3 +297,51 @@ if(document.readyState==='loading'){
 }else{
     setupSignup();
 }
+// =====================
+// FEEDBACK SUBMISSION
+// =====================
+function setupFeedbackForm() {
+    const feedbackForm = document.querySelector('.feedback-form');
+    if (!feedbackForm) return;
+
+    feedbackForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const nameInput = feedbackForm.querySelector('input[type="text"]');
+        const emailInput = feedbackForm.querySelector('input[type="email"]');
+        const feedbackTextInput = feedbackForm.querySelector('textarea');
+
+        if (!nameInput || !emailInput || !feedbackTextInput) return;
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const feedbackText = feedbackTextInput.value.trim();
+
+        if (!name || !email || !feedbackText) {
+            alert('Please fill out all fields in the feedback form.');
+            return;
+        }
+
+        try {
+            const resp = await fetch((window.API_BASE_URL || 'http://localhost:7000') + '/api/feedback/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, feedbackText })
+            });
+
+            if (resp.ok) {
+                alert('Thank you! Your feedback has been submitted successfully.');
+                feedbackForm.reset();
+            } else {
+                const data = await resp.json();
+                alert('Feedback submission failed: ' + (data.message || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('Feedback submission error', err);
+            alert('Could not submit feedback. Check connection.');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', setupFeedbackForm);
+
