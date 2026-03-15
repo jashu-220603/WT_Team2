@@ -872,3 +872,23 @@ background:#218838;
         width: 30px;
     }
 }
+
+.login-footer {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.login-footer p {
+    margin: 5px 0;
+}
+
+.forgot-link {
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
+.forgot-link:hover {
+    color: #4338ca;
+}

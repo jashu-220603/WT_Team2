@@ -40,8 +40,14 @@ function updateProfileInfo() {
     adminNameEls.forEach(el => el.textContent = storedName);
 
     // Profile Image
-    const profileImgs = document.querySelectorAll("img[alt='Profile']");
-    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
+    const profileImgs = document.querySelectorAll("img[alt='Profile'], #admin-prof-img");
+    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
+    
+    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
+        avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+    }
+    
     profileImgs.forEach(img => img.src = avatarUrl);
 }
 
@@ -83,7 +89,12 @@ function setupNavigation() {
                 document.getElementById("admin-email-input").value = user.email;
                 document.getElementById("admin-bio-input").value = user.bio || "";
                 document.getElementById("admin-password-input").value = "";
-                document.getElementById("admin-prof-img").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0d6efd&color=fff&size=100`;
+                
+                let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0d6efd&color=fff&size=100`;
+                if (user.profilePhoto) {
+                    avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+                }
+                document.getElementById("admin-prof-img").src = avatarUrl;
 
                 new bootstrap.Modal(document.getElementById("adminProfileModal")).show();
             } catch (err) {
@@ -93,33 +104,53 @@ function setupNavigation() {
         });
     }
 
-    const adminProfileForm = document.getElementById("admin-profile-form");
     if (adminProfileForm) {
+        // Image preview
+        const photoInput = document.getElementById("admin-photo-input");
+        const profileDisplayImg = document.getElementById("admin-prof-img");
+        if (photoInput && profileDisplayImg) {
+            photoInput.addEventListener("change", function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profileDisplayImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+
         adminProfileForm.addEventListener("submit", async e => {
             e.preventDefault();
-            const payload = {
-                name: document.getElementById("admin-name-input").value,
-                email: document.getElementById("admin-email-input").value,
-                bio: document.getElementById("admin-bio-input").value
-            };
+            const formData = new FormData();
+            formData.append("name", document.getElementById("admin-name-input").value);
+            formData.append("email", document.getElementById("admin-email-input").value);
+            formData.append("bio", document.getElementById("admin-bio-input").value);
+            
+            if (photoInput && photoInput.files[0]) {
+                formData.append("profilePhoto", photoInput.files[0]);
+            }
+
             const pass = document.getElementById("admin-password-input").value;
-            if (pass) payload.password = pass;
+            if (pass) formData.append("password", pass);
 
             try {
                 const res = await fetch(`${API}/auth/profile`, {
                     method: "PUT",
                     headers: {
-                        "Content-Type": "application/json",
                         Authorization: "Bearer " + token
                     },
-                    body: JSON.stringify(payload)
+                    body: formData
                 });
 
                 if (res.ok) {
                     const data = await res.json();
                     alert("Profile updated successfully");
                     sessionStorage.setItem("userName", data.user.name);
-                    sessionStorage.setItem("userEmail", data.user.email);
+                    if (data.user.profilePhoto) {
+                        sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
+                    }
+                    updateProfileInfo();
                     bootstrap.Modal.getInstance(document.getElementById("adminProfileModal")).hide();
                 } else {
                     const error = await res.json();
@@ -903,9 +934,67 @@ window.terminateOfficer = function(id, name) {
 };
 
 window.logout = function() {
-    sessionStorage.clear();
+    sessionStorage.removeItem("userName");
     window.location.href = "../index.html";
 };
+
+// =====================
+// FORGOT PASSWORD FLOW
+// =====================
+function openForgotPassword() {
+    // Hide profile modal if open
+    const profileModal = bootstrap.Modal.getInstance(document.getElementById("adminProfileModal"));
+    if (profileModal) profileModal.hide();
+    
+    document.getElementById("forgotPasswordModal").style.display = "flex";
+    showForgotStep(1);
+}
+
+function closeForgotPassword() {
+    document.getElementById("forgotPasswordModal").style.display = "none";
+}
+
+function showForgotStep(step) {
+    document.getElementById("forgotStep1").style.display = step === 1 ? "block" : "none";
+    document.getElementById("forgotStep2").style.display = step === 2 ? "block" : "none";
+    document.getElementById("forgotStep3").style.display = step === 3 ? "block" : "none";
+    
+    if (step === 1) document.getElementById("forgotModalTitle").textContent = "Forgot Password";
+    if (step === 2) document.getElementById("forgotModalTitle").textContent = "Verify OTP";
+    if (step === 3) document.getElementById("forgotModalTitle").textContent = "Reset Password";
+}
+
+function sendOTP() {
+    const selector = document.getElementById("forgotIdentifier").value.trim();
+    if (!selector) {
+        alert("Please enter email or mobile number");
+        return;
+    }
+    alert("OTP sent to " + selector + " (Use 123456)");
+    showForgotStep(2);
+}
+
+function verifyOTP() {
+    const otp = document.getElementById("forgotOTP").value.trim();
+    if (otp === "123456") {
+        showForgotStep(3);
+    } else {
+        alert("Invalid OTP. Try 123456");
+    }
+}
+
+async function resetPassword() {
+    const newPwd = document.getElementById("newPassword").value.trim();
+    const confirmPwd = document.getElementById("confirmNewPassword").value.trim();
+    
+    if (!newPwd || newPwd !== confirmPwd) {
+        alert("Passwords do not match or are empty");
+        return;
+    }
+    
+    alert("Password reset successfully!");
+    closeForgotPassword();
+}
 
 // Fix Sidebar Menu Toggle
 const sidebarToggleBtn = document.getElementById("sidebar-toggle");

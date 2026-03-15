@@ -10,34 +10,120 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-header">
             <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-lock me-2"></i>Officer Portal</h5>
+            <button id="sidebar-toggle" class="btn btn-link text-white p-0 d-none d-md-block">
+                <i class="bi bi-list fs-4"></i>
+            </button>
         </div>
+
         <div class="nav flex-column mt-3">
-            <a href="index.html" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
-            <a href="index.html" class="nav-link"><i class="bi bi-card-checklist"></i><span>Assigned Tasks</span></a>
-            <a href="index.html" class="nav-link"><i class="bi bi-check2-circle"></i><span>Resolved Cases</span></a>
+            <a href="index.html" class="nav-link">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="index.html" class="nav-link" data-section="assigned">
+                <i class="bi bi-card-checklist"></i>
+                <span>Assigned Tasks</span>
+            </a>
+            <a href="index.html" class="nav-link" data-section="resolved">
+                <i class="bi bi-check2-circle"></i>
+                <span>Resolved Cases</span>
+            </a>
             <hr class="mx-3 opacity-25">
-            <a href="priority_of_cases.html" class="nav-link"><i class="bi bi-flag"></i><span>Priority of Cases</span></a>
-            <a href="complaint_tracking.html" class="nav-link"><i class="bi bi-geo-alt"></i><span>Complaint Tracking</span></a>
-            <a href="your_analytics.html" class="nav-link"><i class="bi bi-pie-chart"></i><span>Analytics</span></a>
-            <a href="my_performance.html" class="nav-link"><i class="bi bi-bar-chart"></i><span>My Performance</span></a>
-            <a href="faqs.html" class="nav-link"><i class="bi bi-question-circle"></i><span>FAQ's</span></a>
-            <a href="contact_admin.html" class="nav-link active"><i class="bi bi-envelope"></i><span>Contact Admin</span></a>
-            <a href="your_ratings.html" class="nav-link"><i class="bi bi-star"></i><span>Your Ratings</span></a>
-            <a href="admins_remarks.html" class="nav-link"><i class="bi bi-chat-left-text"></i><span>Admin's Remarks</span></a>
-            <a href="your_analytics.html" class="nav-link"><i class="bi bi-graph-up"></i><span>Your Analytics</span></a>
+            <a href="priority_of_cases.html" class="nav-link">
+                <i class="bi bi-flag"></i>
+                <span>Priority of Cases</span>
+            </a>
+            <a href="complaint_tracking.html" class="nav-link">
+                <i class="bi bi-geo-alt"></i>
+                <span>Complaint Tracking</span>
+            </a>
+            <a href="your_analytics.html" class="nav-link">
+                <i class="bi bi-pie-chart"></i>
+                <span>Analytics</span>
+            </a>
             <hr class="mx-3 opacity-25">
-            <a href="../homepage/index.html" class="nav-link mt-auto text-danger"><i class="bi bi-box-arrow-left"></i><span>Logout</span></a>
+            <a href="#" class="nav-link text-warning" data-section="legal-notices">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Legal Notices</span>
+            </a>
+            <a href="#" onclick="logout();" class="nav-link mt-auto text-danger">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
         </div>
     </nav>
     <main id="main-content">
+        <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container-fluid">
+                <button id="mobile-sidebar-toggle" class="btn btn-outline-primary d-md-none me-2">
+                    <i class="bi bi-list"></i>
+                </button>
                 <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
+
                 <div class="d-flex align-items-center me-auto">
-                    <h5 class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer: Smith</h5>
+                    <h5 id="officer-display-name" class="mb-0 d-none d-md-block ms-3 fw-bold text-primary">Officer Portal</h5>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <!-- Notification Bell -->
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link text-dark p-0 position-relative" type="button" data-bs-toggle="dropdown" id="notificationDropdown">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="noti-badge" style="font-size: 0.6rem; display: none;">
+                                0
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="width: 300px; padding: 0;">
+                            <li class="p-2 border-bottom text-center fw-bold bg-light">Notifications</li>
+                            <li>
+                                <ul class="nav nav-tabs nav-justified" id="notiTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active py-2" id="citizen-alerts-tab" data-bs-toggle="tab" data-bs-target="#citizen-alerts" type="button" role="tab">Citizen Alerts</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link py-2" id="admin-alerts-tab" data-bs-toggle="tab" data-bs-target="#admin-alerts" type="button" role="tab">Admin Alerts</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="notiTabsContent" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="tab-pane fade show active p-2" id="citizen-alerts" role="tabpanel">
+                                        <div id="citizen-noti-list" class="text-center text-muted small py-3">No new citizen alerts</div>
+                                    </div>
+                                    <div class="tab-pane fade p-2" id="admin-alerts" role="tabpanel">
+                                        <div id="admin-noti-list" class="text-center text-muted small py-3">No new admin alerts</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="btn btn-link text-dark me-3">
+                        <i class="bi bi-moon-fill fs-5"></i>
+                    </button>
+
+                    <!-- User Profile -->
+                    <div class="dropdown">
+                        <button class="btn btn-link p-0 d-flex align-items-center text-decoration-none" type="button"
+                            data-bs-toggle="dropdown">
+                            <img src="https://ui-avatars.com/api/?name=Officer&background=198754&color=fff"
+                                alt="Profile" class="rounded-circle me-2" width="32" height="32">
+                            <span class="d-none d-md-inline text-dark fw-medium">Officer</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item" href="#" id="offProfileBtn"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="offSettingsBtn"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout();"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -110,7 +196,158 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../api-config.js"></script>
+    <script src="../chatbot.js"></script>
     <script src="js/dashboard.js"></script>
+
+    <!-- Officer Profile Modal -->
+    <div class="modal fade" id="offProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Officer Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="officer-profile-form">
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <img id="off-prof-img" src="https://ui-avatars.com/api/?name=Officer&background=198754&color=fff" alt="Profile" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover; border: 3px solid #198754;">
+                                <label for="profile-photo-input" class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-2 shadow-sm" style="cursor: pointer; transform: translate(10%, -20%);">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" id="profile-photo-input" hidden accept="image/*">
+                            </div>
+                            <h5 class="fw-bold mb-0" id="off-prof-header-name">Officer Name</h5>
+                            <div id="off-prof-dept-badge" class="badge bg-success mt-1">Department</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">User ID</label>
+                                <div id="off-prof-id" class="p-2 bg-light rounded font-monospace small text-truncate">Loading...</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Staff ID</label>
+                                <div id="off-prof-staffId-val" class="p-2 bg-light rounded fw-bold small text-truncate">Loading...</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" id="off-name-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" id="off-email-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contact Number</label>
+                            <input type="text" id="off-contact-input" class="form-control" placeholder="Mobile number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Biography / Service Info</label>
+                            <textarea id="off-bio-input" class="form-control" rows="3" placeholder="Tell citizens about your expertise..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Update Password</label>
+                            <input type="password" id="off-password-input" class="form-control" placeholder="Leave blank to keep current">
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success">Update Profile</button>
+                            <p class="mt-2 text-center small"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Officer Settings Modal -->
+    <div class="modal fade" id="offSettingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Officer Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="off-settings-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notifications</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notify-assigned" checked>
+                                <label class="form-check-label" for="notify-assigned">New case assignments</label>
+                            </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="notify-priority">
+                                <label class="form-check-label" for="notify-priority">Priority changes</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Performance Reports</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="reportFreq" id="freqDaily">
+                                <label class="form-check-label" for="freqDaily">Daily Summary</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="reportFreq" id="freqWeekly" checked>
+                                <label class="form-check-label" for="freqWeekly">Weekly Summary</label>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORGOT PASSWORD MODAL -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeForgotPassword()">✖</span>
+            <h2 id="forgotModalTitle">Forgot Password</h2>
+            
+            <div id="forgotStep1">
+                <p>Enter your registered Email or Mobile Number to receive an OTP.</p>
+                <div class="input-group">
+                    <label>Email / Mobile</label>
+                    <input type="text" id="forgotIdentifier" placeholder="your@email.com or 9876543210" required>
+                </div>
+                <button class="signin-btn btn-success w-100" onclick="sendOTP()">Send OTP</button>
+            </div>
+
+            <div id="forgotStep2" style="display: none;">
+                <p>Enter the OTP sent to your email/mobile.</p>
+                <div class="input-group">
+                    <label>Enter OTP</label>
+                    <input type="text" id="forgotOTP" placeholder="123456" required>
+                </div>
+                <button class="signin-btn btn-success w-100" onclick="verifyOTP()">Verify OTP</button>
+            </div>
+
+            <div id="forgotStep3" style="display: none;">
+                <p>Set a new password for your account.</p>
+                <div class="input-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="********" required>
+                </div>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirmNewPassword" placeholder="********" required>
+                </div>
+                <button class="signin-btn btn-success w-100" onclick="resetPassword()">Reset Password</button>
+            </div>
+        </div>
+    </div>
     <script>
         document.getElementById("contact-admin-form").addEventListener("submit", function(e) { 
             e.preventDefault(); 

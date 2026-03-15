@@ -809,7 +809,13 @@
                 <div class="modal-body">
                     <form id="admin-profile-form">
                         <div class="text-center mb-4">
-                            <img id="admin-prof-img" src="https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff" alt="Profile" class="rounded-circle mb-3" width="80" height="80">
+                            <div class="position-relative d-inline-block">
+                                <img id="admin-prof-img" src="https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff" alt="Profile" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover; border: 3px solid #0d6efd;">
+                                <label for="admin-photo-input" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow-sm" style="cursor: pointer; transform: translate(10%, -20%);">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" id="admin-photo-input" hidden accept="image/*">
+                            </div>
                             <h5 class="fw-bold mb-0">System Administrator</h5>
                             <small class="text-muted">Full System Access</small>
                         </div>
@@ -838,6 +844,7 @@
                             <label class="form-label fw-bold">Update Password</label>
                             <input type="password" id="admin-password-input" class="form-control" placeholder="Leave blank to keep current">
                             <small class="text-muted">Security recommendation: Use at least 8 characters.</small>
+                            <p class="mt-3 text-center small"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
                         </div>
 
                         <div class="d-grid mt-4">
@@ -916,6 +923,46 @@
     <script src="../api-config.js"></script>
     <script src="../chatbot.js"></script>
     <script src="js/dashboard.js"></script>
+
+    <!-- FORGOT PASSWORD MODAL -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeForgotPassword()">✖</span>
+            <h2 id="forgotModalTitle">Forgot Password</h2>
+            
+            <div id="forgotStep1">
+                <p>Enter your registered Email or Mobile Number to receive an OTP.</p>
+                <div class="input-group">
+                    <label>Email / Mobile</label>
+                    <input type="text" id="forgotIdentifier" placeholder="your@email.com or 9876543210" required>
+                </div>
+                <button class="signin-btn btn-primary w-100" onclick="sendOTP()">Send OTP</button>
+            </div>
+
+            <div id="forgotStep2" style="display: none;">
+                <p>Enter the OTP sent to your email/mobile.</p>
+                <div class="input-group">
+                    <label>Enter OTP</label>
+                    <input type="text" id="forgotOTP" placeholder="123456" required>
+                </div>
+                <button class="signin-btn btn-primary w-100" onclick="verifyOTP()">Verify OTP</button>
+            </div>
+
+            <div id="forgotStep3" style="display: none;">
+                <p>Set a new password for your account.</p>
+                <div class="input-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="********" required>
+                </div>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirmNewPassword" placeholder="********" required>
+                </div>
+                <button class="signin-btn btn-primary w-100" onclick="resetPassword()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

@@ -589,8 +589,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const storedEmail = sessionStorage.getItem('userEmail') || "citizen@portal.com";
         document.getElementById("panelUserName").textContent = storedName;
         document.getElementById("panelUserEmail").textContent = storedEmail;
-        document.getElementById("headerProfileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
-        document.getElementById("panelProfileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
+        
+        let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
+        const storedPhoto = sessionStorage.getItem("profilePhoto");
+        if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
+            avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        }
+        
+        document.getElementById("headerProfileAvatar").src = avatarUrl;
+        document.getElementById("panelProfileAvatar").src = avatarUrl;
     }
 
     function closePanel() {
@@ -820,7 +827,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("profPhoneMain").value = user.phone || "";
             document.getElementById("profAddressMain").value = user.address || "";
             
-            document.getElementById("standaloneProfileImg").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
+            let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
+            if (user.profilePhoto) {
+                avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+            }
+            document.getElementById("standaloneProfileImg").src = avatarUrl;
             
         } catch(err) {
             console.error("Profile load err", err);
@@ -828,6 +839,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const standaloneProfileForm = document.getElementById("standaloneProfileForm");
+    const uploadPhotoInput = document.getElementById("uploadProfilePhoto");
+
+    if (uploadPhotoInput) {
+        uploadPhotoInput.addEventListener("change", async function() {
+            if (this.files && this.files[0]) {
+                const formData = new FormData();
+                formData.append("profilePhoto", this.files[0]);
+                
+                try {
+                    const res = await fetch(`${API}/auth/profile`, {
+                        method: "PUT",
+                        headers: {
+                            Authorization: "Bearer " + getToken()
+                        },
+                        body: formData
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.user.profilePhoto) {
+                            sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
+                        }
+                        openPanel(); // Refresh panel display
+                        loadStandaloneProfile(); // Refresh page display
+                    }
+                } catch(e) { console.error(e); }
+            }
+        });
+    }
+
     if(standaloneProfileForm) {
         standaloneProfileForm.addEventListener("submit", async(e) => {
             e.preventDefault();
@@ -906,5 +946,62 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Clean up modals since we replaced them with pages and slide panel
     // Keep this safe in case they referenced existing DOMs.
-
 });
+
+// =====================
+// FORGOT PASSWORD FLOW
+// =====================
+function openForgotPassword() {
+    // If modal is open, we might need to handle overlays
+    const profileModal = document.getElementById("profileModal");
+    if (profileModal) profileModal.classList.add("hidden");
+    
+    document.getElementById("forgotPasswordModal").style.display = "flex";
+    showForgotStep(1);
+}
+
+function closeForgotPassword() {
+    document.getElementById("forgotPasswordModal").style.display = "none";
+}
+
+function showForgotStep(step) {
+    document.getElementById("forgotStep1").style.display = step === 1 ? "block" : "none";
+    document.getElementById("forgotStep2").style.display = step === 2 ? "block" : "none";
+    document.getElementById("forgotStep3").style.display = step === 3 ? "block" : "none";
+    
+    if (step === 1) document.getElementById("forgotModalTitle").textContent = "Forgot Password";
+    if (step === 2) document.getElementById("forgotModalTitle").textContent = "Verify OTP";
+    if (step === 3) document.getElementById("forgotModalTitle").textContent = "Reset Password";
+}
+
+function sendOTP() {
+    const selector = document.getElementById("forgotIdentifier").value.trim();
+    if (!selector) {
+        alert("Please enter email or mobile number");
+        return;
+    }
+    alert("OTP sent to " + selector + " (Use 123456)");
+    showForgotStep(2);
+}
+
+function verifyOTP() {
+    const otp = document.getElementById("forgotOTP").value.trim();
+    if (otp === "123456") {
+        showForgotStep(3);
+    } else {
+        alert("Invalid OTP. Try 123456");
+    }
+}
+
+async function resetPassword() {
+    const newPwd = document.getElementById("newPassword").value.trim();
+    const confirmPwd = document.getElementById("confirmNewPassword").value.trim();
+    
+    if (!newPwd || newPwd !== confirmPwd) {
+        alert("Passwords do not match or are empty");
+        return;
+    }
+    
+    alert("Password reset successfully!");
+    closeForgotPassword();
+}

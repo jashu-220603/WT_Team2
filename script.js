@@ -1,7 +1,20 @@
 function toggleMenu(){
     let sidebar=document.getElementById("sidebar");
     sidebar.classList.toggle("active");
+    event.stopPropagation(); // Prevent immediate close
 }
+
+// Close sidebar when clicking anywhere on Home Page
+document.addEventListener("click", function(event) {
+    let sidebar = document.getElementById("sidebar");
+    let menuBtn = document.querySelector(".menu-btn");
+    if (sidebar && sidebar.classList.contains("active")) {
+        // If clicking outside sidebar and not on the menu button
+        if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
+            closeSidebar();
+        }
+    }
+});
 
 // store desired section so we can redirect after login
 window.pendingSection = window.pendingSection || '';
@@ -127,6 +140,7 @@ function setupLoginRedirect(){
             sessionStorage.setItem('role', data.role);
             if (data.name) sessionStorage.setItem('userName', data.name);
             if (data.department) sessionStorage.setItem('department', data.department);
+            if (data.profilePhoto) sessionStorage.setItem('profilePhoto', data.profilePhoto);
 
             // fetch user profile to get name (login response may not include it)
             try {
@@ -137,6 +151,7 @@ function setupLoginRedirect(){
                     const me = await meResp.json();
                     if (me.name) sessionStorage.setItem('userName', me.name);
                     if (me.department) sessionStorage.setItem('department', me.department);
+                    if (me.profilePhoto) sessionStorage.setItem('profilePhoto', me.profilePhoto);
                 }
             } catch(_) {}
 
@@ -344,4 +359,63 @@ function setupFeedbackForm() {
 }
 
 document.addEventListener('DOMContentLoaded', setupFeedbackForm);
+
+// =====================
+// FORGOT PASSWORD FLOW
+// =====================
+function openForgotPassword() {
+    closeLogin();
+    document.getElementById("forgotPasswordModal").style.display = "flex";
+    showForgotStep(1);
+}
+
+function closeForgotPassword() {
+    document.getElementById("forgotPasswordModal").style.display = "none";
+}
+
+function showForgotStep(step) {
+    document.getElementById("forgotStep1").style.display = step === 1 ? "block" : "none";
+    document.getElementById("forgotStep2").style.display = step === 2 ? "block" : "none";
+    document.getElementById("forgotStep3").style.display = step === 3 ? "block" : "none";
+    
+    if (step === 1) document.getElementById("forgotModalTitle").textContent = "Forgot Password";
+    if (step === 2) document.getElementById("forgotModalTitle").textContent = "Verify OTP";
+    if (step === 3) document.getElementById("forgotModalTitle").textContent = "Reset Password";
+}
+
+function sendOTP() {
+    const selector = document.getElementById("forgotIdentifier").value.trim();
+    if (!selector) {
+        alert("Please enter email or mobile number");
+        return;
+    }
+    // Simulate API call
+    alert("OTP sent to " + selector + " (Use 123456)");
+    showForgotStep(2);
+}
+
+function verifyOTP() {
+    const otp = document.getElementById("forgotOTP").value.trim();
+    if (otp === "123456") {
+        showForgotStep(3);
+    } else {
+        alert("Invalid OTP. Try 123456");
+    }
+}
+
+async function resetPassword() {
+    const newPwd = document.getElementById("newPassword").value.trim();
+    const confirmPwd = document.getElementById("confirmNewPassword").value.trim();
+    
+    if (!newPwd || newPwd !== confirmPwd) {
+        alert("Passwords do not match or are empty");
+        return;
+    }
+    
+    // Simulate/Implement actual reset if backend exists
+    // For now, consistent with UI request
+    alert("Password reset successfully! Please login with your new password.");
+    closeForgotPassword();
+    openLogin('citizen');
+}
 

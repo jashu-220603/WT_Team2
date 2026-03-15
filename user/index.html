@@ -631,6 +631,7 @@
                                 <input type="password" id="newPassword" placeholder="New Password" class="form-input">
                             </div>
                             <button type="button" id="pwdUpdateBtn" class="btn-primary mt-2">Update Password</button>
+                            <p class="mt-2"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
                         </div>
                         <div class="input-group mb-4 border-bottom pb-4">
                             <h4 class="mb-3">App Preferences</h4>
@@ -709,6 +710,7 @@
                         </div>
                         <div class="info-item mt-3">
                             <button type="submit" class="btn-primary full-width">Save Changes</button>
+                            <p class="mt-2 text-center"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
                         </div>
                     </div>
                 </form>
@@ -765,5 +767,45 @@
 <script src="../api-config.js"></script>
 <script src="../chatbot.js"></script>
 <script src="script.js"></script>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotPasswordModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeForgotPassword()">✖</span>
+        <h2 id="forgotModalTitle">Forgot Password</h2>
+        
+        <div id="forgotStep1">
+            <p>Enter your registered Email or Mobile Number to receive an OTP.</p>
+            <div class="input-group">
+                <label>Email / Mobile</label>
+                <input type="text" id="forgotIdentifier" placeholder="your@email.com or 9876543210" required>
+            </div>
+            <button class="signin-btn btn-primary full-width" onclick="sendOTP()">Send OTP</button>
+        </div>
+
+        <div id="forgotStep2" style="display: none;">
+            <p>Enter the OTP sent to your email/mobile.</p>
+            <div class="input-group">
+                <label>Enter OTP</label>
+                <input type="text" id="forgotOTP" placeholder="123456" required>
+            </div>
+            <button class="signin-btn btn-primary full-width" onclick="verifyOTP()">Verify OTP</button>
+        </div>
+
+        <div id="forgotStep3" style="display: none;">
+            <p>Set a new password for your account.</p>
+            <div class="input-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="********" required>
+            </div>
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmNewPassword" placeholder="********" required>
+            </div>
+            <button class="signin-btn btn-primary full-width" onclick="resetPassword()">Reset Password</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
