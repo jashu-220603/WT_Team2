@@ -26,6 +26,12 @@
             </div>
             <ul class="nav-list">
                 <li>
+                    <a href="#" class="nav-link active" data-target="dashboard-section">
+                        <i class='bx bx-grid-alt'></i>
+                        <span class="links_name">Dashboard</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-link" data-target="file-complaint-section">
                         <i class='bx bx-edit'></i>
                         <span class="links_name">File Complaint</span>
@@ -38,9 +44,45 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link" data-target="dashboard-section">
-                        <i class='bx bx-grid-alt'></i>
-                        <span class="links_name">Dashboard</span>
+                    <a href="#" class="nav-link" data-target="your-complaints-section">
+                        <i class='bx bx-list-ul'></i>
+                        <span class="links_name">Your Complaints</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="notifications-section">
+                        <i class='bx bx-bell'></i>
+                        <span class="links_name">Notifications</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="feedback-section">
+                        <i class='bx bx-star'></i>
+                        <span class="links_name">Feedback / Rate Service</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="profile-section">
+                        <i class='bx bx-user'></i>
+                        <span class="links_name">My Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="faq-section">
+                        <i class='bx bx-help-circle'></i>
+                        <span class="links_name">Help / FAQ</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="contact-section">
+                        <i class='bx bx-phone'></i>
+                        <span class="links_name">Contact Support</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="settings-section">
+                        <i class='bx bx-cog'></i>
+                        <span class="links_name">Settings</span>
                     </a>
                 </li>
                 <li class="logout-item">
@@ -57,19 +99,59 @@
             
             <!-- HEADER -->
             <header class="top-header">
-                <div class="user-info dropdown-container">
+                <div class="header-left">
                     <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
-                    <div class="user-avatar" id="profileIconTrigger">
-                        <i class='bx bxs-user'></i>
-                        <div class="custom-dropdown hidden" id="profileDropdown">
-                            <a href="#" id="openProfileBtn"><i class='bx bx-user'></i> Profile</a>
-                            <a href="#" id="openSettingsBtn"><i class='bx bx-gear'></i> Settings</a>
-                            <hr>
-                            <a href="#" id="logoutBtnAlt" class="text-danger"><i class='bx bx-log-out'></i> Logout</a>
-                        </div>
+                </div>
+                <div class="header-right">
+                    <div class="profile-icon-container" id="profileIconTrigger">
+                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" class="profile-avatar" id="headerProfileAvatar">
                     </div>
                 </div>
             </header>
+
+            <!-- PROFILE SLIDE PANEL -->
+            <div id="profileSlidePanel" class="profile-slide-panel">
+                <div class="panel-header">
+                    <button class="close-panel-btn" id="closeProfilePanelBtn"><i class='bx bx-x'></i></button>
+                    <h3>Account</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="panel-profile-info">
+                        <div class="panel-avatar-wrapper">
+                            <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" id="panelProfileAvatar">
+                            <label for="uploadProfilePhoto" class="upload-photo-btn"><i class='bx bx-camera'></i></label>
+                            <input type="file" id="uploadProfilePhoto" class="hidden-input" accept="image/*">
+                        </div>
+                        <h4 id="panelUserName">User Name</h4>
+                        <p id="panelUserEmail">user@example.com</p>
+                    </div>
+                    <div class="panel-links">
+                        <a href="#" class="panel-link" id="panelSwitchAccountBtn">
+                            <i class='bx bx-transfer'></i> Switch Account
+                        </a>
+                        <a href="#" class="panel-link nav-trigger" data-target="notifications-section">
+                            <i class='bx bx-bell'></i> Notifications
+                        </a>
+                        <a href="#" class="panel-link nav-trigger" data-target="settings-section">
+                            <i class='bx bx-cog'></i> Settings
+                        </a>
+                        <a href="#" class="panel-link nav-trigger" data-target="faq-section">
+                            <i class='bx bx-help-circle'></i> Help / FAQ
+                        </a>
+                        <a href="#" class="panel-link nav-trigger" data-target="feedback-section">
+                            <i class='bx bx-message-square-detail'></i> Feedback
+                        </a>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <button id="panelLogoutBtn" class="btn-primary full-width logout-btn">
+                        <i class='bx bx-log-out'></i> Logout
+                    </button>
+                </div>
+            </div>
+            
+            <!-- OVERLAY FOR PANEL -->
+            <div id="panelOverlay" class="panel-overlay"></div>
 
             <!-- FILE COMPLAINT PAGE -->
             <section id="file-complaint-section" class="app-page hidden">
@@ -366,6 +448,208 @@
                             <p>No complaints submitted yet.</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- YOUR COMPLAINTS PAGE -->
+            <section id="your-complaints-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Your Complaints</h2>
+                    <p>View all complaints you have filed.</p>
+                </div>
+                <div class="card table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Complaint ID</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yourComplaintsTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                        <div id="noComplaintsMessage" class="no-data hidden">
+                            <i class='bx bx-search-alt'></i>
+                            <p>No complaints found.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NOTIFICATIONS PAGE -->
+            <section id="notifications-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Notifications</h2>
+                    <p>Stay updated on your complaints and alerts.</p>
+                </div>
+                <div class="notifications-container card" id="notificationsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- FEEDBACK PAGE -->
+            <section id="feedback-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Feedback / Rate Service</h2>
+                    <p>Provide feedback for resolved complaints.</p>
+                </div>
+                <div class="card form-card">
+                    <form id="standaloneFeedbackForm">
+                        <div class="input-group mb-3">
+                            <label for="feedbackComplaintSelect">Select Resolved Complaint</label>
+                            <select id="feedbackComplaintSelect" class="form-input" required>
+                                <option value="" disabled selected>Select a complaint</option>
+                            </select>
+                        </div>
+                        <div class="rating-stars mb-3 text-center">
+                            <input type="radio" name="standaloneRating" value="5" id="sr5"><label for="sr5"><i class='bx bxs-star'></i></label>
+                            <input type="radio" name="standaloneRating" value="4" id="sr4"><label for="sr4"><i class='bx bxs-star'></i></label>
+                            <input type="radio" name="standaloneRating" value="3" id="sr3"><label for="sr3"><i class='bx bxs-star'></i></label>
+                            <input type="radio" name="standaloneRating" value="2" id="sr2"><label for="sr2"><i class='bx bxs-star'></i></label>
+                            <input type="radio" name="standaloneRating" value="1" id="sr1"><label for="sr1"><i class='bx bxs-star'></i></label>
+                        </div>
+                        <div class="input-group">
+                            <label for="standaloneFeedbackText">Comments</label>
+                            <textarea id="standaloneFeedbackText" rows="4" placeholder="Share your experience..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary full-width mt-3">Submit Feedback</button>
+                    </form>
+                    <div id="standaloneFeedbackSuccess" class="hidden text-success text-center mt-3 fw-bold">
+                        <i class='bx bx-check-circle'></i> Thanks for your feedback!
+                    </div>
+                </div>
+            </section>
+
+            <!-- MY PROFILE PAGE -->
+            <section id="profile-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>My Profile</h2>
+                    <p>Manage your account settings.</p>
+                </div>
+                <div class="card form-card">
+                    <form id="standaloneProfileForm">
+                        <div class="text-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" id="standaloneProfileImg" class="profile-avatar mb-3" style="width:100px; height:100px;">
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profNameMain" class="form-input" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Email Address</label>
+                                <input type="email" id="profEmailMain" class="form-input" required readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="profPhoneMain" class="form-input">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Address</label>
+                            <textarea id="profAddressMain" class="form-input" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary full-width mt-3">Update Profile</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- HELP / FAQ PAGE -->
+            <section id="faq-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Help / FAQ</h2>
+                    <p>Common questions and answers.</p>
+                </div>
+                <div class="card">
+                    <div class="faq-list">
+                        <details class="faq-item">
+                            <summary>How to file a complaint?</summary>
+                            <p>Navigate to "File Complaint" from the sidebar, fill in your details, select category, upload evidence, and submit. You will receive a Complaint ID.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How to track a complaint?</summary>
+                            <p>Go to "Track Complaint", enter your CMP ID, or view it directly from the "Your Complaints" tab.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How long does complaint resolution take?</summary>
+                            <p>Resolution times vary based on severity. Average is 24-72 hours.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How can I contact support?</summary>
+                            <p>Use the "Contact Support" tab in the sidebar to find our helpline and email details.</p>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTACT SUPPORT PAGE -->
+            <section id="contact-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Contact Support</h2>
+                    <p>We are here to help.</p>
+                </div>
+                <div class="row" style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+                    <div class="col card p-4 text-center">
+                        <i class='bx bx-phone text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
+                        <h3>Helpline</h3>
+                        <p class="fs-4 fw-bold">1800-XXX-XXXX</p>
+                    </div>
+                    <div class="col card p-4 text-center">
+                        <i class='bx bx-envelope text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
+                        <h3>Email Support</h3>
+                        <p class="fs-5 fw-bold">support@citizenportal.gov</p>
+                    </div>
+                    <div class="col card p-4 text-center">
+                        <i class='bx bx-map text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
+                        <h3>Head Office</h3>
+                        <p>123 Secretariat Road, Capital City</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS PAGE -->
+            <section id="settings-section" class="app-page hidden">
+                <div class="page-heading">
+                    <h2>Settings</h2>
+                    <p>Configure app preferences.</p>
+                </div>
+                <div class="card form-card">
+                    <form id="standaloneSettingsForm">
+                        <div class="input-group mb-4 border-bottom pb-4">
+                            <h4 class="mb-3">Change Password</h4>
+                            <div class="form-row">
+                                <input type="password" id="currentPassword" placeholder="Current Password" class="form-input">
+                            </div>
+                            <div class="form-row mt-2">
+                                <input type="password" id="newPassword" placeholder="New Password" class="form-input">
+                            </div>
+                            <button type="button" id="pwdUpdateBtn" class="btn-primary mt-2">Update Password</button>
+                        </div>
+                        <div class="input-group mb-4 border-bottom pb-4">
+                            <h4 class="mb-3">App Preferences</h4>
+                            <div class="form-row align-items-center mb-3">
+                                <label style="flex:1;">Language</label>
+                                <select class="form-input" style="width:auto; flex:2;">
+                                    <option value="en">English</option>
+                                    <option value="te">Telugu</option>
+                                </select>
+                            </div>
+                            <div class="form-row align-items-center">
+                                <label style="flex:1;">Dark Mode</label>
+                                <label class="switch d-flex justify-content-end" style="flex:2;">
+                                    <input type="checkbox" id="themeToggleCheckbox">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </section>
         </main>

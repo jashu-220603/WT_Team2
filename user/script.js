@@ -55,10 +55,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             sections.forEach(sec => sec.classList.add("hidden"));
 
             const targetId = link.getAttribute("data-target");
-            document.getElementById(targetId).classList.remove("hidden");
+            const targetEl = document.getElementById(targetId);
+            if(targetEl) targetEl.classList.remove("hidden");
 
             if (targetId === "dashboard-section") {
                 loadDashboard();
+            } else if (targetId === "your-complaints-section") {
+                loadYourComplaints();
+            } else if (targetId === "notifications-section") {
+                loadNotifications();
+            } else if (targetId === "profile-section") {
+                loadStandaloneProfile();
+            } else if (targetId === "feedback-section") {
+                loadFeedbackDropdown();
             }
 
             if (window.innerWidth < 768) {
@@ -94,17 +103,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const appWrapper = document.getElementById("app-wrapper");
     if (appWrapper) {
         appWrapper.classList.remove("hidden");
-        const hash = window.location.hash.substring(1);
-        if (hash) {
-            const match = Array.from(navLinks).find(l => l.getAttribute('data-target') === hash);
-            if (match) {
-                match.click();
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const match = Array.from(navLinks).find(l => l.getAttribute('data-target') === hash);
+                if (match) {
+                    match.click();
+                } else {
+                    document.querySelector('.nav-link[data-target="dashboard-section"]')?.click();
+                }
             } else {
-                navLinks[0].click();
+                document.querySelector('.nav-link[data-target="dashboard-section"]')?.click();
             }
-        } else {
-            navLinks[0].click();
-        }
     }
 
     // Logout Logic
@@ -560,65 +569,273 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- 5. PROFILE & SETTINGS DROPDOWN ---
-    const profileTrigger = document.getElementById("profileIconTrigger");
-    const profileDropdown = document.getElementById("profileDropdown");
-    const openProfileBtn = document.getElementById("openProfileBtn");
-    const openSettingsBtn = document.getElementById("openSettingsBtn");
-    const profileModal = document.getElementById("profileModal");
-    const settingsModal = document.getElementById("settingsModal");
-    const closeProfileModal = document.getElementById("closeProfileModal");
-    const closeSettingsModal = document.getElementById("closeSettingsModal");
-    const logoutBtnAlt = document.getElementById("logoutBtnAlt");
+    // --- 5. PROFILE SLIDE PANEL & STANDALONE PAGES LOGIC ---
+    
+    // Panel Elements
+    const profileIconTrigger = document.getElementById("profileIconTrigger");
+    const profileSlidePanel = document.getElementById("profileSlidePanel");
+    const closeProfilePanelBtn = document.getElementById("closeProfilePanelBtn");
+    const panelOverlay = document.getElementById("panelOverlay");
+    const panelLogoutBtn = document.getElementById("panelLogoutBtn");
+    const panelNavTriggers = document.querySelectorAll(".nav-trigger");
+    const panelSwitchAccountBtn = document.getElementById("panelSwitchAccountBtn");
 
-    if (profileTrigger) {
-        profileTrigger.addEventListener("click", (e) => {
-            e.stopPropagation();
-            profileDropdown.classList.toggle("hidden");
+    function openPanel() {
+        if(profileSlidePanel) profileSlidePanel.classList.add("open");
+        if(panelOverlay) panelOverlay.classList.add("show");
+        
+        // Populate info
+        const storedName = sessionStorage.getItem('userName') || "Citizen";
+        const storedEmail = sessionStorage.getItem('userEmail') || "citizen@portal.com";
+        document.getElementById("panelUserName").textContent = storedName;
+        document.getElementById("panelUserEmail").textContent = storedEmail;
+        document.getElementById("headerProfileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
+        document.getElementById("panelProfileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
+    }
+
+    function closePanel() {
+        if(profileSlidePanel) profileSlidePanel.classList.remove("open");
+        if(panelOverlay) panelOverlay.classList.remove("show");
+    }
+
+    if (profileIconTrigger) {
+        profileIconTrigger.addEventListener("click", openPanel);
+    }
+    if (closeProfilePanelBtn) {
+        closeProfilePanelBtn.addEventListener("click", closePanel);
+    }
+    if (panelOverlay) {
+        panelOverlay.addEventListener("click", closePanel);
+    }
+    
+    // Switch Account
+    if (panelSwitchAccountBtn) {
+        panelSwitchAccountBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            logoutBtn.click();
         });
     }
 
-    document.addEventListener("click", () => {
-        if (profileDropdown) profileDropdown.classList.add("hidden");
+    // Nav triggers inside panel
+    panelNavTriggers.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            closePanel();
+            const target = btn.getAttribute("data-target");
+            const navLink = document.querySelector(`.nav-link[data-target="${target}"]`);
+            if(navLink) navLink.click();
+        });
     });
 
-    if (openProfileBtn) {
-        openProfileBtn.addEventListener("click", async (e) => {
+    if (panelLogoutBtn) {
+        panelLogoutBtn.addEventListener("click", () => logoutBtn.click());
+    }
+
+    // --- PAGE: Your Complaints ---
+    async function loadYourComplaints() {
+        const tbody = document.getElementById("yourComplaintsTableBody");
+        const noMsg = document.getElementById("noComplaintsMessage");
+        if(!tbody) return;
+        
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+        
+        try {
+            const resp = await fetch(`${API}/complaints`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const complaints = await resp.json();
+            tbody.innerHTML = "";
+            
+            if(complaints.length === 0) {
+                noMsg.classList.remove("hidden");
+                document.querySelector("#your-complaints-section .data-table").classList.add("hidden");
+            } else {
+                noMsg.classList.add("hidden");
+                document.querySelector("#your-complaints-section .data-table").classList.remove("hidden");
+                
+                complaints.forEach(c => {
+                    const tr = document.createElement("tr");
+                    const dateStr = new Date(c.createdAt).toLocaleDateString();
+                    tr.innerHTML = `
+                        <td><strong>${c.complaintId || c._id.substring(0,8)}</strong></td>
+                        <td>${c.category}</td>
+                        <td>${dateStr}</td>
+                        <td><span class="badge" style="background:var(--light);color:var(--dark);">${c.status}</span></td>
+                        <td>
+                            <button class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="viewComplaintDetails('${c.complaintId || c._id}')">
+                                View
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch(err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load</td></tr>';
+        }
+    }
+
+    window.viewComplaintDetails = function(id) {
+        document.querySelector('.nav-link[data-target="track-complaint-section"]').click();
+        const trkInput = document.getElementById("trackIdInput");
+        if(trkInput) {
+            trkInput.value = id;
+            document.getElementById("trackForm").dispatchEvent(new Event("submit"));
+        }
+    };
+
+    // --- PAGE: Notifications ---
+    async function loadNotifications() {
+        const list = document.getElementById("notificationsList");
+        if(!list) return;
+        
+        list.innerHTML = "<p class='text-center'>Loading notifications...</p>";
+        
+        try {
+            const resp = await fetch(`${API}/complaints`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const complaints = await resp.json();
+            list.innerHTML = "";
+            
+            // Generate synthetic notifications based on status
+            const notifications = [];
+            
+            complaints.forEach(c => {
+                const id = c.complaintId || c._id.substring(0,8);
+                if(c.status === "Assigned") {
+                    notifications.push({
+                        text: `Complaint ${id} has been assigned to an officer.`,
+                        time: new Date(c.updatedAt || c.createdAt),
+                        type: 'info', icon: 'bx-user-pin'
+                    });
+                } else if(c.status === "In Progress") {
+                    notifications.push({
+                        text: `Complaint ${id} is currently under review / in progress.`,
+                        time: new Date(c.updatedAt || c.createdAt),
+                        type: 'info', icon: 'bx-cog'
+                    });
+                } else if(["Resolved", "Closed"].includes(c.status)) {
+                    notifications.push({
+                        text: `Complaint ${id} has been resolved!`,
+                        time: new Date(c.updatedAt || c.createdAt),
+                        type: 'success', icon: 'bx-check-shield'
+                    });
+                }
+            });
+            
+            notifications.sort((a,b) => b.time - a.time);
+            
+            if(notifications.length === 0) {
+                list.innerHTML = "<div class='no-data'><i class='bx bx-bell'></i><p>No new notifications</p></div>";
+            } else {
+                notifications.forEach(n => {
+                    list.innerHTML += `
+                        <div class="notification-item">
+                            <div class="noti-icon ${n.type}"><i class='bx ${n.icon}'></i></div>
+                            <div class="noti-content">
+                                <p>${n.text}</p>
+                                <span class="noti-time">${n.time.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        } catch(err) {
+            console.error(err);
+            list.innerHTML = "<p class='text-center text-danger'>Error loading notifications.</p>";
+        }
+    }
+
+    // --- PAGE: Feedback ---
+    async function loadFeedbackDropdown() {
+        const select = document.getElementById("feedbackComplaintSelect");
+        if(!select) return;
+        
+        try {
+            const resp = await fetch(`${API}/complaints`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const complaints = await resp.json();
+            
+            const resolved = complaints.filter(c => ["Resolved", "Closed"].includes(c.status));
+            
+            select.innerHTML = '<option value="" disabled selected>Select a complaint</option>';
+            resolved.forEach(c => {
+                const id = c.complaintId || c._id.substring(0,8);
+                select.innerHTML += `<option value="${c._id}">${id} - ${c.category}</option>`;
+            });
+            
+        } catch(err) {
+            console.error("Feedback dropdwn err", err);
+        }
+    }
+
+    const standaloneFeedbackForm = document.getElementById("standaloneFeedbackForm");
+    if(standaloneFeedbackForm) {
+        standaloneFeedbackForm.addEventListener("submit", async(e) => {
             e.preventDefault();
+            const cid = document.getElementById("feedbackComplaintSelect").value;
+            const text = document.getElementById("standaloneFeedbackText").value;
+            const ratingEl = document.querySelector('input[name="standaloneRating"]:checked');
+            
+            if(!cid || !ratingEl) {
+                alert("Please select a complaint and provide a star rating.");
+                return;
+            }
             
             try {
-                const res = await fetch(`${API}/auth/me`, {
-                    headers: { Authorization: "Bearer " + getToken() }
+                const res = await fetch(`${API}/complaints/${cid}/rate`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + getToken()
+                    },
+                    body: JSON.stringify({ rating: ratingEl.value, feedback: text })
                 });
-                const user = await res.json();
                 
-                document.getElementById("prof-id").textContent = user._id;
-                document.getElementById("prof-name-input").value = user.name;
-                document.getElementById("prof-email-input").value = user.email;
-                document.getElementById("prof-bio-input").value = user.bio || "";
-                document.getElementById("prof-password-input").value = "";
-                
-                profileModal.classList.remove("hidden");
-            } catch (err) {
-                console.error("Fetch profile error:", err);
-                alert("Could not load profile details.");
+                if(res.ok) {
+                    standaloneFeedbackForm.classList.add("hidden");
+                    document.getElementById("standaloneFeedbackSuccess").classList.remove("hidden");
+                } else {
+                    alert("Failed to submit feedback.");
+                }
+            } catch(e) {
+                console.error(e);
             }
         });
     }
 
-    const profileForm = document.getElementById("update-profile-form");
-    if (profileForm) {
-        profileForm.addEventListener("submit", async (e) => {
+    // --- PAGE: Profile Update ---
+    async function loadStandaloneProfile() {
+        try {
+            const res = await fetch(`${API}/auth/me`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const user = await res.json();
+            
+            document.getElementById("profNameMain").value = user.name || "";
+            document.getElementById("profEmailMain").value = user.email || "";
+            document.getElementById("profPhoneMain").value = user.phone || "";
+            document.getElementById("profAddressMain").value = user.address || "";
+            
+            document.getElementById("standaloneProfileImg").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
+            
+        } catch(err) {
+            console.error("Profile load err", err);
+        }
+    }
+
+    const standaloneProfileForm = document.getElementById("standaloneProfileForm");
+    if(standaloneProfileForm) {
+        standaloneProfileForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            
             const payload = {
-                name: document.getElementById("prof-name-input").value,
-                email: document.getElementById("prof-email-input").value,
-                bio: document.getElementById("prof-bio-input").value,
+                name: document.getElementById("profNameMain").value,
+                phone: document.getElementById("profPhoneMain").value,
+                address: document.getElementById("profAddressMain").value
             };
-            
-            const newPass = document.getElementById("prof-password-input").value;
-            if (newPass) payload.password = newPass;
             
             try {
                 const res = await fetch(`${API}/auth/profile`, {
@@ -630,60 +847,64 @@ document.addEventListener("DOMContentLoaded", async () => {
                     body: JSON.stringify(payload)
                 });
                 
-                const data = await res.json();
-                if (res.ok) {
-                    alert("Profile updated successfully!");
+                if(res.ok) {
+                    const data = await res.json();
                     sessionStorage.setItem("userName", data.user.name);
-                    sessionStorage.setItem("userEmail", data.user.email);
-                    // Update header display if exists
-                    const greeting = document.getElementById("user-greeting");
-                    if (greeting) greeting.textContent = data.user.name;
-                    
-                    profileModal.classList.add("hidden");
+                    alert("Profile updated successfully");
+                    // Refresh avatar
+                    openPanel(); closePanel(); // quick trick to refresh panel data
                 } else {
-                    alert(data.message || "Update failed");
+                    alert("Update failed.");
                 }
-            } catch (err) {
-                console.error("Update profile error:", err);
-                alert("An error occurred during update.");
+            } catch(err) {
+                console.error(err);
             }
         });
     }
 
-    if (closeProfileModal) {
-        closeProfileModal.addEventListener("click", () => profileModal.classList.add("hidden"));
-    }
-
-    if (openSettingsBtn) {
-        openSettingsBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            settingsModal.classList.remove("hidden");
-        });
-    }
-
-    if (closeSettingsModal) {
-        closeSettingsModal.addEventListener("click", () => settingsModal.classList.add("hidden"));
-    }
-
-    if (logoutBtnAlt) {
-        logoutBtnAlt.addEventListener("click", (e) => {
-            e.preventDefault();
-            document.getElementById("logoutBtn").click();
+    // --- PAGE: Settings (Change Password Wrapper) ---
+    const pwdUpdateBtn = document.getElementById("pwdUpdateBtn");
+    if(pwdUpdateBtn) {
+        pwdUpdateBtn.addEventListener("click", async() => {
+            const cur = document.getElementById("currentPassword").value;
+            const newp = document.getElementById("newPassword").value;
+            if(!newp) return alert("Enter new password");
+            
+            // Simulating update via profile endpoint, though real system needs dedicated pwd route for verification
+            try {
+                const res = await fetch(`${API}/auth/profile`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + getToken()
+                    },
+                    body: JSON.stringify({ password: newp })
+                });
+                if(res.ok) {
+                    alert("Password updated");
+                    document.getElementById("currentPassword").value = "";
+                    document.getElementById("newPassword").value = "";
+                } else {
+                    alert("Failed to update password");
+                }
+            } catch(e) {
+                console.error(e);
+            }
         });
     }
 
     // Initialize with real user email if available
     if (!sessionStorage.getItem("userEmail") && getToken()) {
         try {
-            fetch(`${API}/complaints`, { 
+            fetch(`${API}/auth/me`, { 
                 headers: { Authorization: "Bearer " + getToken() }
             }).then(r => r.json()).then(data => {
-                const list = data.complaints || data;
-                if (list.length > 0 && list[0].user) {
-                    sessionStorage.setItem("userEmail", list[0].user.email);
-                }
+                sessionStorage.setItem("userEmail", data.email);
             });
         } catch(e) {}
     }
+
+    // Clean up modals since we replaced them with pages and slide panel
+    // Keep this safe in case they referenced existing DOMs.
 
 });

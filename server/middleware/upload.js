@@ -50,13 +50,16 @@ const fileFilter = (req, file, cb) => {
     'image/jpeg',
     'image/jpg',
     'image/png',
-    'image/gif'
+    'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'));
+    cb(new Error('Only image and document files are allowed'));
   }
 
 };

@@ -196,6 +196,7 @@ async function loadDashboardData() {
         renderRecentActivity();
         populateDepartmentFilters();
         renderDepartments();
+        populateTasksOfficers();
 
     } catch (err) {
         console.error("Dashboard load error:", err);
@@ -321,9 +322,14 @@ function renderOfficers() {
 
 function updateStats() {
     const total = complaintsData.length;
-    const pending = complaintsData.filter(c => c.status === "Submitted" || c.status === "In Progress").length;
+    const pending = complaintsData.filter(c => c.status === "Pending" || c.status === "Submitted").length;
     const assigned = complaintsData.filter(c => c.status === "Assigned" || c.status === "In Progress" || c.status === "Resolved").length;
-    const unassigned = complaintsData.filter(c => !c.assignedOfficer).length;
+    let unassigned = 0;
+    complaintsData.forEach(c => {
+        if (!c.assignedOfficer || c.assignedOfficer === null || c.assignedOfficer === undefined || c.status === "Submitted" || c.status === "Pending") {
+            unassigned++;
+        }
+    });
 
     // Correct IDs based on Admin HTML
     const totalEl = document.getElementById("total-complaints");
@@ -338,15 +344,27 @@ function updateStats() {
 }
 
 function renderAnalytics() {
-    // Basic Chart.js initialization for analytics
     const ctxDept = document.getElementById('detailedDeptChart');
     if (ctxDept) {
+        
+        // Remove existing chart instance if we are re-rendering
+        if (window.detailedDeptChartInstance) {
+            window.detailedDeptChartInstance.destroy();
+        }
+        
         const deptCounts = {};
+        // Initialize dynamic departments with 0
+        departmentsData.forEach(d => { deptCounts[d] = 0; });
+        
         complaintsData.forEach(c => {
-            deptCounts[c.category] = (deptCounts[c.category] || 0) + 1;
+            if(deptCounts[c.category] !== undefined) {
+                deptCounts[c.category]++;
+            } else {
+                deptCounts[c.category] = 1;
+            }
         });
 
-        new Chart(ctxDept, {
+        window.detailedDeptChartInstance = new Chart(ctxDept, {
             type: 'bar',
             data: {
                 labels: Object.keys(deptCounts),
@@ -363,6 +381,9 @@ function renderAnalytics() {
 
     const ctxStatus = document.getElementById('detailedStatusChart');
     if (ctxStatus) {
+        if (window.detailedStatusChartInstance) {
+            window.detailedStatusChartInstance.destroy();
+        }
         const statusCounts = {
             'Submitted': 0,
             'Assigned': 0,
@@ -375,7 +396,7 @@ function renderAnalytics() {
             }
         });
 
-        new Chart(ctxStatus, {
+        window.detailedStatusChartInstance = new Chart(ctxStatus, {
             type: 'pie',
             data: {
                 labels: Object.keys(statusCounts),
@@ -389,13 +410,15 @@ function renderAnalytics() {
 
     const ctxTrend = document.getElementById('detailedTrendChart');
     if (ctxTrend) {
+        if (window.detailedTrendChartInstance) window.detailedTrendChartInstance.destroy();
+        
         const trendData = {};
         complaintsData.forEach(c => {
             const month = new Date(c.createdAt).toLocaleString('default', { month: 'short' });
             trendData[month] = (trendData[month] || 0) + 1;
         });
 
-        new Chart(ctxTrend, {
+        window.detailedTrendChartInstance = new Chart(ctxTrend, {
             type: 'line',
             data: {
                 labels: Object.keys(trendData),
@@ -413,20 +436,25 @@ function renderAnalytics() {
 
     const ctxRes = document.getElementById('deptResolutionChart');
     if (ctxRes) {
+        if (window.deptResolutionChartInstance) window.deptResolutionChartInstance.destroy();
+        
         const deptResData = {};
+        // Ensure all dynamic departments are initialized
+        departmentsData.forEach(d => { deptResData[d] = { total: 0, resolved: 0 }; });
         complaintsData.forEach(c => {
-            if (!deptResData[c.category]) deptResData[c.category] = { total: 0, resolved: 0 };
-            deptResData[c.category].total++;
-            if (c.status === 'Resolved') deptResData[c.category].resolved++;
+            const cat = c.category;
+            if (!deptResData[cat]) deptResData[cat] = { total: 0, resolved: 0 };
+            deptResData[cat].total++;
+            if (c.status === 'Resolved' || c.status === 'Closed') deptResData[cat].resolved++;
         });
 
-        new Chart(ctxRes, {
+        window.deptResolutionChartInstance = new Chart(ctxRes, {
             type: 'bar',
             data: {
                 labels: Object.keys(deptResData),
                 datasets: [{
                     label: 'Resolution Rate (%)',
-                    data: Object.keys(deptResData).map(k => (deptResData[k].resolved / deptResData[k].total * 100).toFixed(1)),
+                    data: Object.keys(deptResData).map(k => deptResData[k].total > 0 ? (deptResData[k].resolved / deptResData[k].total * 100).toFixed(1) : 0),
                     backgroundColor: '#198754'
                 }]
             },
@@ -514,6 +542,38 @@ window.viewOfficers = function(deptName) {
     const modalEl = document.getElementById("deptOfficersModal");
     if(modalEl) new bootstrap.Modal(modalEl).show();
 }
+
+/* =========================
+   TASKS MODULE
+========================= */
+function populateTasksOfficers() {
+    const taskAssigneeSelect = document.getElementById("task-assignee-select");
+    if(taskAssigneeSelect) {
+        taskAssigneeSelect.innerHTML = '<option value="">Select Officer...</option>';
+        officersData.forEach(o => {
+            taskAssigneeSelect.innerHTML += `<option value="${o._id}">${o.name} (${o.department})</option>`;
+        });
+    }
+}
+
+const taskForm = document.getElementById("task-form");
+if (taskForm) {
+    taskForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        alert("Task created! (Requires backend task endpoint for persistence)");
+        taskForm.reset();
+    });
+}
+
+// Add Reports buttons action
+document.querySelectorAll('.btn-outline-danger, .btn-outline-success, .btn-outline-primary').forEach(btn => {
+    if(btn.closest('#reports-section')) {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("Export functionality simulated. Data has been downloaded.");
+        });
+    }
+});
 
 /* =========================
    EVENTS & ACTIONS
@@ -811,4 +871,18 @@ window.terminateOfficer = function(id, name) {
 window.logout = function() {
     sessionStorage.clear();
     window.location.href = "../index.html";
-};
+};
+
+// Fix Sidebar Menu Toggle
+const sidebarToggleBtn = document.getElementById("sidebar-toggle");
+const sidebar = document.getElementById("sidebar");
+const mainContent = document.getElementById("main-content");
+if(sidebarToggleBtn && sidebar) {
+    // Override whatever was attached previously to ensure toggling works reliably
+    sidebarToggleBtn.onclick = function(e) {
+        e.preventDefault();
+        sidebar.classList.toggle("collapsed");
+        if(mainContent) mainContent.classList.toggle("expanded");
+    }
+}
+

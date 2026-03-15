@@ -109,6 +109,33 @@ router.post('/login', async (req, res) => {
 
 });
 
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for profile photo uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Make sure this folder exists
+  },
+  filename: function (req, file, cb) {
+    cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Images only!'));
+    }
+  }
+});
+
 /*
 -------------------------------------------------
 GET CURRENT USER
@@ -125,7 +152,8 @@ router.get('/me', protect, async (req, res) => {
     department: req.user.department,
     staffId: req.user.staffId,
     contactNumber: req.user.contactNumber,
-    bio: req.user.bio
+    bio: req.user.bio,
+    profilePhoto: req.user.profilePhoto
   });
 });
 
@@ -135,7 +163,7 @@ UPDATE PROFILE
 PUT /api/auth/profile
 -------------------------------------------------
 */
-router.put('/profile', protect, async (req, res) => {
+router.put('/profile', protect, upload.single('profilePhoto'), async (req, res) => {
   const { name, email, password, bio, contactNumber } = req.body;
 
   try {
@@ -149,6 +177,11 @@ router.put('/profile', protect, async (req, res) => {
     if (email) user.email = email;
     if (bio !== undefined) user.bio = bio;
     if (contactNumber !== undefined) user.contactNumber = contactNumber;
+    
+    // Add profile photo update if file is uploaded
+    if (req.file) {
+      user.profilePhoto = req.file.filename;
+    }
     
     if (password) {
       user.password = password; // Pre-save hook will hash it
@@ -164,13 +197,14 @@ router.put('/profile', protect, async (req, res) => {
         email: user.email,
         role: user.role,
         bio: user.bio,
-        contactNumber: user.contactNumber
+        contactNumber: user.contactNumber,
+        profilePhoto: user.profilePhoto
       }
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

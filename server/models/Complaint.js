@@ -46,9 +46,6 @@ const ComplaintSchema = new mongoose.Schema({
     default: 'Medium'
   },
 
-  citizenName: {
-    type: String
-  },
 
   user: {
     type: mongoose.Schema.Types.ObjectId,

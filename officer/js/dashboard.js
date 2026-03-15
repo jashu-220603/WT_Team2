@@ -216,8 +216,93 @@ document.addEventListener("DOMContentLoaded", () => {
             allComplaints = await res.json();
             renderComplaints(allComplaints);
             updateStats(allComplaints);
+            updateNotifications(allComplaints);
         } catch (err) {
             console.error(err);
+        }
+    }
+
+    /* =========================
+       NOTIFICATIONS SYSTEM
+    ========================= */
+    function updateNotifications(complaints) {
+        const citizenList = document.getElementById("citizen-noti-list");
+        const adminList = document.getElementById("admin-noti-list");
+        const badge = document.getElementById("noti-badge");
+
+        if (!citizenList || !adminList || !badge) return;
+
+        let citizenAlerts = [];
+        let adminAlerts = [];
+
+        // Simple rules for generating synthetic alerts:
+        // Citizen: Any case that was assigned recent or updated by the citizen
+        // Admin: Any case marked as priority = 'High' and not resolved, or any case past 7 days without resolution
+        const now = new Date();
+
+        complaints.forEach(c => {
+            const id = c.complaintId || (c._id ? c._id.substring(0,8) : 'N/A');
+            const created = new Date(c.createdAt);
+            const daysOld = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+
+            // Citizen Alerts trigger
+            if (c.status === "Assigned") {
+                citizenAlerts.push({
+                    text: `New complaint ${id} assigned to you.`,
+                    time: created.toLocaleString()
+                });
+            } else if (c.rating) {
+                citizenAlerts.push({
+                    text: `Citizen left a ${c.rating}-star review on ${id}.`,
+                    time: new Date(c.updatedAt || c.createdAt).toLocaleString()
+                });
+            }
+
+            // Admin Alerts trigger
+            if (c.status !== "Resolved" && c.priority === "High") {
+                adminAlerts.push({
+                    text: `Admin flagged ${id} as HIGH priority. Actions required.`,
+                    time: new Date(c.updatedAt || c.createdAt).toLocaleString()
+                });
+            } else if (c.status !== "Resolved" && daysOld > 7) {
+                adminAlerts.push({
+                    text: `Admin Alert: Case ${id} is overdue (${daysOld} days).`,
+                    time: new Date().toLocaleString()
+                });
+            }
+        });
+
+        // Set Badge
+        const totalAlerts = citizenAlerts.length + adminAlerts.length;
+        if (totalAlerts > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = totalAlerts > 99 ? '99+' : totalAlerts;
+        } else {
+            badge.style.display = 'none';
+        }
+
+        // Render citizen alerts
+        if (citizenAlerts.length > 0) {
+            citizenList.innerHTML = citizenAlerts.map(a => `
+                <div class="border-bottom p-2 text-start">
+                    <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.text}</p>
+                    <small class="text-muted" style="font-size: 0.75rem;">${a.time}</small>
+                </div>
+            `).join("");
+        } else {
+            citizenList.innerHTML = '<div class="text-center text-muted small py-3">No new citizen alerts</div>';
+        }
+
+        // Render admin alerts
+        if (adminAlerts.length > 0) {
+            adminList.innerHTML = adminAlerts.map(a => `
+                <div class="border-bottom p-2 text-start">
+                    <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.text}</p>
+                    <small class="text-muted" style="font-size: 0.75rem;">${a.time}</small>
+                </div>
+            `).join("");
+        } else {
+            adminList.innerHTML = '<div class="text-center text-muted small py-3">No new admin alerts</div>';
         }
     }
 
