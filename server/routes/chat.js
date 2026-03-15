@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ message: "Message is required" });
         }
 
-        const API_KEY = process.env.AI_API_KEY;
+        const API_KEY = process.env.AI_API_KEY ? process.env.AI_API_KEY.trim() : null;
         if (!API_KEY) {
             return res.status(500).json({ message: "AI API Key not configured on server" });
         }
