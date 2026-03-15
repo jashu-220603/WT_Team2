@@ -65,7 +65,7 @@ POST /api/auth/login
 */
 router.post('/login', async (req, res) => {
 
-  const { email, password } = req.body; // email field will carry email or staffId from frontend
+  const { email, password, role } = req.body; // email field will carry email or staffId from frontend
 
   try {
 
@@ -80,6 +80,11 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Role validation fix
+    if (role && user.role !== role) {
+        return res.status(403).json({ message: `Access denied. You are not registered as a ${role}.` });
     }
 
     const isMatch = await user.matchPassword(password);
@@ -97,7 +102,8 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       role: user.role,
-      department: user.department
+      department: user.department,
+      name: user.name
     });
 
   } catch (err) {

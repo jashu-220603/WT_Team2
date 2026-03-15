@@ -27,6 +27,20 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
         });
 
         await legalNotice.save();
+
+        // Trigger Notification for the Officer
+        try {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                user: officerId,
+                title: "Official Legal Notice Received",
+                message: `You have received a new legal notice: "${title}". Please review it in the Legal Notices section.`,
+                type: "concern_responded" // Using a relevant existing type or similar
+            });
+        } catch (notifErr) {
+            console.error("Failed to trigger notification for legal notice:", notifErr);
+        }
+
         res.status(201).json({ message: "Legal notice sent successfully.", legalNotice });
     } catch (err) {
         console.error("Send Legal Notice Error: ", err);

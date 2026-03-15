@@ -31,6 +31,11 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/legal-notices', require('./routes/legal-notices'));
+app.use('/api/concerns', require('./routes/concerns'));
+app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/departments', require('./routes/departments'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/reports', require('./routes/reports'));
 
 // DEBUG ROUTE: See files in the backend (Since Render Shell is blocked)
 app.get('/api/admin/debug-files', (req, res) => {

@@ -111,7 +111,7 @@
                     </a>
 
                     <!-- Dark Mode Toggle -->
-                    <button id="theme-toggle" class="btn btn-link text-dark me-2">
+                    <button id="theme-toggle" class="btn btn-link text-dark me-2" title="Toggle Theme">
                         <i class="bi bi-moon-fill fs-5"></i>
                     </button>
 
@@ -150,7 +150,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                             <li><a class="dropdown-item" href="#" id="adminProfileBtn"><i class="bi bi-person me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="#" id="adminSettingsBtn"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="switchSection('settings')"><i class="bi bi-gear me-2"></i>Settings</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -370,13 +370,36 @@
                         <form id="task-form">
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Task Title</label>
-                                <input type="text" class="form-control" placeholder="Enter task title...">
+                                <input type="text" id="task-title" class="form-control" placeholder="Enter task title..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Description</label>
+                                <textarea id="task-desc" class="form-control" rows="2" placeholder="Task details..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Department</label>
+                                <select id="task-dept" class="form-select" required></select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Assign To</label>
-                                <select class="form-select" id="task-assignee-select"></select>
+                                <select id="task-assignee-select" class="form-select" required></select>
                             </div>
-                            <button type="button" class="btn btn-primary w-100">Add Task</button>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">Priority</label>
+                                    <select id="task-priority" class="form-select">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">Due Date</label>
+                                    <input type="date" id="task-due" class="form-control">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Task</button>
                         </form>
                     </div>
                 </div>
@@ -741,9 +764,41 @@
 
                     <div class="d-grid gap-2">
                         <button type="button" id="confirm-terminate-btn" class="btn btn-danger disabled">Immediate Terminate</button>
-                        <button type="button" id="send-legal-notice-btn" class="btn btn-warning disabled">Send Legal Notice</button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal Notice Modal -->
+    <div class="modal fade" id="legalNoticeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-envelope-paper-fill me-2"></i>Send Official Legal Notice</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="legal-notice-form">
+                        <input type="hidden" id="notice-officer-id">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Officer</label>
+                            <h5 id="notice-officer-name" class="fw-bold"></h5>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notice Title</label>
+                            <input type="text" id="notice-title" class="form-control" placeholder="e.g. Warning for Delay in Case Resolution" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notice Content</label>
+                            <textarea id="notice-content" class="form-control" rows="5" placeholder="Enter the detailed legal notice content here..." required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning fw-bold">Send Notice</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

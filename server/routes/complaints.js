@@ -6,6 +6,7 @@ const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 const Complaint = require('../models/Complaint');
+const Notification = require('../models/Notification');
 
 
 /*
@@ -25,9 +26,9 @@ async (req, res) => {
 
     let { title, description, category, subcategory, location } = req.body;
 
-    if (!title || !description) {
+    if (!description) {
       return res.status(400).json({
-        message: "Title and description are required"
+        message: "Description is required"
       });
     }
 
@@ -53,6 +54,15 @@ async (req, res) => {
     });
 
     await complaint.save();
+    
+    // Notify User
+    await Notification.create({
+      user: req.user._id,
+      type: 'complaint_status',
+      title: 'Complaint Received',
+      message: `Your complaint ${complaintId} has been successfully submitted.`,
+      relatedComplaint: complaint._id
+    });
 
     res.status(201).json({
       message: "Complaint submitted successfully",
@@ -219,6 +229,19 @@ router.put('/:id/status', protect, authorize('officer','admin'), upload.single('
     });
 
     await complaint.save();
+    
+    // Notify User
+    let title = 'Complaint Update';
+    if (status === 'In Progress') title = 'Complaint In Progress';
+    if (status === 'Resolved') title = 'Complaint Resolved';
+    
+    await Notification.create({
+      user: complaint.user,
+      type: 'complaint_status',
+      title: title,
+      message: `Your complaint ${complaint.complaintId} status has been updated to: ${status}`,
+      relatedComplaint: complaint._id
+    });
 
     res.json({
       message: "Complaint status updated successfully",
@@ -312,6 +335,15 @@ router.put('/:id/assign', protect, authorize('admin'), async (req, res) => {
     });
 
     await complaint.save();
+    
+    // Notify User
+    await Notification.create({
+      user: complaint.user,
+      type: 'assignment',
+      title: 'Complaint Assigned',
+      message: `Your complaint ${complaint.complaintId} has been assigned to an officer.`,
+      relatedComplaint: complaint._id
+    });
 
     res.json({
       message: "Officer assigned successfully",

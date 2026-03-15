@@ -7,7 +7,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../chatbot.css">
 </head>
 <body>
     <!-- Sidebar -->
@@ -24,14 +26,6 @@
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="index.html" class="nav-link" data-section="assigned">
-                <i class="bi bi-card-checklist"></i>
-                <span>Assigned Tasks</span>
-            </a>
-            <a href="index.html" class="nav-link" data-section="resolved">
-                <i class="bi bi-check2-circle"></i>
-                <span>Resolved Cases</span>
-            </a>
             <hr class="mx-3 opacity-25">
             <a href="priority_of_cases.html" class="nav-link">
                 <i class="bi bi-flag"></i>
@@ -43,10 +37,31 @@
             </a>
             <a href="your_analytics.html" class="nav-link">
                 <i class="bi bi-pie-chart"></i>
-                <span>Analytics</span>
+                <span>Your Analytics</span>
+            </a>
+            <a href="my_performance.html" class="nav-link">
+                <i class="bi bi-bar-chart"></i>
+                <span>My Performance</span>
+            </a>
+            <a href="your_ratings.html" class="nav-link">
+                <i class="bi bi-star"></i>
+                <span>Your Ratings</span>
             </a>
             <hr class="mx-3 opacity-25">
-            <a href="#" class="nav-link text-warning" data-section="legal-notices">
+            <a href="admins_remarks.html" class="nav-link active">
+                <i class="bi bi-chat-left-text"></i>
+                <span>Admin's Remarks</span>
+            </a>
+            <a href="faqs.html" class="nav-link">
+                <i class="bi bi-question-circle"></i>
+                <span>FAQ's</span>
+            </a>
+            <a href="contact_admin.html" class="nav-link">
+                <i class="bi bi-envelope"></i>
+                <span>Contact Admin</span>
+            </a>
+            <hr class="mx-3 opacity-25">
+            <a href="index.html" class="nav-link text-warning" data-section="legal-notices">
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>Legal Notices</span>
             </a>
@@ -56,6 +71,8 @@
             </a>
         </div>
     </nav>
+
+    <!-- Main Content -->
     <main id="main-content">
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
@@ -166,6 +183,130 @@
             </div>
         </div>
     </main>
+
+    <!-- Modals -->
+    <!-- Officer Profile Modal -->
+    <div class="modal fade" id="offProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Officer Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="officer-profile-form">
+                        <div class="text-center mb-4">
+                            <img id="off-prof-img" src="https://ui-avatars.com/api/?name=Officer&background=198754&color=fff" alt="Profile" class="rounded-circle mb-3" width="80" height="80">
+                            <h5 class="fw-bold mb-0" id="off-prof-header-name">Officer Name</h5>
+                            <div id="off-prof-dept-badge" class="badge bg-success mt-1">Department</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">User ID</label>
+                                <div id="off-prof-id" class="p-2 bg-light rounded font-monospace small text-truncate">Loading...</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Staff ID</label>
+                                <div id="off-prof-staffId-val" class="p-2 bg-light rounded fw-bold small text-truncate">Loading...</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" id="off-name-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" id="off-email-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contact Number</label>
+                            <input type="text" id="off-contact-input" class="form-control" placeholder="Mobile number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Biography / Service Info</label>
+                            <textarea id="off-bio-input" class="form-control" rows="3" placeholder="Tell citizens about your expertise..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Update Password</label>
+                            <input type="password" id="off-password-input" class="form-control" placeholder="Leave blank to keep current">
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Officer Settings Modal -->
+    <div class="modal fade" id="offSettingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Officer Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="off-settings-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notifications</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notify-assigned" checked>
+                                <label class="form-check-label" for="notify-assigned">New case assignments</label>
+                            </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="notify-priority">
+                                <label class="form-check-label" for="notify-priority">Priority changes</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Performance Reports</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="reportFreq" id="freqDaily">
+                                <label class="form-check-label" for="freqDaily">Daily Summary</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="reportFreq" id="freqWeekly" checked>
+                                <label class="form-check-label" for="freqWeekly">Weekly Summary</label>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div class="chatbot-icon" onclick="toggleChat()">
+        💬 
+    </div>
+
+    <div id="chatbox" class="chatbox">
+        <div class="chat-header">
+            <span>CMS Assistant</span>
+            <span onclick="toggleChat()">&times;</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <p class="bot-msg">Hello 👋 How can I help you today with the Complaint Portal?</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your question...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../api-config.js"></script>
     <script src="../chatbot.js"></script>

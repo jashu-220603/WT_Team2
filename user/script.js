@@ -85,6 +85,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // --- THEME TOGGLE (DARK MODE) ---
+    const themeToggle = document.getElementById("themeToggleCheckbox");
+    const body = document.body;
+
+    // Check for saved theme
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+        body.classList.add("dark-mode");
+        if (themeToggle) themeToggle.checked = true;
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener("change", () => {
+            if (themeToggle.checked) {
+                body.classList.add("dark-mode");
+                localStorage.setItem("theme", "dark");
+            } else {
+                body.classList.remove("dark-mode");
+                localStorage.setItem("theme", "light");
+            }
+        });
+    }
+
     // Ripple effect on buttons
     const btns = document.querySelectorAll('.animate-btn');
     btns.forEach(btn => {
@@ -103,18 +126,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     const appWrapper = document.getElementById("app-wrapper");
     if (appWrapper) {
         appWrapper.classList.remove("hidden");
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                const match = Array.from(navLinks).find(l => l.getAttribute('data-target') === hash);
-                if (match) {
-                    match.click();
-                } else {
-                    document.querySelector('.nav-link[data-target="dashboard-section"]')?.click();
-                }
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            const match = Array.from(navLinks).find(l => l.getAttribute('data-target') === hash);
+            if (match) {
+                match.click();
             } else {
                 document.querySelector('.nav-link[data-target="dashboard-section"]')?.click();
             }
+        } else {
+            document.querySelector('.nav-link[data-target="dashboard-section"]')?.click();
+        }
     }
+
+    // --- NOTIFICATION BELL LOGIC ---
+    const notifBellTrigger = document.getElementById("notificationBellTrigger");
+    const notifDropdown = document.getElementById("notificationDropdown");
+    const markAllReadBtn = document.getElementById("markAllReadBtn");
+
+    if (notifBellTrigger) {
+        notifBellTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle("hidden");
+            if (!notifDropdown.classList.contains("hidden")) {
+                loadNotificationsForDropdown();
+            }
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (notifDropdown && !notifDropdown.contains(e.target) && e.target !== notifBellTrigger) {
+            notifDropdown.classList.add("hidden");
+        }
+    });
+
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener("click", markNotificationsAsRead);
+    }
+
+    // Initial check for notifications
+    checkNotifications();
+    setInterval(checkNotifications, 60000); // Check every minute
+
 
     // Logout Logic
     const logoutBtn = document.getElementById("logoutBtn");
@@ -176,27 +229,39 @@ document.addEventListener("DOMContentLoaded", async () => {
                     (position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
-                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        
+                        // Use accurate zoom for more specific address details
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`)
                             .then(response => response.json())
                             .then(data => {
-                                let city = data.address.city || data.address.town || data.address.village || data.address.county || "Unknown Location";
-                                locationInput.value = `Current Location: ${city}`;
+                                // Prefer full display name for exact location, fallback to city/town
+                                let address = data.display_name || (data.address.city || data.address.town || data.address.village || data.address.county || "Unknown Location");
+                                locationInput.value = address;
+                                locationInput.removeAttribute("readonly"); // Allow manual correction
                                 getLocationBtn.disabled = false;
                             })
                             .catch(err => {
-                                locationInput.value = `Current Location: Lat ${lat.toFixed(4)}, Lng ${lon.toFixed(4)}`;
+                                locationInput.value = `Lat: ${lat.toFixed(6)}, Lng: ${lon.toFixed(6)}`;
+                                locationInput.removeAttribute("readonly");
                                 getLocationBtn.disabled = false;
                             });
                     },
                     (error) => {
-                        locationInput.value = "Location access denied. Please type manually.";
+                        let errorMsg = "Location access denied. Please type manually.";
+                        if (error.code === error.TIMEOUT) errorMsg = "Location detection timed out.";
+                        else if (error.code === error.POSITION_UNAVAILABLE) errorMsg = "Location information is unavailable.";
+                        
+                        locationInput.value = "";
+                        locationInput.placeholder = errorMsg;
                         locationInput.removeAttribute("readonly");
                         locationInput.focus();
                         getLocationBtn.disabled = false;
-                    }
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             } else {
-                locationInput.value = "Geolocation is not supported by this browser.";
+                locationInput.value = "";
+                locationInput.placeholder = "Geolocation not supported.";
                 locationInput.removeAttribute("readonly");
             }
         });
@@ -225,36 +290,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         complaintForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const title = document.getElementById("title").value.trim();
+            const submitBtn = complaintForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+            }
+
             const description = document.getElementById("description").value.trim();
             const category = document.getElementById("category").value;
             const subcategory = document.getElementById("subcategory").value;
             const location = document.getElementById("location").value.trim();
             const evidenceFile = evidenceInput ? evidenceInput.files[0] : null;
 
-            if (!title || !description || !category) {
-                alert("Please fill in Title, Description and Category.");
-                return;
-            }
-
-            // Build FormData for multipart (supports file upload)
             const formData = new FormData();
-            formData.append("title", title);
             formData.append("description", description);
             formData.append("category", category);
             if (subcategory) formData.append("subcategory", subcategory);
             formData.append("location", location || "Unknown");
             if (evidenceFile) formData.append("image", evidenceFile);
 
-            const submitBtn = complaintForm.querySelector('button[type="submit"]');
-            if (submitBtn) submitBtn.disabled = true;
-
             try {
                 const resp = await fetch(`${API}/complaints`, {
                     method: "POST",
                     headers: {
                         Authorization: "Bearer " + getToken()
-                        // NOTE: Do NOT set Content-Type when using FormData — browser sets it with boundary
                     },
                     body: formData
                 });
@@ -263,11 +322,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 if (!resp.ok) {
                     alert("Error: " + (data.message || "Failed to submit complaint"));
-                    if (submitBtn) submitBtn.disabled = false;
                     return;
                 }
 
-                // Show success popup with formatted complaint ID
+                // Show success popup
                 const complId = data.complaint.complaintId || data.complaint._id;
                 popupComplaintId.textContent = complId;
                 successModal.classList.remove("hidden");
@@ -285,7 +343,80 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.error("Submit complaint error:", err);
                 alert("Failed to submit complaint. Make sure the backend server is running.");
             } finally {
-                if (submitBtn) submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Submit Complaint";
+                }
+            }
+        });
+    }
+
+    // --- RAISE A CONCERN LOGIC ---
+    const showConcernFormBtn = document.getElementById("showConcernFormBtn");
+    const cancelConcernBtn = document.getElementById("cancelConcernBtn");
+    const concernForm = document.getElementById("concernForm");
+
+    if (showConcernFormBtn) {
+        showConcernFormBtn.addEventListener("click", () => {
+            concernForm.classList.remove("hidden");
+            document.querySelector(".concern-content").classList.add("hidden");
+        });
+    }
+
+    if (cancelConcernBtn) {
+        cancelConcernBtn.addEventListener("click", () => {
+            concernForm.classList.add("hidden");
+            document.querySelector(".concern-content").classList.remove("hidden");
+        });
+    }
+
+    if (concernForm) {
+        concernForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const compIDInput = document.getElementById("concernComplaintId");
+            const description = document.getElementById("concernDescription").value;
+            const evidence = document.getElementById("concernEvidence").files[0];
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Submitting...";
+            }
+
+            const formData = new FormData();
+            formData.append("complaintId", compIDInput.getAttribute('data-real-id'));
+            formData.append("description", description);
+            if (evidence) formData.append("image", evidence);
+
+            try {
+                const res = await fetch(`${API}/concerns`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`
+                    },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    document.getElementById("concernSuccess").classList.remove("hidden");
+                    this.reset();
+                    setTimeout(() => {
+                        document.getElementById("concernSuccess").classList.add("hidden");
+                        concernForm.classList.add("hidden");
+                        document.querySelector(".concern-content").classList.remove("hidden");
+                    }, 4000);
+                } else {
+                    const data = await res.json();
+                    alert(data.message || "Error raising concern");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error submitting concern.");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Submit Concern";
+                }
             }
         });
     }
@@ -359,6 +490,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const status = complaint.status;
 
                 displayBadge.textContent = status;
+                
+                // Set ID for concern form
+                const concernCompId = document.getElementById("concernComplaintId");
+                if (concernCompId) {
+                    concernCompId.value = searchId;
+                    concernCompId.setAttribute('data-real-id', complaint._id);
+                }
+                
+                // Show concern section
+                const raiseConcernSection = document.getElementById("raiseConcernSection");
+                if (raiseConcernSection) raiseConcernSection.classList.remove("hidden");
+
 
                 // Badge color
                 if (status === "Submitted") displayBadge.style.background = "#e0e7ff";
@@ -520,15 +663,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Update stats
             const total = complaints.length;
-            const pending = complaints.filter(c => !["Resolved","Closed"].includes(c.status)).length;
-            const solved = complaints.filter(c => ["Resolved","Closed"].includes(c.status)).length;
+            const submitted = complaints.filter(c => c.status === "Submitted").length;
+            const inProgress = complaints.filter(c => ["Assigned", "In Progress"].includes(c.status)).length;
+            const solved = complaints.filter(c => ["Resolved", "Closed"].includes(c.status)).length;
 
             const statTotal = document.getElementById("stat-total");
             const statPending = document.getElementById("stat-pending");
+            const statInProgress = document.getElementById("stat-inprogress");
             const statSolved = document.getElementById("stat-solved");
 
             if (statTotal) statTotal.textContent = total;
-            if (statPending) statPending.textContent = pending;
+            if (statPending) statPending.textContent = submitted;
+            if (statInProgress) statInProgress.textContent = inProgress;
             if (statSolved) statSolved.textContent = solved;
 
             // Populate Table
@@ -822,16 +968,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
             const user = await res.json();
             
-            document.getElementById("profNameMain").value = user.name || "";
-            document.getElementById("profEmailMain").value = user.email || "";
-            document.getElementById("profPhoneMain").value = user.phone || "";
-            document.getElementById("profAddressMain").value = user.address || "";
+            if (document.getElementById("profNameMain")) document.getElementById("profNameMain").value = user.name || "";
+            if (document.getElementById("profEmailMain")) document.getElementById("profEmailMain").value = user.email || "";
+            if (document.getElementById("profPhoneMain")) document.getElementById("profPhoneMain").value = user.phone || "";
+            if (document.getElementById("profAddressMain")) document.getElementById("profAddressMain").value = user.address || "";
             
             let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
             if (user.profilePhoto) {
                 avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
             }
-            document.getElementById("standaloneProfileImg").src = avatarUrl;
+            if (document.getElementById("standaloneProfileImg")) document.getElementById("standaloneProfileImg").src = avatarUrl;
             
         } catch(err) {
             console.error("Profile load err", err);
@@ -871,46 +1017,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     if(standaloneProfileForm) {
         standaloneProfileForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            const payload = {
-                name: document.getElementById("profNameMain").value,
-                phone: document.getElementById("profPhoneMain").value,
-                address: document.getElementById("profAddressMain").value
-            };
-            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            const name = document.getElementById("profNameMain").value;
+            const phone = document.getElementById("profPhoneMain").value;
+            const photo = document.getElementById("profPhotoMain").files[0];
+
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("contactNumber", phone);
+            if (photo) formData.append("profilePhoto", photo);
+
             try {
                 const res = await fetch(`${API}/auth/profile`, {
                     method: "PUT",
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: "Bearer " + getToken()
+                        "Authorization": `Bearer ${getToken()}`
                     },
-                    body: JSON.stringify(payload)
+                    body: formData
                 });
-                
-                if(res.ok) {
+
+                if (res.ok) {
                     const data = await res.json();
-                    sessionStorage.setItem("userName", data.user.name);
-                    alert("Profile updated successfully");
-                    // Refresh avatar
-                    openPanel(); closePanel(); // quick trick to refresh panel data
+                    alert("Profile updated successfully!");
+                    sessionStorage.setItem('userName', name);
+                    if (userGreeting) userGreeting.textContent = `Welcome, ${name}`;
+                    if (data.user.profilePhoto) {
+                        const photoUrl = `${window.API_BASE_URL || "http://localhost:7000"}/uploads/${data.user.profilePhoto}`;
+                        document.getElementById("standaloneProfileImg").src = photoUrl;
+                        const headerAv = document.getElementById("headerProfileAvatar");
+                        if (headerAv) headerAv.src = photoUrl;
+                    }
                 } else {
-                    alert("Update failed.");
+                    alert("Failed to update profile.");
                 }
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
+                alert("Error updating profile.");
+            } finally {
+                submitBtn.disabled = false;
             }
         });
+
+        // Photo preview
+        const profPhotoMain = document.getElementById("profPhotoMain");
+        if (profPhotoMain) {
+            profPhotoMain.addEventListener("change", function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById("standaloneProfileImg").src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
     }
 
-    // --- PAGE: Settings (Change Password Wrapper) ---
+
+    // --- PAGE: Settings (Change Password) ---
     const pwdUpdateBtn = document.getElementById("pwdUpdateBtn");
     if(pwdUpdateBtn) {
         pwdUpdateBtn.addEventListener("click", async() => {
-            const cur = document.getElementById("currentPassword").value;
             const newp = document.getElementById("newPassword").value;
             if(!newp) return alert("Enter new password");
             
-            // Simulating update via profile endpoint, though real system needs dedicated pwd route for verification
             try {
                 const res = await fetch(`${API}/auth/profile`, {
                     method: "PUT",
@@ -922,7 +1094,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
                 if(res.ok) {
                     alert("Password updated");
-                    document.getElementById("currentPassword").value = "";
                     document.getElementById("newPassword").value = "";
                 } else {
                     alert("Failed to update password");
@@ -943,7 +1114,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         } catch(e) {}
     }
-
     // Clean up modals since we replaced them with pages and slide panel
     // Keep this safe in case they referenced existing DOMs.
 });
@@ -1004,4 +1174,136 @@ async function resetPassword() {
     
     alert("Password reset successfully!");
     closeForgotPassword();
+}
+
+// --- NOTIFICATION HELPERS ---
+async function checkNotifications() {
+    try {
+        const resp = await fetch(`${API}/notifications`, {
+            headers: { Authorization: "Bearer " + getToken() }
+        });
+        if (!resp.ok) return;
+        const notifications = await resp.json();
+        const unreadCount = notifications.filter(n => !n.isRead).length;
+        
+        const badge = document.getElementById("notificationCount");
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.classList.remove("hidden");
+            } else {
+                badge.classList.add("hidden");
+            }
+        }
+        
+        // Update dashboard summary if we are on dashboard
+        updateDashboardNotifSummary(notifications.filter(n => !n.isRead).slice(0, 3));
+    } catch (err) {
+        console.error("Check notifications error:", err);
+    }
+}
+
+async function loadNotificationsForDropdown() {
+    const list = document.getElementById("notifDropdownList");
+    if (!list) return;
+    
+    list.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    
+    try {
+        const resp = await fetch(`${API}/notifications`, {
+            headers: { Authorization: "Bearer " + getToken() }
+        });
+        const notifications = await resp.json();
+        
+        if (notifications.length === 0) {
+            list.innerHTML = '<div class="notif-placeholder">No notifications yet</div>';
+            return;
+        }
+        
+        list.innerHTML = notifications.slice(0, 10).map(notif => `
+            <div class="notif-item ${notif.isRead ? '' : 'unread'}" onclick="markAsRead('${notif._id}')">
+                <div class="notif-icon ${getNotifColor(notif.type)}">
+                    <i class='${getNotifIcon(notif.type)}'></i>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title">${notif.title}</div>
+                    <div class="notif-message">${notif.message}</div>
+                    <div class="notif-time">${new Date(notif.createdAt).toLocaleString([], {hour: '2-digit', minute:'2-digit', month:'short', day:'numeric'})}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        list.innerHTML = '<div class="notif-placeholder">Failed to load notifications</div>';
+    }
+}
+
+async function markNotificationsAsRead() {
+    try {
+        await fetch(`${API}/notifications/read-all`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + getToken() }
+        });
+        checkNotifications();
+        if (!document.getElementById("notificationDropdown").classList.contains("hidden")) {
+            loadNotificationsForDropdown();
+        }
+    } catch (err) {
+        console.error("Mark all read error:", err);
+    }
+}
+
+async function markAsRead(id) {
+    try {
+        await fetch(`${API}/notifications/${id}/read`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + getToken() }
+        });
+        checkNotifications();
+        loadNotificationsForDropdown();
+    } catch (err) {
+        console.error("Mark read error:", err);
+    }
+}
+
+function getNotifIcon(type) {
+    switch(type) {
+        case 'complaint_status': return 'bx bx-info-circle';
+        case 'assignment': return 'bx bx-user-plus';
+        case 'concern_responded': return 'bx bx-reply';
+        case 'concern_raised': return 'bx bx-error-circle';
+        case 'legal_notice': return 'bx bx-shield-quarter';
+        default: return 'bx bx-bell';
+    }
+}
+
+function getNotifColor(type) {
+    switch(type) {
+        case 'complaint_status': return 'text-primary';
+        case 'assignment': return 'text-success';
+        case 'concern_responded': return 'text-warning';
+        case 'concern_raised': return 'text-danger';
+        case 'legal_notice': return 'text-danger';
+        default: return 'text-secondary';
+    }
+}
+
+function updateDashboardNotifSummary(notifs) {
+    const container = document.getElementById("dashboardNotificationSummary");
+    if (!container) return;
+    
+    if (notifs.length === 0) {
+        container.innerHTML = '<p class="text-muted small">You are all caught up!</p>';
+        return;
+    }
+    
+    container.innerHTML = notifs.map(n => `
+        <div class="notif-summary-item">
+            <i class='${getNotifIcon(n.type)} ${getNotifColor(n.type)}' style="font-size: 1.25rem;"></i>
+            <div style="flex: 1;">
+                <div class="fw-bold small">${n.title}</div>
+                <div class="text-muted smaller" style="font-size: 0.75rem;">${n.message}</div>
+            </div>
+            <div class="smaller text-muted" style="font-size: 0.7rem;">${new Date(n.createdAt).toLocaleDateString()}</div>
+        </div>
+    `).join('');
 }

@@ -41,12 +41,119 @@ function updateProfileInfo() {
     });
 }
 
+/* =========================
+   NOTIFICATIONS SYSTEM
+========================= */
+
+async function fetchNotifications() {
+    try {
+        const res = await fetch(`${API}/notifications`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) return;
+        
+        const notifications = await res.json();
+        const unreadCount = notifications.filter(n => !n.isRead).length;
+        
+        const badge = document.getElementById("noti-badge");
+        if (badge) {
+            badge.textContent = unreadCount;
+            badge.style.display = unreadCount > 0 ? "block" : "none";
+        }
+        
+        loadNotifications(notifications);
+        
+        // Check for new persistent alerts (Toast)
+        const lastNotifId = localStorage.getItem("lastOfficerNotifId");
+        if (notifications.length > 0 && notifications[0]._id !== lastNotifId && !notifications[0].isRead) {
+            showToast(notifications[0].title, notifications[1] ? notifications[0].message : notifications[0].message);
+            localStorage.setItem("lastOfficerNotifId", notifications[0]._id);
+        }
+    } catch (err) {
+        console.error("Notif Error:", err);
+    }
+}
+
+function loadNotifications(notifications) {
+    const citizenList = document.getElementById("citizen-noti-list");
+    const adminList = document.getElementById("admin-noti-list");
+    if (!citizenList || !adminList) return;
+
+    const citizenNotifs = notifications.filter(n => ['concern_raised', 'assignment'].includes(n.type));
+    const adminNotifs = notifications.filter(n => !['concern_raised', 'assignment'].includes(n.type));
+
+    if (citizenNotifs.length === 0) {
+        citizenList.innerHTML = `<div class="p-3 text-center text-muted small">No citizen alerts</div>`;
+    } else {
+        citizenList.innerHTML = citizenNotifs.slice(0, 10).map(n => renderNotifItem(n)).join('');
+    }
+
+    if (adminNotifs.length === 0) {
+        adminList.innerHTML = `<div class="p-3 text-center text-muted small">No admin alerts</div>`;
+    } else {
+        adminList.innerHTML = adminNotifs.slice(0, 10).map(n => renderNotifItem(n)).join('');
+    }
+}
+
+function renderNotifItem(n) {
+    return `
+        <div class="notification-item p-2 border-bottom ${n.isRead ? '' : 'bg-light'}" style="cursor: pointer;" onclick="markAsRead('${n._id}')">
+            <h6 class="mb-1 small fw-bold" style="font-size: 0.8rem;">${n.title}</h6>
+            <p class="mb-1 text-muted tiny" style="font-size: 0.7rem; line-height: 1.2;">${n.message}</p>
+            <span class="text-primary tiny" style="font-size: 0.6rem;">${new Date(n.createdAt).toLocaleString()}</span>
+        </div>
+    `;
+}
+
+async function markAsRead(id) {
+    try {
+        await fetch(`${API}/notifications/${id}/read`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token }
+        });
+        fetchNotifications();
+    } catch (err) { console.error(err); }
+}
+
+function showToast(title, message) {
+    const toastContainer = document.getElementById("toast-container");
+    if (!toastContainer) {
+        const container = document.createElement("div");
+        container.id = "toast-container";
+        container.className = "position-fixed bottom-0 end-0 p-3";
+        container.style.zIndex = "1100";
+        document.body.appendChild(container);
+    }
+    
+    const toastId = "toast-" + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast show border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white border-0">
+                <i class="bi bi-bell-fill me-2"></i>
+                <strong class="me-auto">${title}</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("toast-container").insertAdjacentHTML('beforeend', toastHtml);
+    setTimeout(() => {
+        const el = document.getElementById(toastId);
+        if (el) el.remove();
+    }, 5000);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     updateProfileInfo();
 
-    /* =========================
-       SIDEBAR & NAVIGATION
-    ========================= */
+    // Notifications Initialization
+    fetchNotifications();
+    setInterval(fetchNotifications, 30000); // Polling every 30s
+    
+    // ... handle all sidebar links ...
 
     // Sidebar toggle (desktop/mobile)
     const sidebar = document.getElementById('sidebar');
@@ -251,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
             allComplaints = await res.json();
             renderComplaints(allComplaints);
             updateStats(allComplaints);
-            updateNotifications(allComplaints);
+            fetchNotifications(); // Now fetches real notifications
         } catch (err) {
             console.error(err);
         }
@@ -305,84 +412,60 @@ document.addEventListener("DOMContentLoaded", () => {
     /* =========================
        NOTIFICATIONS SYSTEM
     ========================= */
-    function updateNotifications(complaints) {
+    async function fetchNotifications() {
         const citizenList = document.getElementById("citizen-noti-list");
         const adminList = document.getElementById("admin-noti-list");
         const badge = document.getElementById("noti-badge");
 
         if (!citizenList || !adminList || !badge) return;
 
-        let citizenAlerts = [];
-        let adminAlerts = [];
+        try {
+            const res = await fetch(`${API}/notifications`, {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (!res.ok) throw new Error("Failed to fetch notifications");
 
-        // Simple rules for generating synthetic alerts:
-        // Citizen: Any case that was assigned recent or updated by the citizen
-        // Admin: Any case marked as priority = 'High' and not resolved, or any case past 7 days without resolution
-        const now = new Date();
+            const notifications = await res.json();
+            
+            // Separate notifications into Admin and Citizen based on content or type
+            // (Assuming content starting with 'Admin' or coming from specific sources)
+            const adminAlerts = notifications.filter(n => n.message.toLowerCase().includes('admin') || n.message.toLowerCase().includes('legal'));
+            const citizenAlerts = notifications.filter(n => !n.message.toLowerCase().includes('admin') && !n.message.toLowerCase().includes('legal'));
 
-        complaints.forEach(c => {
-            const id = c.complaintId || (c._id ? c._id.substring(0,8) : 'N/A');
-            const created = new Date(c.createdAt);
-            const daysOld = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-
-            // Citizen Alerts trigger
-            if (c.status === "Assigned") {
-                citizenAlerts.push({
-                    text: `New complaint ${id} assigned to you.`,
-                    time: created.toLocaleString()
-                });
-            } else if (c.rating) {
-                citizenAlerts.push({
-                    text: `Citizen left a ${c.rating}-star review on ${id}.`,
-                    time: new Date(c.updatedAt || c.createdAt).toLocaleString()
-                });
+            // Set Badge (Unread only)
+            const unreadCount = notifications.filter(n => !n.isRead).length;
+            if (unreadCount > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
             }
 
-            // Admin Alerts trigger
-            if (c.status !== "Resolved" && c.priority === "High") {
-                adminAlerts.push({
-                    text: `Admin flagged ${id} as HIGH priority. Actions required.`,
-                    time: new Date(c.updatedAt || c.createdAt).toLocaleString()
-                });
-            } else if (c.status !== "Resolved" && daysOld > 7) {
-                adminAlerts.push({
-                    text: `Admin Alert: Case ${id} is overdue (${daysOld} days).`,
-                    time: new Date().toLocaleString()
-                });
+            // Render citizen alerts
+            if (citizenAlerts.length > 0) {
+                citizenList.innerHTML = citizenAlerts.map(a => `
+                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}">
+                        <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                    </div>
+                `).join("");
+            } else {
+                citizenList.innerHTML = '<div class="text-center text-muted small py-3">No new citizen alerts</div>';
             }
-        });
 
-        // Set Badge
-        const totalAlerts = citizenAlerts.length + adminAlerts.length;
-        if (totalAlerts > 0) {
-            badge.style.display = 'inline-block';
-            badge.textContent = totalAlerts > 99 ? '99+' : totalAlerts;
-        } else {
-            badge.style.display = 'none';
-        }
-
-        // Render citizen alerts
-        if (citizenAlerts.length > 0) {
-            citizenList.innerHTML = citizenAlerts.map(a => `
-                <div class="border-bottom p-2 text-start">
-                    <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.text}</p>
-                    <small class="text-muted" style="font-size: 0.75rem;">${a.time}</small>
-                </div>
-            `).join("");
-        } else {
-            citizenList.innerHTML = '<div class="text-center text-muted small py-3">No new citizen alerts</div>';
-        }
-
-        // Render admin alerts
-        if (adminAlerts.length > 0) {
-            adminList.innerHTML = adminAlerts.map(a => `
-                <div class="border-bottom p-2 text-start">
-                    <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.text}</p>
-                    <small class="text-muted" style="font-size: 0.75rem;">${a.time}</small>
-                </div>
-            `).join("");
-        } else {
-            adminList.innerHTML = '<div class="text-center text-muted small py-3">No new admin alerts</div>';
+            // Render admin alerts
+            if (adminAlerts.length > 0) {
+                adminList.innerHTML = adminAlerts.map(a => `
+                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}">
+                        <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                    </div>
+                `).join("");
+            } else {
+                adminList.innerHTML = '<div class="text-center text-muted small py-3">No new admin alerts</div>';
+            }
+        } catch (err) {
+            console.error("Notifications fetch error:", err);
         }
     }
 

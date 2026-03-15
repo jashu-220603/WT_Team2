@@ -20,8 +20,10 @@
         <!-- SIDEBAR -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <i class='bx bx-shield-quarter'></i>
-                <span class="logo-name">Citizen Portal</span>
+                <div class="logo-wrapper">
+                    <i class='bx bx-shield-quarter'></i>
+                    <span class="logo-name">Citizen Portal</span>
+                </div>
                 <i class='bx bx-menu' id="btn-menu"></i>
             </div>
             <ul class="nav-list">
@@ -79,18 +81,21 @@
                         <span class="links_name">Contact Support</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="nav-link" data-target="settings-section">
-                        <i class='bx bx-cog'></i>
-                        <span class="links_name">Settings</span>
-                    </a>
-                </li>
-                <li class="logout-item">
-                    <a href="#" id="logoutBtn">
-                        <i class='bx bx-log-out'></i>
-                        <span class="links_name">Logout</span>
-                    </a>
-                </li>
+                
+                <div class="sidebar-bottom">
+                    <li>
+                        <a href="#" class="nav-link" data-target="settings-section">
+                            <i class='bx bx-cog'></i>
+                            <span class="links_name">Settings</span>
+                        </a>
+                    </li>
+                    <li class="logout-item">
+                        <a href="#" id="logoutBtn">
+                            <i class='bx bx-log-out'></i>
+                            <span class="links_name">Logout</span>
+                        </a>
+                    </li>
+                </div>
             </ul>
         </nav>
 
@@ -103,6 +108,25 @@
                     <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
                 </div>
                 <div class="header-right">
+                    <div class="notification-bell-container" id="notificationBellTrigger">
+                        <i class='bx bx-bell'></i>
+                        <span class="notification-badge hidden" id="notificationCount">0</span>
+                        
+                        <!-- NOTIFICATION DROPDOWN -->
+                        <div class="notification-dropdown hidden" id="notificationDropdown">
+                            <div class="notif-header">
+                                <h4>Notifications</h4>
+                                <button id="markAllReadBtn">Mark all as read</button>
+                            </div>
+                            <div class="notif-list" id="notifDropdownList">
+                                <!-- Notifications injected here -->
+                                <div class="notif-placeholder">No new notifications</div>
+                            </div>
+                            <div class="notif-footer">
+                                <a href="#" class="nav-trigger" data-target="notifications-section">See all notifications</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="profile-icon-container" id="profileIconTrigger">
                         <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" class="profile-avatar" id="headerProfileAvatar">
                     </div>
@@ -173,12 +197,7 @@
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label for="title">Complaint Title</label>
-                                <input type="text" id="title" name="title" placeholder="Brief title for your complaint" required>
-                            </div>
-                        </div>
+
 
                         <div class="form-row">
                             <div class="input-group">
@@ -242,110 +261,149 @@
                 </div>
 
                 <div class="card track-card">
-                    <form id="trackForm" class="track-form">
-                        <div class="input-wrapper">
-                            <i class='bx bx-search'></i>
-                            <input type="text" id="trackIdInput" placeholder="Enter Complaint ID (e.g. CMP849201)" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Check Status</button>
-                    </form>
+                    <div class="track-form-container">
+                        <form id="trackForm" class="track-form">
+                            <div class="input-wrapper">
+                                <i class='bx bx-search'></i>
+                                <input type="text" id="trackIdInput" placeholder="Enter Complaint ID (e.g. CMP849201)" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Check Status</button>
+                        </form>
 
-                    <div id="trackingResult" class="tracking-result hidden">
-                        <div class="tracking-header">
-                            <h3>Complaint: <span id="displayTrackId" class="highlight-id"></span></h3>
-                            <span class="badge" id="displayBadge">In Progress</span>
-                        </div>
-                        
-                        <!-- Progress Stepper -->
-                        <div class="stepper">
-                            <div class="step" id="step-assigned">
-                                <div class="step-icon"><i class='bx bx-user-pin'></i></div>
-                                <div class="step-content">
-                                    <h4>Assigned</h4>
-                                    <p>Officer assigned to the issue</p>
+                        <div id="trackingResult" class="tracking-result hidden">
+                            <div class="tracking-header">
+                                <h3>Complaint: <span id="displayTrackId" class="highlight-id"></span></h3>
+                                <div class="badge-wrapper">
+                                    <span class="badge" id="displayBadge">In Progress</span>
                                 </div>
                             </div>
-                            <div class="connector" id="conn-1"></div>
                             
-                            <div class="step" id="step-inprogress">
-                                <div class="step-icon"><i class='bx bx-cog'></i></div>
-                                <div class="step-content">
-                                    <h4>In Progress</h4>
-                                    <p>Action is being taken</p>
+                            <!-- Progress Stepper -->
+                            <div class="stepper-container">
+                                <div class="stepper">
+                                    <div class="step" id="step-assigned">
+                                        <div class="step-icon"><i class='bx bx-user-pin'></i></div>
+                                        <div class="step-content">
+                                            <h4>Assigned</h4>
+                                            <p>Officer assigned</p>
+                                        </div>
+                                    </div>
+                                    <div class="connector" id="conn-1"></div>
+                                    
+                                    <div class="step" id="step-inprogress">
+                                        <div class="step-icon"><i class='bx bx-cog'></i></div>
+                                        <div class="step-content">
+                                            <h4>In Progress</h4>
+                                            <p>Action taken</p>
+                                        </div>
+                                    </div>
+                                    <div class="connector" id="conn-2"></div>
+                                    
+                                    <div class="step" id="step-pending">
+                                        <div class="step-icon"><i class='bx bx-time'></i></div>
+                                        <div class="step-content">
+                                            <h4>Internal Check</h4>
+                                            <p>Awaiting verification</p>
+                                        </div>
+                                    </div>
+                                    <div class="connector" id="conn-3"></div>
+                                    
+                                    <div class="step" id="step-resolved">
+                                        <div class="step-icon"><i class='bx bx-check-double'></i></div>
+                                        <div class="step-content">
+                                            <h4>Resolved</h4>
+                                            <p>Issue solved</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="connector" id="conn-2"></div>
-                            
-                            <div class="step" id="step-pending">
-                                <div class="step-icon"><i class='bx bx-time'></i></div>
-                                <div class="step-content">
-                                    <h4>Pending</h4>
-                                    <p>Awaiting resolution</p>
-                                </div>
-                            </div>
-                            <div class="connector" id="conn-3"></div>
-                            
-                            <div class="step" id="step-resolved">
-                                <div class="step-icon"><i class='bx bx-check-double'></i></div>
-                                <div class="step-content">
-                                    <h4>Resolved</h4>
-                                    <p>Issue has been solved</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Officer Details -->
-                        <div id="officerDetails" class="officer-details-card hidden mt-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div id="officerAvatarSmall" class="officer-avatar-sm"></div>
-                                <div>
-                                    <h4 id="officerNameDisplay" class="mb-0">Officer Name</h4>
-                                    <p id="officerDeptDisplay" class="text-muted small mb-0">Department</p>
+                            <!-- Officer Details -->
+                            <div id="officerDetails" class="officer-details-card hidden mt-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div id="officerAvatarSmall" class="officer-avatar-sm"></div>
+                                    <div>
+                                        <h4 id="officerNameDisplay" class="mb-0">Officer Name</h4>
+                                        <p id="officerDeptDisplay" class="text-muted small mb-0">Department</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <p class="small text-muted mb-0"><i class='bx bx-phone'></i> Contact</p>
+                                        <h6 id="officerPhoneDisplay" class="fw-bold"></h6>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="small text-muted mb-0"><i class='bx bx-envelope'></i> Email</p>
+                                        <h6 id="officerEmailDisplay" class="fw-bold"></h6>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <p class="small text-muted mb-0"><i class='bx bx-info-circle'></i> Bio</p>
+                                    <p id="officerBioDisplay" class="small"></p>
                                 </div>
                             </div>
-                            <hr>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <p class="small text-muted mb-0"><i class='bx bx-phone'></i> Contact</p>
-                                    <h6 id="officerPhoneDisplay" class="fw-bold"></h6>
-                                </div>
-                                <div class="col-6">
-                                    <p class="small text-muted mb-0"><i class='bx bx-envelope'></i> Email</p>
-                                    <h6 id="officerEmailDisplay" class="fw-bold"></h6>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <p class="small text-muted mb-0"><i class='bx bx-info-circle'></i> Bio</p>
-                                <p id="officerBioDisplay" class="small"></p>
-                            </div>
-                        </div>
 
-                        <!-- Resolution Proof -->
-                        <div id="resolutionProof" class="officer-details-card hidden mt-3" style="border-top: 3px solid var(--success);">
-                            <h4><i class='bx bx-check-shield'></i> Resolution Proof</h4>
-                            <div id="resolutionContent" class="mt-2 text-center">
-                                <p id="resolutionRemarks" class="mb-3 fw-bold"></p>
-                                <img id="resolutionImageDisplay" src="" alt="Resolution Proof" class="img-fluid rounded shadow-sm" style="max-height: 300px; display: none;">
-                            </div>
-                        </div>
-
-                        <!-- Citizen Rating Section -->
-                        <div id="ratingSection" class="officer-details-card hidden mt-3">
-                            <h4><i class='bx bx-star'></i> Rate our Service</h4>
-                            <p class="small text-muted mb-3">Please rate the resolution of your complaint.</p>
-                            <form id="ratingForm">
-                                <div class="rating-stars mb-3">
-                                    <input type="radio" name="rating" value="5" id="r5"><label for="r5"><i class='bx bxs-star'></i></label>
-                                    <input type="radio" name="rating" value="4" id="r4"><label for="r4"><i class='bx bxs-star'></i></label>
-                                    <input type="radio" name="rating" value="3" id="r3"><label for="r3"><i class='bx bxs-star'></i></label>
-                                    <input type="radio" name="rating" value="2" id="r2"><label for="r2"><i class='bx bxs-star'></i></label>
-                                    <input type="radio" name="rating" value="1" id="r1"><label for="r1"><i class='bx bxs-star'></i></label>
+                            <!-- Resolution Proof -->
+                            <div id="resolutionProof" class="officer-details-card hidden mt-3" style="border-top: 3px solid var(--success);">
+                                <h4><i class='bx bx-check-shield'></i> Resolution Proof</h4>
+                                <div id="resolutionContent" class="mt-2 text-center">
+                                    <p id="resolutionRemarks" class="mb-3 fw-bold"></p>
+                                    <img id="resolutionImageDisplay" src="" alt="Resolution Proof" class="img-fluid rounded shadow-sm" style="max-height: 300px; display: none;">
                                 </div>
-                                <textarea id="feedback-text" class="form-input mb-2" placeholder="Tell us more about your experience..."></textarea>
-                                <button type="submit" class="btn-primary full-width">Submit Feedback</button>
-                            </form>
-                            <div id="ratingSuccess" class="hidden text-success text-center mt-2">
-                                <i class='bx bx-check-circle'></i> Thank you for your feedback!
+                            </div>
+
+                            <!-- Citizen Rating Section -->
+                            <div id="ratingSection" class="officer-details-card hidden mt-3">
+                                <h4><i class='bx bx-star'></i> Rate our Service</h4>
+                                <p class="small text-muted mb-3">Please rate the resolution of your complaint.</p>
+                                <form id="ratingForm">
+                                    <div class="rating-stars mb-3">
+                                        <input type="radio" name="rating" value="5" id="r5"><label for="r5"><i class='bx bxs-star'></i></label>
+                                        <input type="radio" name="rating" value="4" id="r4"><label for="r4"><i class='bx bxs-star'></i></label>
+                                        <input type="radio" name="rating" value="3" id="r3"><label for="r3"><i class='bx bxs-star'></i></label>
+                                        <input type="radio" name="rating" value="2" id="r2"><label for="r2"><i class='bx bxs-star'></i></label>
+                                        <input type="radio" name="rating" value="1" id="r1"><label for="r1"><i class='bx bxs-star'></i></label>
+                                    </div>
+                                    <textarea id="feedback-text" class="form-input mb-2" placeholder="Tell us more about your experience..."></textarea>
+                                    <button type="submit" class="btn-primary full-width">Submit Feedback</button>
+                                </form>
+                                <div id="ratingSuccess" class="hidden text-success text-center mt-2">
+                                    <i class='bx bx-check-circle'></i> Thank you for your feedback!
+                                </div>
+                            </div>
+
+                            <!-- RAISE A CONCERN SECTION -->
+                            <div id="raiseConcernSection" class="concern-banner mt-4 hidden">
+                                <div class="concern-content">
+                                    <div class="concern-text">
+                                        <h4><i class='bx bx-error-circle'></i> Issue not resolved?</h4>
+                                        <p>If the work is delayed or unsatisfactory, you can raise a formal concern.</p>
+                                    </div>
+                                    <button id="showConcernFormBtn" class="btn-danger-outline">Raise a Concern</button>
+                                </div>
+                                
+                                <form id="concernForm" class="hidden mt-3 card p-3 shadow-none border">
+                                    <div class="input-group mb-3">
+                                        <label>Complaint ID</label>
+                                        <input type="text" id="concernComplaintId" class="form-input" readonly>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <label>Reason for Concern</label>
+                                        <textarea id="concernDescription" class="form-input" rows="3" placeholder="Explain the issue clearly..." required></textarea>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <label>Upload Evidence (Optional)</label>
+                                        <input type="file" id="concernEvidence" class="form-input" accept="image/*">
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" id="cancelConcernBtn" class="btn-secondary flex-1">Cancel</button>
+                                        <button type="submit" class="btn-primary flex-2">Submit Concern</button>
+                                    </div>
+                                </form>
+                                <div id="concernSuccess" class="hidden text-success text-center mt-3 fw-bold">
+                                    <i class='bx bx-check-circle'></i> Concern submitted successfully! Our team will review it.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -375,51 +433,32 @@
                         </div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon bg-yellow"><i class='bx bx-loader-circle'></i></div>
+                        <div class="stat-details">
+                            <h3>In Progress</h3>
+                            <h2 id="stat-inprogress">0</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
                         <div class="stat-icon bg-green"><i class='bx bx-check-shield'></i></div>
                         <div class="stat-details">
-                            <h3>Solved Complaints</h3>
+                            <h3>Resolved Complaints</h3>
                             <h2 id="stat-solved">0</h2>
                         </div>
                     </div>
                 </div>
 
-                <div class="row mt-4" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                    <div class="col" style="flex: 1; min-width: 300px;">
-                        <div class="card p-4 h-100" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;">
-                            <h3 style="color: white; margin-bottom: 1rem;"><i class='bx bxs-lightning me-2'></i> Quick Actions</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                                <button class="nav-link-btn" onclick="document.querySelector('[data-target=\'file-complaint-section\']').click()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; cursor: pointer;">
-                                    <i class='bx bx-plus-circle'></i> File Case
-                                </button>
-                                <button class="nav-link-btn" onclick="document.querySelector('[data-target=\'track-complaint-section\']').click()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; cursor: pointer;">
-                                    <i class='bx bx-search'></i> Track Status
-                                </button>
-                                <button class="nav-link-btn" onclick="document.getElementById('openProfileBtn').click()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; cursor: pointer;">
-                                    <i class='bx bx-user'></i> My Profile
-                                </button>
-                                <button class="nav-link-btn" onclick="document.getElementById('openSettingsBtn').click()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; cursor: pointer;">
-                                    <i class='bx bx-cog'></i> Help Desk
-                                </button>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card p-4 shadow-sm">
+                            <h3 class="mb-3"><i class='bx bx-bell text-primary me-2'></i> Notification Summary</h3>
+                            <div id="dashboardNotificationSummary" class="notif-summary-list">
+                                <!-- Short list of latest 3 notifications -->
+                                <p class="text-muted">No recent notifications.</p>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col" style="flex: 1; min-width: 300px;">
-                        <div class="card p-4 h-100 border-0 shadow-sm">
-                            <h3 style="margin-bottom: 1rem;"><i class='bx bxs-phone-call text-danger me-2'></i> Emergency Contacts</h3>
-                            <ul style="list-style: none; padding: 0;">
-                                <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                                    <span>Police</span>
-                                    <strong class="text-primary">100</strong>
-                                </li>
-                                <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                                    <span>Ambulance</span>
-                                    <strong class="text-primary">102</strong>
-                                </li>
-                                <li style="display: flex; justify-content: space-between; padding: 8px 0;">
-                                    <span>Fire Station</span>
-                                    <strong class="text-primary">101</strong>
-                                </li>
-                            </ul>
+                            <div class="text-end mt-2">
+                                <a href="#" class="nav-trigger small text-decoration-none" data-target="notifications-section">View All Notifications</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -503,7 +542,7 @@
                         <div class="input-group mb-3">
                             <label for="feedbackComplaintSelect">Select Resolved Complaint</label>
                             <select id="feedbackComplaintSelect" class="form-input" required>
-                                <option value="" disabled selected>Select a complaint</option>
+                                <option value="" disabled selected>Loading resolved complaints...</option>
                             </select>
                         </div>
                         <div class="rating-stars mb-3 text-center">
@@ -534,7 +573,13 @@
                 <div class="card form-card">
                     <form id="standaloneProfileForm">
                         <div class="text-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" id="standaloneProfileImg" class="profile-avatar mb-3" style="width:100px; height:100px;">
+                            <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" id="standaloneProfileImg" class="profile-avatar mb-3" style="width:100px; height:100px; object-fit: cover; border-radius: 50%;">
+                            <div class="input-group">
+                                <label class="btn-secondary" style="justify-content: center; cursor: pointer;">
+                                    <i class='bx bx-camera'></i> Change Photo
+                                    <input type="file" id="profPhotoMain" accept="image/*" class="hidden">
+                                </label>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="input-group">
@@ -551,10 +596,6 @@
                                 <label>Phone Number</label>
                                 <input type="tel" id="profPhoneMain" class="form-input">
                             </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Address</label>
-                            <textarea id="profAddressMain" class="form-input" rows="3"></textarea>
                         </div>
                         <button type="submit" class="btn-primary full-width mt-3">Update Profile</button>
                     </form>
@@ -624,10 +665,10 @@
                     <form id="standaloneSettingsForm">
                         <div class="input-group mb-4 border-bottom pb-4">
                             <h4 class="mb-3">Change Password</h4>
-                            <div class="form-row">
+                            <div class="form-row mb-4">
                                 <input type="password" id="currentPassword" placeholder="Current Password" class="form-input">
                             </div>
-                            <div class="form-row mt-2">
+                            <div class="form-row mb-4">
                                 <input type="password" id="newPassword" placeholder="New Password" class="form-input">
                             </div>
                             <button type="button" id="pwdUpdateBtn" class="btn-primary mt-2">Update Password</button>
@@ -635,7 +676,7 @@
                         </div>
                         <div class="input-group mb-4 border-bottom pb-4">
                             <h4 class="mb-3">App Preferences</h4>
-                            <div class="form-row align-items-center mb-3">
+                            <div class="form-row align-items-center mb-4">
                                 <label style="flex:1;">Language</label>
                                 <select class="form-input" style="width:auto; flex:2;">
                                     <option value="en">English</option>
@@ -644,10 +685,12 @@
                             </div>
                             <div class="form-row align-items-center">
                                 <label style="flex:1;">Dark Mode</label>
-                                <label class="switch d-flex justify-content-end" style="flex:2;">
-                                    <input type="checkbox" id="themeToggleCheckbox">
-                                    <span class="slider round"></span>
-                                </label>
+                                <div class="switch-container" style="flex:2; display:flex; justify-content: flex-end;">
+                                    <label class="switch">
+                                        <input type="checkbox" id="themeToggleCheckbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </form>

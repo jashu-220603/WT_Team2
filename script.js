@@ -39,6 +39,7 @@ function openSignup(){
     
     document.getElementById("signupModal").style.display="flex";
     switchSignupTab(activeRole);
+    if (activeRole === 'officer') populateSignupDepartments();
 }
 
 function closeSignup(){
@@ -98,7 +99,25 @@ function switchSignupTab(role) {
         deptGroup.style.display = "none";
         staffIdLabel.textContent = "Admin ID";
         staffIdInput.placeholder = "e.g. adm-001";
-        staffIdInput.required = true;
+    }
+}
+
+async function populateSignupDepartments() {
+    const deptSelect = document.getElementById("signupDept");
+    if (!deptSelect) return;
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/departments`);
+        if (resp.ok) {
+            const depts = await resp.json();
+            let html = '<option value="">Select Department</option>';
+            depts.forEach(d => {
+                const name = d.name || d;
+                html += `<option value="${name}">${name}</option>`;
+            });
+            deptSelect.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Error fetching departments:', err);
     }
 }
 
@@ -121,10 +140,16 @@ function setupLoginRedirect(){
         }
 
         try {
+            // Determine active role from tabs
+            const tabs = document.querySelectorAll("#loginModal .tab");
+            let role = 'user';
+            if (tabs[1] && tabs[1].classList.contains('active')) role = 'officer';
+            if (tabs[2] && tabs[2].classList.contains('active')) role = 'admin';
+
             const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({email, password})
+                body: JSON.stringify({email, password, role})
             });
 
             if(!resp.ok){
