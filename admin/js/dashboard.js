@@ -217,6 +217,7 @@ function setupNavigation() {
         });
     }
 
+    const adminProfileForm = document.getElementById("admin-profile-form");
     if (adminProfileForm) {
         // Image preview
         const photoInput = document.getElementById("admin-photo-input");
@@ -582,7 +583,7 @@ function renderAnalytics() {
         
         const deptCounts = {};
         // Initialize dynamic departments with 0
-        departmentsData.forEach(d => { deptCounts[d] = 0; });
+        departmentsData.forEach(d => { deptCounts[d.name || d] = 0; });
         
         complaintsData.forEach(c => {
             if(deptCounts[c.category] !== undefined) {
@@ -668,7 +669,7 @@ function renderAnalytics() {
         
         const deptResData = {};
         // Ensure all dynamic departments are initialized
-        departmentsData.forEach(d => { deptResData[d] = { total: 0, resolved: 0 }; });
+        departmentsData.forEach(d => { deptResData[d.name || d] = { total: 0, resolved: 0 }; });
         complaintsData.forEach(c => {
             const cat = c.category;
             if (!deptResData[cat]) deptResData[cat] = { total: 0, resolved: 0 };
@@ -924,24 +925,33 @@ if (taskForm) {
 document.querySelectorAll('#reports-section .btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
         e.preventDefault();
-        const text = btn.textContent;
-        if (text.includes("Export CSV")) {
-            window.location.href = `${API}/reports/export-csv?token=${token}`;
-            // If token in URL is not supported by backend auth, we use fetch and blob
-            fetch(`${API}/reports/export-csv`, { headers: { Authorization: "Bearer " + token } })
-                .then(res => res.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'complaints_report.csv';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
+        const text = btn.textContent.trim();
+        if (text.includes("Export CSV") || text.includes("Download CSV")) {
+            // Use fetch + blob so auth header is sent properly
+            try {
+                btn.disabled = true;
+                btn.textContent = "Downloading...";
+                const res = await fetch(`${API}/reports/export-csv`, {
+                    headers: { Authorization: "Bearer " + token }
                 });
-        } else if (text.includes("Download PDF") || text.includes("View Online")) {
-            alert("This feature generates a live summary report. Downloading...");
-            setTimeout(() => alert("Report downloaded successfully."), 1000);
+                if (!res.ok) throw new Error("Failed to generate report");
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'complaints_report.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch(err) {
+                alert("Failed to download report: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = text;
+            }
+        } else if (text.includes("Download PDF") || text.includes("View Online") || text.includes("Summary")) {
+            alert("PDF reports are not yet implemented. Use CSV Export instead.");
         }
     });
 });
@@ -1166,8 +1176,19 @@ function populateDepartmentFilters() {
 
     deptSelector.innerHTML = '<li><a class="dropdown-item" href="#" onclick="filterByDept(\'All\')">All Departments</a></li>';
     departmentsData.forEach(dept => {
-        deptSelector.innerHTML += `<li><a class="dropdown-item" href="#" onclick="filterByDept('${dept}')">${dept}</a></li>`;
+        const name = dept.name || dept;
+        deptSelector.innerHTML += `<li><a class="dropdown-item" href="#" onclick="filterByDept('${name}')">${name}</a></li>`;
     });
+    
+    // Also populate the add-officer department dropdown
+    const offDeptSelect = document.getElementById("off-dept");
+    if (offDeptSelect) {
+        offDeptSelect.innerHTML = '<option value="">Select Department...</option>';
+        departmentsData.forEach(dept => {
+            const name = dept.name || dept;
+            offDeptSelect.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+    }
 }
 
 window.filterByDept = function(dept) {
@@ -1257,7 +1278,12 @@ window.terminateOfficer = function(id, name) {
     document.getElementById("res-target-name").textContent = name;
     document.getElementById("confirm-termination").checked = false;
     document.getElementById("confirm-terminate-btn").classList.add("disabled");
-    document.getElementById("send-legal-notice-btn").classList.add("disabled");
+    
+    // Store officer info for the legal notice button inside the modal
+    const noticeIdEl = document.getElementById("notice-officer-id");
+    if (noticeIdEl) noticeIdEl.value = id;
+    const sendNoticeBtn = document.getElementById("send-legal-notice-btn");
+    if (sendNoticeBtn) sendNoticeBtn.classList.add("disabled");
 
     const modal = new bootstrap.Modal(document.getElementById("terminationModal"));
     modal.show();
