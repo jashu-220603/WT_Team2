@@ -51,19 +51,28 @@ router.post('/', async (req, res) => {
             })
         });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("OpenRouter Error Details:", errorData);
+            return res.status(response.status).json({ 
+                message: "AI Service Error", 
+                details: errorData.error ? errorData.error.message : "Unknown error"
+            });
+        }
+
         const data = await response.json();
         
-        if (data.error) {
-            console.error("AI Error:", data.error);
-            return res.status(500).json({ message: "Error from AI Service", details: data.error.message });
+        if (!data.choices || data.choices.length === 0) {
+            console.error("No choices returned from AI:", data);
+            return res.status(500).json({ message: "No response from AI service" });
         }
 
         const botReply = data.choices[0].message.content;
         res.json({ reply: botReply });
 
     } catch (err) {
-        console.error("Chat Error:", err);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Chat Route Error:", err);
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 });
 

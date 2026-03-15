@@ -48,16 +48,23 @@ async function sendMessage() {
 
         const botMsg = document.createElement("p");
         botMsg.className = "bot-msg";
-        botMsg.innerText = data.reply || "I'm sorry, I'm having trouble connecting to my brain right now.";
+        
+        if (response.ok && data.reply) {
+            botMsg.innerText = data.reply;
+        } else {
+            botMsg.innerText = data.details || data.message || "I'm sorry, I'm having trouble connecting to my brain right now.";
+            console.error("Chat Error Response:", data);
+        }
+        
         chatBody.appendChild(botMsg);
 
     } catch (err) {
-        console.error("Chatbot error:", err);
+        console.error("Chatbot network error:", err);
         chatBody.removeChild(typingIndicator);
         
         const errorMsg = document.createElement("p");
         errorMsg.className = "bot-msg";
-        errorMsg.innerText = "Connection error. Please try again later.";
+        errorMsg.innerText = "Connection error. Please check if the backend is live.";
         chatBody.appendChild(errorMsg);
     }
 
