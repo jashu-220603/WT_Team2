@@ -65,7 +65,7 @@
                 <i class="bi bi-gear"></i>
                 <span>Settings</span>
             </a>
-            <a href="../homepage/index.html" class="nav-link text-danger">
+            <a href="#" onclick="sessionStorage.clear(); window.location.href='../index.html';" class="nav-link text-danger">
                 <i class="bi bi-box-arrow-left"></i>
                 <span>Logout</span>
             </a>
@@ -96,6 +96,14 @@
                 </div>
 
                 <div class="d-flex align-items-center">
+                    <!-- Home Option -->
+                    <a href="../index.html" class="btn btn-link text-dark text-decoration-none me-2 fw-medium d-none d-md-inline-block">
+                        <i class="bi bi-house-door-fill fs-5 me-1"></i>Home
+                    </a>
+                    <a href="../index.html" class="btn btn-link text-dark me-2 d-md-none">
+                        <i class="bi bi-house-door-fill fs-5"></i>
+                    </a>
+
                     <!-- Dark Mode Toggle -->
                     <button id="theme-toggle" class="btn btn-link text-dark me-2">
                         <i class="bi bi-moon-fill fs-5"></i>
@@ -135,12 +143,12 @@
                             <span class="d-none d-md-inline text-dark fw-medium">Admin User</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item" href="#" id="adminProfileBtn"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="adminSettingsBtn"><i class="bi bi-gear me-2"></i>Settings</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item text-danger" href="../homepage/index.html"><i
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout();"><i
                                         class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </div>
@@ -160,18 +168,12 @@
                         <button class="btn btn-secondary btn-sm" onclick="switchSection('reports')">View Summary</button>
                     </div>
                 </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active">Dashboard</li>
-                    </ol>
-                </nav>
             </div>
 
             <!-- Stats Cards -->
             <div class="row g-4 mb-5">
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <div class="card stat-card h-100" style="cursor:pointer;" onclick="switchSection('complaints')">
+                <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
                         <div class="card-body">
                             <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-file-earmark-text"></i>
@@ -183,8 +185,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <div class="card stat-card h-100" style="cursor:pointer;" onclick="switchSection('complaints')">
+                <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
                         <div class="card-body">
                             <div class="stat-icon bg-warning bg-opacity-10 text-warning mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-clock-history"></i>
@@ -196,8 +198,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <div class="card stat-card h-100" style="cursor:pointer;" onclick="switchSection('complaints')">
+                <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
                         <div class="card-body">
                             <div class="stat-icon bg-info bg-opacity-10 text-info mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-person-check"></i>
@@ -209,8 +211,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                    <div class="card stat-card h-100" style="cursor:pointer;" onclick="switchSection('tasks')">
+                <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('tasks')">
                         <div class="card-body">
                             <div class="stat-icon bg-secondary bg-opacity-10 text-secondary mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-person-dash"></i>
@@ -222,50 +224,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                    <div class="card stat-card h-100" style="cursor:pointer;" onclick="switchSection('complaints')">
-                        <div class="card-body">
-                            <div class="stat-icon bg-success bg-opacity-10 text-success mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                            <div class="text-center">
-                                <h6 class="text-muted mb-1 small fw-bold">Resolved Complaints</h6>
-                                <h3 class="fw-bold mb-0" id="resolved-complaints">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Simplified Charts Row -->
-            <div class="row g-4 mb-5">
-                <div class="col-12 col-lg-8">
-                    <div class="chart-container h-100 border-0">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="d-flex align-items-center gap-2">
-                                <h6 class="fw-bold text-uppercase smaller tracking-wider mb-0">Complaint Trends</h6>
-                                <select id="trend-time-filter" class="form-select form-select-sm" onchange="updateTrendChart()">
-                                    <option value="Weekly">Weekly</option>
-                                    <option value="Monthly" selected>Monthly</option>
-                                    <option value="Yearly">Yearly</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary" onclick="switchSection('analytics')">View Details</button>
-                        </div>
-                        <div style="height: 300px;">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-4">
-                    <div class="chart-container h-100 border-0">
-                        <h6 class="fw-bold mb-4 text-uppercase smaller tracking-wider">Complaints by Status</h6>
-                        <div style="height: 300px;">
-                            <canvas id="statusChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Simplified Activity Row -->
             <div class="row g-4">
@@ -311,12 +272,6 @@
                     <h3 class="fw-bold mb-1">Complaint Management</h3>
                     <p class="text-muted small mb-0">Review, assign, and track all citizen complaints.</p>
                 </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active">Complaints</li>
-                    </ol>
-                </nav>
             </div>
 
             <div class="table-container border-0">
@@ -351,6 +306,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
+                                <th>Citizen</th>
                                 <th>Title</th>
                                 <th>Department</th>
                                 <th>Priority</th>
@@ -375,34 +331,11 @@
                     <h3 class="fw-bold mb-1">Officer Management</h3>
                     <p class="text-muted small mb-0">Manage and track performance of department officers.</p>
                 </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active">Officers</li>
-                    </ol>
-                </nav>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOfficerModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Add Officer
+                </button>
             </div>
 
-            <div class="row g-4 mb-5">
-                <div class="col-12">
-                    <div class="chart-container border-0">
-                        <h6 class="fw-bold mb-4 text-uppercase smaller tracking-wider">Officer Workload & Performance
-                        </h6>
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div id="workload-container">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div style="height: 250px;">
-                                    <canvas id="officerPerformanceChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div class="table-container border-0">
                 <div class="table-responsive">
@@ -522,29 +455,13 @@
         <div id="departments-section" class="container-fluid py-4 px-md-5 d-none">
             <div class="d-flex justify-content-between align-items-center mb-5">
                 <div>
-                    <h3 class="fw-bold mb-1">Departments Management</h3>
-                    <p class="text-muted small mb-0">Manage system departments and their structure.</p>
+                    <h3 class="fw-bold mb-1">Departments</h3>
+                    <p class="text-muted small mb-0">Overview of departmental efficiency and officer distribution.</p>
                 </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
-                    <i class="bi bi-plus-lg"></i> Add Department
-                </button>
             </div>
-            <div class="table-container border-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Department Name</th>
-                                <th>Total Complaints</th>
-                                <th>Assigned Officers</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="departments-table-body">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+            
+            <div class="row g-4" id="departments-grid">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -667,50 +584,30 @@
         </div>
     </div>
 
-    <!-- Assign Complaint Modal (officer-centric) -->
-    <div class="modal fade" id="assignComplaintModal" tabindex="-1" aria-hidden="true">
+    <!-- Assign Complaint Modal -->
+    <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Assign New Complaint</h5>
+                    <h5 class="modal-title">Assign Complaint</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="assign-complaint-form">
-                        <input type="hidden" id="assign-officer-id">
-                        <div class="mb-3">
-                            <label class="form-label">Officer Name</label>
-                            <input type="text" id="assign-officer-name" class="form-control" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Select Complaint</label>
-                            <select id="assign-complaint-id" class="form-select" required>
-                                <!-- Unassigned complaints populated by JS -->
+                    <form id="assign-form">
+                        <input type="hidden" id="assign-complaint-id">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select Officer</label>
+                            <select id="assign-officer" class="form-select" required>
+                                <!-- Populated by JS -->
                             </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Priority</label>
-                                <select id="assign-priority" class="form-select">
-                                    <option value="Low">Low</option>
-                                    <option value="Medium" selected>Medium</option>
-                                    <option value="High">High</option>
-                        <!-- existing continued -->
-                                </select>
+                            <div class="form-text mt-2 text-primary">
+                                <i class="bi bi-info-circle me-1"></i> Showing officers from the complaint's department first.
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Deadline</label>
-                                <input type="date" id="assign-deadline" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Remarks</label>
-                            <textarea id="assign-remarks" class="form-control" rows="3"></textarea>
                         </div>
                         <div class="text-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Assign Complaint</button>
+                            <button type="submit" class="btn btn-primary">Assign Officer</button>
                         </div>
                     </form>
                 </div>
@@ -750,6 +647,212 @@
                         <div class="text-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-warning">Confirm Reassignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dept Officers Modal -->
+    <div class="modal fade" id="deptOfficersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="dept-officers-title">Department Officers</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Officer Name</th>
+                                    <th>Staff ID</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dept-officers-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Termination Modal -->
+    <div class="modal fade" id="terminationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Official Termination Notice</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                        <h4 class="mt-2 text-danger fw-bold">Action Required</h4>
+                        <p class="text-muted small">You are about to terminate the service of <br><strong id="terminate-off-name" class="text-dark"></strong>.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-light border rounded mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-danger"><i class="bi bi-envelope-paper me-1"></i> Legal Resignation Notice</label>
+                        <div id="resignation-template" class="small italic text-muted" style="font-size: 0.85rem;">
+                            "Dear <span id="res-target-name"></span>, <br><br> 
+                            Based on departmental requirements, your service as a Department Officer is being terminated effective immediately. Please consider this as a formal directive for the submission of your resignation letter. Your system access has been revoked.<br><br>
+                            Regards, <br> System Administrator"
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirm-termination">
+                        <label class="form-check-label small" for="confirm-termination">
+                            I confirm that I want to terminate this officer and send the notice.
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" id="confirm-terminate-btn" class="btn btn-danger disabled">Send Resignation Notice & Terminate</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Officer Modal -->
+    <div class="modal fade" id="addOfficerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Create New Officer Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-officer-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" id="off-name" class="form-control" required placeholder="e.g. John Doe">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" id="off-email" class="form-control" required placeholder="name@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Officer ID (Staff ID)</label>
+                            <input type="text" id="off-staffId" class="form-control" required placeholder="e.g. off-001">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Department</label>
+                            <select id="off-dept" class="form-select" required>
+                                <option value="">Select Department...</option>
+                                <option value="Cyber Crime">Cyber Crime</option>
+                                <option value="Water Issue">Water Issue</option>
+                                <option value="Electricity Issue">Electricity Issue</option>
+                                <option value="Road Damage">Road Damage</option>
+                                <option value="Public Safety">Public Safety</option>
+                                <option value="Garbage Issue">Garbage Issue</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Password</label>
+                            <input type="password" id="off-password" class="form-control" required placeholder="Set password">
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Profile Modal -->
+    <div class="modal fade" id="adminProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Admin Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="admin-profile-form">
+                        <div class="text-center mb-4">
+                            <img id="admin-prof-img" src="https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff" alt="Profile" class="rounded-circle mb-3" width="80" height="80">
+                            <h5 class="fw-bold mb-0">System Administrator</h5>
+                            <small class="text-muted">Full System Access</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted text-uppercase fw-bold">User ID</label>
+                            <div id="admin-prof-id" class="p-2 bg-light rounded font-monospace small">Loading...</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" id="admin-name-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" id="admin-email-input" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Biography</label>
+                            <textarea id="admin-bio-input" class="form-control" rows="3" placeholder="Tell us about yourself..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Update Password</label>
+                            <input type="password" id="admin-password-input" class="form-control" placeholder="Leave blank to keep current">
+                            <small class="text-muted">Security recommendation: Use at least 8 characters.</small>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Settings Modal -->
+    <div class="modal fade" id="adminSettingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Admin Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="admin-settings-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">System Email Notifications</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notify-new-complaint" checked>
+                                <label class="form-check-label" for="notify-new-complaint">Notify me of new complaints</label>
+                            </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="notify-officer-status" checked>
+                                <label class="form-check-label" for="notify-officer-status">Notify me when officers update status</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data Management</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm d-block w-100 mb-2">Export All Complaints (CSV)</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm d-block w-100">Refresh System Cache</button>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>

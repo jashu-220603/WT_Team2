@@ -49,62 +49,58 @@
                     <div class="card border-0 shadow-sm h-100 text-center">
                         <div class="card-body p-5">
                             <h5 class="fw-bold mb-2">Overall Performance</h5>
-                            <h1 class="display-3 fw-bold text-dark my-4">4.3<span class="fs-4 text-muted">/5</span></h1>
-                            <div class="text-warning fs-1 mb-3">
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-fill"></i>
-                                <i class="bi bi-star-half"></i>
+                            <h1 class="display-3 fw-bold text-dark my-4" id="avg-rating-val">0.0<span class="fs-4 text-muted">/5</span></h1>
+                            <div class="text-warning fs-1 mb-3" id="avg-rating-stars">
+                                <!-- Dynamic Stars -->
                             </div>
-                            <p class="text-muted fw-medium mb-0">Based on 142 Citizen Reviews</p>
+                            <p class="text-muted fw-medium mb-0" id="total-reviews-text">Based on 0 Citizen Reviews</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-12 col-md-7">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
+                        <div class="card-body p-4" id="rating-bars-container">
                             <h5 class="fw-bold mb-4">Feedback Summary</h5>
                             
                             <div class="d-flex align-items-center mb-3">
                                 <span class="fw-bold text-muted me-3" style="min-width: 40px;">5 <i class="bi bi-star-fill text-warning"></i></span>
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-success" style="width: 65%"></div>
+                                    <div class="progress-bar bg-success" id="bar-5" style="width: 0%"></div>
                                 </div>
-                                <span class="text-muted ms-3" style="min-width: 40px;">65%</span>
+                                <span class="text-muted ms-3" style="min-width: 40px;" id="pct-5">0%</span>
                             </div>
                             
                             <div class="d-flex align-items-center mb-3">
                                 <span class="fw-bold text-muted me-3" style="min-width: 40px;">4 <i class="bi bi-star-fill text-warning"></i></span>
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-primary" style="width: 20%"></div>
+                                    <div class="progress-bar bg-primary" id="bar-4" style="width: 0%"></div>
                                 </div>
-                                <span class="text-muted ms-3" style="min-width: 40px;">20%</span>
+                                <span class="text-muted ms-3" style="min-width: 40px;" id="pct-4">0%</span>
                             </div>
                             
                             <div class="d-flex align-items-center mb-3">
                                 <span class="fw-bold text-muted me-3" style="min-width: 40px;">3 <i class="bi bi-star-fill text-warning"></i></span>
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-info" style="width: 10%"></div>
+                                    <div class="progress-bar bg-info" id="bar-3" style="width: 0%"></div>
                                 </div>
-                                <span class="text-muted ms-3" style="min-width: 40px;">10%</span>
+                                <span class="text-muted ms-3" style="min-width: 40px;" id="pct-3">0%</span>
                             </div>
                             
                             <div class="d-flex align-items-center mb-3">
                                 <span class="fw-bold text-muted me-3" style="min-width: 40px;">2 <i class="bi bi-star-fill text-warning"></i></span>
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-warning" style="width: 4%"></div>
+                                    <div class="progress-bar bg-warning" id="bar-2" style="width: 0%"></div>
                                 </div>
-                                <span class="text-muted ms-3" style="min-width: 40px;">4%</span>
+                                <span class="text-muted ms-3" style="min-width: 40px;" id="pct-2">0%</span>
                             </div>
                             
                             <div class="d-flex align-items-center">
                                 <span class="fw-bold text-muted me-3" style="min-width: 40px;">1 <i class="bi bi-star-fill text-warning"></i></span>
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-danger" style="width: 1%"></div>
+                                    <div class="progress-bar bg-danger" id="bar-1" style="width: 0%"></div>
                                 </div>
-                                <span class="text-muted ms-3" style="min-width: 40px;">1%</span>
+                                <span class="text-muted ms-3" style="min-width: 40px;" id="pct-1">0%</span>
                             </div>
                         </div>
                     </div>

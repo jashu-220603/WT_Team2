@@ -342,6 +342,7 @@ font-size:28px;
 padding:8px 15px;
 cursor:pointer;
 border-radius:5px;
+z-index:10;
 }
 
 .prev{
@@ -395,7 +396,7 @@ justify-content:space-between;
 margin-bottom:20px;
 }
 
-.tab{
+.tab, .signup-tab{
 flex:1;
 padding:10px;
 border:1px solid #ddd;
@@ -403,7 +404,7 @@ background:white;
 cursor:pointer;
 }
 
-.tab.active{
+.tab.active, .signup-tab.active{
 background:#1e2a38;
 color:white;
 }
@@ -786,6 +787,13 @@ border:1px solid #ccc;
 border-radius:5px;
 }
 
+.signup-form select{
+padding:10px;
+border:1px solid #ccc;
+border-radius:5px;
+width: 100%;
+}
+
 .signup-btn{
 padding:10px;
 background:#28a745;
@@ -793,4 +801,9 @@ color:white;
 border:none;
 border-radius:5px;
 cursor:pointer;
+margin-top: 10px;
+}
+
+.signup-btn:hover{
+background:#218838;
 }

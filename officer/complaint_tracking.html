@@ -131,6 +131,21 @@
                 <div class="card-body p-5">
                     <h5 class="fw-bold mb-4" id="tracking-title">Status for: <span class="text-primary" id="tracking-display-id"></span></h5>
                     
+                    <div class="row mb-5 py-3 border-bottom border-top">
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Citizen Name</p>
+                            <h6 id="track-citizen-name" class="fw-bold">-</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Department</p>
+                            <h6 id="track-category" class="fw-bold">-</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Priority</p>
+                            <h6 id="track-priority" class="fw-bold">-</h6>
+                        </div>
+                    </div>
+                    
                     <div class="tracking-progress">
                         <div class="tracking-progress-bar" id="progress-bar" style="width: 0%;"></div>
                         
@@ -162,52 +177,66 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
-        document.getElementById('tracking-form').addEventListener('submit', function(e) {
+        document.getElementById('tracking-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('track-id').value.trim();
             const resultDiv = document.getElementById('tracking-result');
             const errorDiv = document.getElementById('tracking-error');
+            const token = sessionStorage.getItem("jwt");
             
             errorDiv.classList.add('d-none');
             resultDiv.classList.remove('d-none');
             document.getElementById('tracking-display-id').textContent = id;
             
-            let status = 'In Progress'; // Default
-            if (window.dummyAssigned) {
-                const complaint = window.dummyAssigned.find(c => c.id === id);
-                if (complaint) {
-                    status = complaint.status;
+            try {
+                const res = await fetch(`http://localhost:7000/api/complaints/${id}`, {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                
+                if (!res.ok) throw new Error("Not found");
+                
+                const complaint = await res.json();
+                
+                // Populate Details
+                document.getElementById('track-citizen-name').textContent = complaint.citizenName || (complaint.user ? complaint.user.name : "N/A");
+                document.getElementById('track-category').textContent = complaint.category || "General";
+                document.getElementById('track-priority').textContent = complaint.priority || "Medium";
+
+                let status = complaint.status;
+                if(status === 'Resolved' || status === 'Closed') status = 'Solved';
+                
+                const stepAssigned = document.getElementById('step-assigned');
+                const stepPending = document.getElementById('step-pending');
+                const stepInprogress = document.getElementById('step-inprogress');
+                const stepSolved = document.getElementById('step-solved');
+                const progressBar = document.getElementById('progress-bar');
+                
+                stepAssigned.className = 'tracking-step';
+                stepPending.className = 'tracking-step';
+                stepInprogress.className = 'tracking-step';
+                stepSolved.className = 'tracking-step';
+                
+                stepAssigned.classList.add('completed');
+                
+                if (status === 'Assigned') {
+                    progressBar.style.width = '0%';
+                } else if (status === 'Pending' || status === 'Submitted') {
+                    stepPending.classList.add('completed');
+                    progressBar.style.width = '33%';
+                } else if (status === 'In Progress') {
+                    stepPending.classList.add('completed');
+                    stepInprogress.classList.add('completed');
+                    progressBar.style.width = '66%';
+                } else if (status === 'Solved') {
+                    stepPending.classList.add('completed');
+                    stepInprogress.classList.add('completed');
+                    stepSolved.classList.add('completed');
+                    progressBar.style.width = '100%';
                 }
-            }
-            if(status === 'Resolved') status = 'Solved';
-            
-            const stepAssigned = document.getElementById('step-assigned');
-            const stepPending = document.getElementById('step-pending');
-            const stepInprogress = document.getElementById('step-inprogress');
-            const stepSolved = document.getElementById('step-solved');
-            const progressBar = document.getElementById('progress-bar');
-            
-            stepAssigned.className = 'tracking-step';
-            stepPending.className = 'tracking-step';
-            stepInprogress.className = 'tracking-step';
-            stepSolved.className = 'tracking-step';
-            
-            stepAssigned.classList.add('completed');
-            
-            if (status === 'Assigned') {
-                progressBar.style.width = '0%';
-            } else if (status === 'Pending') {
-                stepPending.classList.add('completed');
-                progressBar.style.width = '33%';
-            } else if (status === 'In Progress') {
-                stepPending.classList.add('completed');
-                stepInprogress.classList.add('completed');
-                progressBar.style.width = '66%';
-            } else if (status === 'Solved') {
-                stepPending.classList.add('completed');
-                stepInprogress.classList.add('completed');
-                stepSolved.classList.add('completed');
-                progressBar.style.width = '100%';
+            } catch (err) {
+                console.error(err);
+                resultDiv.classList.add('d-none');
+                errorDiv.classList.remove('d-none');
             }
         });
     </script>

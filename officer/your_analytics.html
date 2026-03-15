@@ -79,130 +79,91 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Data for charts
-            let pendingCount = 0;
-            let solvedCount = 0;
-            
-            if (window.dummyAssigned) {
-                pendingCount = window.dummyAssigned.filter(c => c.status === 'Pending' || c.status === 'In Progress').length;
-                solvedCount = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved').length;
-            } else {
-                pendingCount = 10;
-                solvedCount = 25;
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const API = "http://localhost:7000/api";
+            const token = sessionStorage.getItem("jwt");
 
-            // Pie Chart Configuration
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Pending / In Progress', 'Solved Cases'],
-                    datasets: [{
-                        data: [pendingCount, solvedCount],
-                        backgroundColor: [
-                            '#ffc107', // Warning/Pending
-                            '#198754'  // Success/Solved
-                        ],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: {
-                                    family: "'Inter', sans-serif"
-                                }
-                            }
-                        }
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${API}/complaints`, {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                const complaints = await res.json();
+
+                const pendingCount = complaints.filter(c => c.status !== 'Resolved').length;
+                const solvedCount = complaints.filter(c => c.status === 'Resolved').length;
+
+                // Pie Chart Configuration
+                const pieCtx = document.getElementById('pieChart').getContext('2d');
+                new Chart(pieCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pending / In Progress', 'Solved Cases'],
+                        datasets: [{
+                            data: [pendingCount, solvedCount],
+                            backgroundColor: ['#ffc107', '#198754'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
                     },
-                    cutout: '65%'
-                }
-            });
-
-            // Line Chart Configuration
-            const lineCtx = document.getElementById('lineChart').getContext('2d');
-            
-            // Dummy data for line chart
-            const labels = ['Jan 1', 'Jan 8', 'Jan 15', 'Jan 22', 'Feb 1', 'Feb 8', 'Feb 15', 'Feb 22', 'Mar 1', 'Mar 8'];
-            const dataPoints = [2, 3, 5, 4, 7, 6, 9, 11, 15, 12];
-
-            new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Complaints Solved',
-                        data: dataPoints,
-                        fill: true,
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        borderColor: '#198754',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        pointBackgroundColor: '#198754',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: {
-                                family: "'Inter', sans-serif",
-                                size: 13
-                            },
-                            bodyFont: {
-                                family: "'Inter', sans-serif",
-                                size: 14,
-                                weight: 'bold'
-                            },
-                            displayColors: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                font: {
-                                    family: "'Inter', sans-serif"
-                                },
-                                stepSize: 5
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { padding: 20, usePointStyle: true, font: { family: "'Inter', sans-serif" } }
                             }
                         },
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                font: {
-                                    family: "'Inter', sans-serif"
-                                }
-                            }
+                        cutout: '65%'
+                    }
+                });
+
+                // Line Chart Configuration (Grouped by date)
+                const lineCtx = document.getElementById('lineChart').getContext('2d');
+                
+                // Group solved complaints by date
+                const solvedByDate = {};
+                complaints.filter(c => c.status === 'Resolved').forEach(c => {
+                    const date = new Date(c.updatedAt || c.createdAt).toLocaleDateString();
+                    solvedByDate[date] = (solvedByDate[date] || 0) + 1;
+                });
+
+                const labels = Object.keys(solvedByDate).sort();
+                const dataPoints = labels.map(l => solvedByDate[l]);
+
+                new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['No Data'],
+                        datasets: [{
+                            label: 'Complaints Solved',
+                            data: dataPoints.length > 0 ? dataPoints : [0],
+                            fill: true,
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderColor: '#198754',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointBackgroundColor: '#198754',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false } },
+                            x: { grid: { display: false, drawBorder: false } }
                         }
                     }
-                }
-            });
+                });
+            } catch (err) {
+                console.error("Analytics fetch error:", err);
+            }
         });
     </script>
 </body>

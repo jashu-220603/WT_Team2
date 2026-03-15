@@ -1,977 +1,814 @@
 /**
- * Dashboard Logic for Citizen Complaint Management System
+ * Admin Dashboard JavaScript
+ * Connected to Node.js Backend
  */
 
-// Mock Data
-const departments = ["All Departments", "Roads", "Water Supply", "Electricity", "Sanitation", "Public Safety"];
+const API = "http://localhost:7000/api";
+const token = sessionStorage.getItem("jwt");
+const role = sessionStorage.getItem("role");
 
-const complaintsData = [
-    { id: "CMP-1001", title: "Pothole on Main St", dept: "Roads", priority: "High", status: "Pending", officer: "John Doe", date: "2026-03-01" },
-    { id: "CMP-1002", title: "Water Leakage in Sector 4", dept: "Water Supply", priority: "Medium", status: "Resolved", officer: "Jane Smith", date: "2026-03-02" },
-    { id: "CMP-1003", title: "Street Light Not Working", dept: "Electricity", priority: "Low", status: "In Progress", officer: "Mike Ross", date: "2026-03-03" },
-    { id: "CMP-1004", title: "Garbage Collection Delayed", dept: "Sanitation", priority: "Medium", status: "Pending", officer: "Sarah Connor", date: "2026-03-04" },
-    { id: "CMP-1005", title: "Traffic Signal Malfunction", dept: "Public Safety", priority: "High", status: "In Progress", officer: "James Bond", date: "2026-03-05" },
-    { id: "CMP-1006", title: "Broken Pavement near Park", dept: "Roads", priority: "Low", status: "Resolved", officer: "John Doe", date: "2026-03-06" },
-    { id: "CMP-1007", title: "No Water Supply in Block B", dept: "Water Supply", priority: "High", status: "Pending", officer: "Jane Smith", date: "2026-03-07" },
-    { id: "CMP-1008", title: "Frequent Power Cuts", dept: "Electricity", priority: "Medium", status: "Pending", officer: "Mike Ross", date: "2026-03-08" },
-    { id: "CMP-1009", title: "Illegal Dumping Site", dept: "Sanitation", priority: "High", status: "In Progress", officer: "Sarah Connor", date: "2026-03-09" },
-    { id: "CMP-1010", title: "Noise Complaint - Night Club", dept: "Public Safety", priority: "Low", status: "Resolved", officer: "James Bond", date: "2026-03-10" }
-];
+if (!token || role !== "admin") {
+    alert("Access denied. Please login as an admin.");
+    window.location.href = "../index.html";
+}
 
-const officersData = [
-    { id: "OFF-201", name: "John Doe", dept: "Roads", active: 2, resolved: 15, score: 88, status: "Active" },
-    { id: "OFF-202", name: "Jane Smith", dept: "Water Supply", active: 3, resolved: 12, score: 92, status: "Active" },
-    { id: "OFF-203", name: "Mike Ross", dept: "Electricity", active: 2, resolved: 10, score: 85, status: "Active" },
-    { id: "OFF-204", name: "Sarah Connor", dept: "Sanitation", active: 4, resolved: 8, score: 78, status: "Active" },
-    { id: "OFF-205", name: "James Bond", dept: "Public Safety", active: 1, resolved: 20, score: 95, status: "Active" }
-];
+// Global data store
+let complaintsData = [];
+let officersData = [];
+let departmentsData = [];
 
-const activityLog = [
-    { text: "Officer John Doe assigned to CMP-1001", time: "5 mins ago" },
-    { text: "Officer Jane Smith resolved CMP-1002", time: "1 hour ago" },
-    { text: "Admin reassigned CMP-1005 to James Bond", time: "3 hours ago" }
-];
+/* =========================
+   INITIALIZATION
+========================= */
 
-const notifications = [
-    { id: 1, text: "Officer John Doe assigned to CMP-1001", time: "5 mins ago", icon: "user-plus", color: "primary" },
-    { id: 2, text: "Complaint CMP-1002 status updated to Resolved", time: "1 hour ago", icon: "check-circle", color: "success" },
-    { id: 3, text: "New complaint submitted: CMP-1010", time: "2 hours ago", icon: "plus-circle", color: "info" }
-];
-
-// State
-let currentDepartment = "All Departments";
-let searchTerm = "";
-let statusFilter = "All";
-let priorityFilter = "All";
-let officerFilter = "All";
-let charts = {};
-
-// placeholder admin name (would come from backend)
-const adminName = "Admin User";
-
-// Initialize Dashboard
-document.addEventListener('DOMContentLoaded', () => {
-    initSidebar();
-    initDepartmentSelector();
-    initNotifications();
-    initCharts();
-    initOfficerFilter();
-    renderTable();
-    renderDepartmentInfo();
-    renderAssignmentTable();
-    renderOfficersTable();
-    renderWorkload();
-    renderActivityLog();
-    renderDepartmentsTable();
-    updateStats();
-    initModalHandlers();
-
-    // set greeting name
-    const greetEl = document.getElementById('admin-greeting');
-    if (greetEl) greetEl.innerText = `Hello, ${adminName}`;
-    updateGreetingSubtitle();
-
-    document.getElementById('search-box').addEventListener('input', (e) => {
-        searchTerm = e.target.value.toLowerCase();
-        renderTable();
-    });
-
-    document.getElementById('status-filter').addEventListener('change', (e) => {
-        statusFilter = e.target.value;
-        renderTable();
-    });
-
-    document.getElementById('priority-filter').addEventListener('change', (e) => {
-        priorityFilter = e.target.value;
-        renderTable();
-    });
-
-    document.getElementById('officer-filter').addEventListener('change', (e) => {
-        officerFilter = e.target.value;
-        renderTable();
-    });
+document.addEventListener("DOMContentLoaded", () => {
+    updateProfileInfo();
+    setupNavigation();
+    loadDashboardData();
+    setupFilters();
 });
 
-// Sidebar Toggle
-function initSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
-    const toggleBtn = document.getElementById('sidebar-toggle');
-    const navLinks = document.querySelectorAll('#sidebar .nav-link[data-section]');
-    const deptLinks = document.querySelectorAll('#sidebar .submenu-list .nav-link[data-dept]');
+function updateProfileInfo() {
+    const storedName = sessionStorage.getItem("userName") || "Admin";
+    
+    // Greeting
+    const adminGreeting = document.getElementById("admin-greeting");
+    if (adminGreeting) adminGreeting.textContent = `Hello, ${storedName}`;
 
-    toggleBtn.addEventListener('click', () => {
-        if (window.innerWidth < 768) {
-            // mobile: slide sidebar in/out
-            sidebar.classList.toggle('show');
-        } else {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
-    });
+    // Sidebar & Profile Dropdown
+    const adminNameEls = document.querySelectorAll(".text-dark.fw-medium");
+    adminNameEls.forEach(el => el.textContent = storedName);
 
+    // Profile Image
+    const profileImgs = document.querySelectorAll("img[alt='Profile']");
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
+    profileImgs.forEach(img => img.src = avatarUrl);
+}
+
+function setupNavigation() {
+    const navLinks = document.querySelectorAll(".nav-link[data-section]");
     navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener("click", (e) => {
             e.preventDefault();
-            const section = link.getAttribute('data-section');
+            const section = link.getAttribute("data-section");
+            if (section === "settings") {
+                document.getElementById("adminSettingsBtn").click();
+                return;
+            }
             switchSection(section);
             
             // Update active link
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-
-            // collapse/hide sidebar on mobile
-            if (window.innerWidth < 768) {
-                sidebar.classList.remove('show');
+            navLinks.forEach(l => l.classList.remove("active"));
+            link.classList.add("active");
+            
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('show');
             }
         });
     });
 
-    deptLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+    // Profile Button
+    const profBtn = document.getElementById("adminProfileBtn");
+    if (profBtn) {
+        profBtn.addEventListener("click", async (e) => {
             e.preventDefault();
-            const dept = link.getAttribute('data-dept');
-            
-            // Update state and UI
-            currentDepartment = dept;
-            document.getElementById('current-dept-display').innerText = dept;
-            updateGreetingSubtitle();
-            
-            // Ensure we are on dashboard to see the changes
-            switchSection('dashboard');
-            
-            updateStats();
-            renderTable();
-            renderDepartmentInfo();
-            renderAssignmentTable();
-            updateCharts();
-            
-            // Close sidebar on mobile if open
-            if (window.innerWidth < 768) {
-                sidebar.classList.remove('show');
+            try {
+                const res = await fetch(`${API}/auth/me`, {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                const user = await res.json();
+
+                document.getElementById("admin-prof-id").textContent = user._id;
+                document.getElementById("admin-name-input").value = user.name;
+                document.getElementById("admin-email-input").value = user.email;
+                document.getElementById("admin-bio-input").value = user.bio || "";
+                document.getElementById("admin-password-input").value = "";
+                document.getElementById("admin-prof-img").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0d6efd&color=fff&size=100`;
+
+                new bootstrap.Modal(document.getElementById("adminProfileModal")).show();
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load profile");
             }
         });
-    });
+    }
+
+    const adminProfileForm = document.getElementById("admin-profile-form");
+    if (adminProfileForm) {
+        adminProfileForm.addEventListener("submit", async e => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById("admin-name-input").value,
+                email: document.getElementById("admin-email-input").value,
+                bio: document.getElementById("admin-bio-input").value
+            };
+            const pass = document.getElementById("admin-password-input").value;
+            if (pass) payload.password = pass;
+
+            try {
+                const res = await fetch(`${API}/auth/profile`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    alert("Profile updated successfully");
+                    sessionStorage.setItem("userName", data.user.name);
+                    sessionStorage.setItem("userEmail", data.user.email);
+                    bootstrap.Modal.getInstance(document.getElementById("adminProfileModal")).hide();
+                } else {
+                    const error = await res.json();
+                    alert(error.message || "Update failed");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Update failed");
+            }
+        });
+    }
+
+    // Settings Button
+    const settBtn = document.getElementById("adminSettingsBtn");
+    if (settBtn) {
+        settBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById("adminSettingsModal"));
+            modal.show();
+        });
+    }
 }
 
-function switchSection(sectionId) {
+window.switchSection = function(sectionId) {
     const sections = [
-        'dashboard-section', 
-        'complaints-section', 
-        'officers-section', 
-        'departments-section',
-        'tasks-section', 
-        'analytics-section', 
-        'reports-section', 
-        'settings-section'
+        "dashboard-section",
+        "complaints-section",
+        "officers-section",
+        "tasks-section",
+        "analytics-section",
+        "departments-section",
+        "reports-section",
+        "settings-section"
     ];
-    
+
     sections.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.add('d-none');
+        if (el) el.classList.add("d-none");
     });
 
-    const targetId = `${sectionId}-section`;
-    const target = document.getElementById(targetId);
+    const target = document.getElementById(sectionId + "-section");
+    if (target) target.classList.remove("d-none");
     
-    if (target) {
-        target.classList.remove('d-none');
-        
-        // Specific rendering based on section
-        if (sectionId === 'dashboard') {
-            renderRecentComplaintsMini();
-            updateStats();
-            updateCharts();
-        } else if (sectionId === 'complaints') {
-            renderTable();
-        } else if (sectionId === 'officers') {
-            renderOfficersTable();
-            renderWorkload();
-        } else if (sectionId === 'departments') {
-            renderDepartmentsTable();
-        } else if (sectionId === 'tasks') {
-            renderAssignmentTable();
-        } else if (sectionId === 'analytics') {
-            renderDetailedAnalytics();
-        } else if (sectionId === 'departments') {
-            renderDepartmentsTable();
-        }
-    }
+    // Refresh data if needed when switching to specific sections
+    if (sectionId === 'analytics') renderAnalytics();
+    if (sectionId === 'departments') renderDepartments();
+};
 
-    // Scroll to top
-    window.scrollTo(0, 0);
+/* =========================
+   LOAD DATA FROM BACKEND
+========================= */
+
+async function loadDashboardData() {
+    try {
+        const [complaintsRes, officersRes] = await Promise.all([
+            fetch(`${API}/complaints`, { headers: { Authorization: "Bearer " + token } }),
+            fetch(`${API}/admin/officers`, { headers: { Authorization: "Bearer " + token } })
+        ]);
+
+        if (!complaintsRes.ok || !officersRes.ok) throw new Error("Failed to fetch data");
+
+        const complaintsJson = await complaintsRes.json();
+        const officersJson = await officersRes.json();
+
+        complaintsData = complaintsJson.complaints || complaintsJson;
+        officersData = officersJson.officers || officersJson;
+        
+        // Extract unique departments
+        departmentsData = [...new Set(officersData.map(o => o.department).filter(Boolean))];
+
+        renderComplaints();
+        renderOfficers();
+        updateStats();
+        renderRecentActivity();
+        populateDepartmentFilters();
+        renderDepartments();
+
+    } catch (err) {
+        console.error("Dashboard load error:", err);
+    }
 }
 
-// Render Recent Complaints for Mini Dashboard
-function renderRecentComplaintsMini() {
-    const tbody = document.getElementById('recent-complaints-mini');
+/* =========================
+   RENDER TABLES
+========================= */
+
+function renderComplaints(filteredData = null) {
+    const data = filteredData || complaintsData;
+    const tbody = document.getElementById("complaints-table-body");
     if (!tbody) return;
-    
-    const filtered = complaintsData
-        .filter(c => currentDepartment === 'All Departments' || c.dept === currentDepartment)
-        .slice(0, 5);
-        
-    tbody.innerHTML = filtered.map(c => `
-        <tr>
-            <td><span class="fw-bold">#${c.id}</span></td>
-            <td>${c.title}</td>
-            <td><span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></td>
-            <td class="small text-muted">${c.date}</td>
-        </tr>
-    `).join('');
-}
 
-// Render Tasks
-function renderTasks() {
-    const select = document.getElementById('task-assignee-select');
-    if (select) {
-        select.innerHTML = officersData.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
-    }
-}
+    let html = "";
+    if (data.length === 0) {
+        html = '<tr><td colspan="9" class="text-center py-4">No complaints found.</td></tr>';
+    } else {
+        data.forEach(c => {
+            let badge = "bg-secondary";
+            if (c.status === "Submitted") badge = "bg-warning text-dark";
+            if (c.status === "Assigned") badge = "bg-info";
+            if (c.status === "In Progress") badge = "bg-primary";
+            if (c.status === "Resolved") badge = "bg-success";
 
-// Detailed Analytics Charts
-let detailedDeptChart = null;
-let detailedStatusChart = null;
-let detailedTrendChart = null;
-let deptResolutionChart = null;
+            const reporterName = c.citizenName || c.user?.name || "Citizen";
+            const officerName = c.assignedOfficer?.name || '<span class="text-danger small">Unassigned</span>';
 
-function renderDetailedAnalytics() {
-    const ctxDept = document.getElementById('detailedDeptChart');
-    const ctxStatus = document.getElementById('detailedStatusChart');
-    const ctxTrend = document.getElementById('detailedTrendChart');
-    const ctxRes = document.getElementById('deptResolutionChart');
-    
-    if (!ctxDept || !ctxStatus || !ctxTrend || !ctxRes) return;
-
-    if (detailedDeptChart) detailedDeptChart.destroy();
-    if (detailedStatusChart) detailedStatusChart.destroy();
-    if (detailedTrendChart) detailedTrendChart.destroy();
-    if (deptResolutionChart) deptResolutionChart.destroy();
-
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#e0e0e0' : '#666';
-
-    const depts = departments.filter(d => d !== "All Departments");
-    
-    // Dept Chart
-    detailedDeptChart = new Chart(ctxDept, {
-        type: 'pie',
-        data: {
-            labels: depts,
-            datasets: [{
-                data: depts.map(d => complaintsData.filter(c => c.dept === d).length),
-                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0'],
-                borderWidth: 0
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } }
-    });
-
-    // Status Chart
-    detailedStatusChart = new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-            labels: ['Pending', 'In Progress', 'Resolved'],
-            datasets: [{
-                data: [
-                    complaintsData.filter(c => c.status === 'Pending').length,
-                    complaintsData.filter(c => c.status === 'In Progress').length,
-                    complaintsData.filter(c => c.status === 'Resolved').length
-                ],
-                backgroundColor: ['#6c757d', '#0d6efd', '#198754'],
-                borderWidth: 0
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
-    });
-
-    // Trend Chart
-    detailedTrendChart = new Chart(ctxTrend, {
-        type: 'line',
-        data: getTrendChartData(),
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } } }
-    });
-
-    // Resolution Rate
-    const resolutionRates = depts.map(d => {
-        const deptC = complaintsData.filter(c => c.dept === d);
-        if(deptC.length === 0) return 0;
-        return (deptC.filter(c => c.status === 'Resolved').length / deptC.length) * 100;
-    });
-
-    deptResolutionChart = new Chart(ctxRes, {
-        type: 'bar',
-        data: {
-            labels: depts,
-            datasets: [{ label: 'Resolution Rate (%)', data: resolutionRates, backgroundColor: '#0dcaf0', borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { color: textColor } }, x: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } }
-    });
-}
-
-window.switchSection = switchSection;
-
-// Department Selector
-function initDepartmentSelector() {
-    const selector = document.getElementById('dept-selector');
-    departments.forEach(dept => {
-        const option = document.createElement('li');
-        option.innerHTML = `<a class="dropdown-item" href="#" data-dept="${dept}">${dept}</a>`;
-        option.addEventListener('click', (e) => {
-            e.preventDefault();
-            currentDepartment = dept;
-            document.getElementById('current-dept-display').innerText = dept;
-            updateGreetingSubtitle();
-            updateStats();
-            renderTable();            renderDepartmentInfo();
-            renderAssignmentTable();            updateCharts();
+            html += `
+            <tr>
+                <td><small class="text-muted fw-bold">${c.complaintId || c._id.substring(0,8).toUpperCase()}</small></td>
+                <td><strong>${reporterName}</strong></td>
+                <td>
+                    <div class="fw-medium">${c.title}</div>
+                    <div class="small text-muted text-truncate" style="max-width: 200px;">${c.description}</div>
+                </td>
+                <td><span class="badge bg-light text-dark border">${c.category || "-"}</span></td>
+                <td><span class="badge bg-light text-dark border">${c.priority || "Medium"}</span></td>
+                <td><span class="badge ${badge}">${c.status}</span></td>
+                <td>${officerName}</td>
+                <td><small>${new Date(c.createdAt).toLocaleDateString()}</small></td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${c._id}" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary assign-btn" 
+                                data-id="${c._id}" 
+                                data-dept="${c.category}" title="Assign Officer">
+                            <i class="bi bi-person-plus"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            `;
         });
-        selector.appendChild(option);
-    });
+    }
+
+    tbody.innerHTML = html;
+    attachComplaintEvents();
 }
 
-// Notifications
-function initNotifications() {
-    const container = document.getElementById('notification-list');
-    const badge = document.getElementById('notification-badge');
-    badge.innerText = notifications.length;
+function renderRecentActivity() {
+    const tbody = document.getElementById("recent-complaints-mini");
+    if (!tbody) return;
 
-    notifications.forEach(note => {
-        const item = document.createElement('div');
-        item.className = 'notification-item';
-        item.innerHTML = `
-            <div class="d-flex align-items-center">
-                <div class="bg-${note.color} text-white rounded-circle p-2 me-3">
-                    <i class="bi bi-${note.icon}"></i>
-                </div>
-                <div>
-                    <p class="mb-0 small fw-bold">${note.text}</p>
-                    <span class="text-muted smaller">${note.time}</span>
-                </div>
-            </div>
+    const recent = complaintsData.slice(0, 5);
+    let html = "";
+
+    recent.forEach(c => {
+        let badge = "bg-secondary";
+        if (c.status === "Submitted") badge = "bg-warning text-dark";
+        if (c.status === "Assigned") badge = "bg-info";
+        if (c.status === "In Progress") badge = "bg-primary";
+        if (c.status === "Resolved") badge = "bg-success";
+
+        html += `
+        <tr>
+            <td><small class="fw-bold">${c.complaintId || c._id.substring(0,6).toUpperCase()}</small></td>
+            <td><div class="text-truncate" style="max-width: 150px;">${c.title}</div></td>
+            <td><span class="badge ${badge} smaller">${c.status}</span></td>
+            <td><small>${new Date(c.createdAt).toLocaleDateString()}</small></td>
+        </tr>
         `;
-        container.appendChild(item);
     });
+
+    tbody.innerHTML = html;
 }
 
-// Officer Management Logic
-function renderOfficersTable() {
-    const tbody = document.getElementById('officers-table-body');
-    tbody.innerHTML = '';
+function renderOfficers() {
+    const tbody = document.getElementById("officers-table-body");
+    if (!tbody) return;
 
+    let html = "";
     officersData.forEach(o => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><span class="fw-bold">${o.id}</span></td>
-            <td>${o.name}</td>
-            <td><span class="badge bg-${o.status === 'Active' ? 'success' : 'danger'}">${o.status}</span></td>
-            <td>${o.dept}</td>
+        html += `
+        <tr>
+            <td><span class="badge bg-light text-dark border">${o.staffId || "-"}</span></td>
             <td>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                    <button class="btn btn-sm btn-outline-primary" onclick="openAssignModal('${o.id}')"><i class="bi bi-person-plus"></i></button>
+                <div class="d-flex align-items-center">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(o.name)}&background=random" class="rounded-circle me-2" width="24" height="24">
+                    <span>${o.name}</span>
                 </div>
             </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-function initOfficerFilter() {
-    const filter = document.getElementById('officer-filter');
-    filter.innerHTML = '<option value="All">All Officers</option>';
-    officersData.forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o.name;
-        opt.innerText = o.name;
-        filter.appendChild(opt);
-    });
-}
-
-function renderWorkload() {
-    const container = document.getElementById('workload-container');
-    container.innerHTML = '';
-    
-    officersData.forEach(o => {
-        const maxWorkload = 5;
-        const percentage = (o.active / maxWorkload) * 100;
-        const color = percentage > 80 ? 'danger' : percentage > 50 ? 'warning' : 'primary';
-        
-        container.innerHTML += `
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="small fw-bold">${o.name}</span>
-                    <span class="small text-muted">${o.active} active complaints</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-${color}" style="width: ${percentage}%"></div>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function renderActivityLog() {
-    const container = document.getElementById('activity-log-container');
-    container.innerHTML = '';
-    
-    activityLog.forEach(log => {
-        container.innerHTML += `
-            <div class="d-flex mb-3 border-bottom pb-2">
-                <div class="me-3">
-                    <div class="bg-light rounded p-2"><i class="bi bi-info-circle text-primary"></i></div>
-                </div>
-                <div>
-                    <p class="mb-0 small">${log.text}</p>
-                    <span class="smaller text-muted">${log.time}</span>
-                </div>
-            </div>
-        `;
-    });
-}
-
-// show department officers and their contact info
-function renderDepartmentInfo() {
-    const container = document.getElementById('department-info');
-    if (!container) return;
-    if (currentDepartment === 'All Departments') {
-        container.innerHTML = '';
-        return;
-    }
-    const officers = officersData.filter(o => o.dept === currentDepartment);
-    if (officers.length === 0) {
-        container.innerHTML = '<p class="text-muted small">No officers in this department.</p>';
-        return;
-    }
-    container.innerHTML = `<h6 class="fw-bold mb-2">Officers in ${currentDepartment}</h6>
-        <div class="list-group">
-            ${officers.map(o => `<div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>${o.name}</strong><br>
-                    <small>${o.contact || 'N/A'}</small>
-                </div>
-                <button class="btn btn-sm btn-outline-primary" onclick="openOfficerProfile('${o.id}')">View</button>
-            </div>`).join('')}
-        </div>`;
-}
-
-// assignment table for tasks section
-function renderAssignmentTable() {
-    const tbody = document.getElementById('assignment-table-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const unassigned = complaintsData.filter(c => {
-        return !c.officer || c.officer.trim() === '';
-    });
-
-    unassigned.forEach(c => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><span class="fw-bold text-primary">${c.id}</span></td>
-            <td>${c.title}</td>
-            <td>${c.dept}</td>
-            <td><span class="badge bg-${getPriorityColor(c.priority)}">${c.priority}</span></td>
-            <td><span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></td>
-            <td>${c.date}</td>
+            <td><span class="badge bg-success">Active</span></td>
+            <td>${o.department || "-"}</td>
             <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="openAssignModal('${c.id}')">
-                    <i class="bi bi-person-plus"></i> Assign
+                <button class="btn btn-sm btn-outline-danger" onclick="terminateOfficer('${o._id}', '${o.name}')" title="Terminate Officer">
+                    <i class="bi bi-person-x-fill me-1"></i> Terminate
                 </button>
             </td>
+        </tr>
         `;
-        tbody.appendChild(row);
     });
 
-    if (unassigned.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No unassigned complaints.</td></tr>';
+    tbody.innerHTML = html;
+}
+
+/* =========================
+   STATS & ANALYTICS
+========================= */
+
+function updateStats() {
+    const total = complaintsData.length;
+    const pending = complaintsData.filter(c => c.status === "Submitted" || c.status === "In Progress").length;
+    const assigned = complaintsData.filter(c => c.status === "Assigned" || c.status === "In Progress" || c.status === "Resolved").length;
+    const unassigned = complaintsData.filter(c => !c.assignedOfficer).length;
+
+    // Correct IDs based on Admin HTML
+    const totalEl = document.getElementById("total-complaints");
+    const pendingEl = document.getElementById("pending-complaints");
+    const assignedEl = document.getElementById("assigned-complaints");
+    const unassignedEl = document.getElementById("unassigned-complaints");
+
+    if (totalEl) totalEl.textContent = total;
+    if (pendingEl) pendingEl.textContent = pending;
+    if (assignedEl) assignedEl.textContent = assigned;
+    if (unassignedEl) unassignedEl.textContent = unassigned;
+}
+
+function renderAnalytics() {
+    // Basic Chart.js initialization for analytics
+    const ctxDept = document.getElementById('detailedDeptChart');
+    if (ctxDept) {
+        const deptCounts = {};
+        complaintsData.forEach(c => {
+            deptCounts[c.category] = (deptCounts[c.category] || 0) + 1;
+        });
+
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(deptCounts),
+                datasets: [{
+                    label: '# of Complaints',
+                    data: Object.values(deptCounts),
+                    backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                    borderColor: '#0d6efd',
+                    borderWidth: 1
+                }]
+            }
+        });
+    }
+
+    const ctxStatus = document.getElementById('detailedStatusChart');
+    if (ctxStatus) {
+        const statusCounts = {
+            'Submitted': 0,
+            'Assigned': 0,
+            'In Progress': 0,
+            'Resolved': 0
+        };
+        complaintsData.forEach(c => {
+            if (statusCounts.hasOwnProperty(c.status)) {
+                statusCounts[c.status]++;
+            }
+        });
+
+        new Chart(ctxStatus, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#ffc107', '#0dcaf0', '#0d6efd', '#198754']
+                }]
+            }
+        });
+    }
+
+    const ctxTrend = document.getElementById('detailedTrendChart');
+    if (ctxTrend) {
+        const trendData = {};
+        complaintsData.forEach(c => {
+            const month = new Date(c.createdAt).toLocaleString('default', { month: 'short' });
+            trendData[month] = (trendData[month] || 0) + 1;
+        });
+
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: Object.keys(trendData),
+                datasets: [{
+                    label: 'Complaints Trend',
+                    data: Object.values(trendData),
+                    borderColor: '#0d6efd',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)'
+                }]
+            }
+        });
+    }
+
+    const ctxRes = document.getElementById('deptResolutionChart');
+    if (ctxRes) {
+        const deptResData = {};
+        complaintsData.forEach(c => {
+            if (!deptResData[c.category]) deptResData[c.category] = { total: 0, resolved: 0 };
+            deptResData[c.category].total++;
+            if (c.status === 'Resolved') deptResData[c.category].resolved++;
+        });
+
+        new Chart(ctxRes, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(deptResData),
+                datasets: [{
+                    label: 'Resolution Rate (%)',
+                    data: Object.keys(deptResData).map(k => (deptResData[k].resolved / deptResData[k].total * 100).toFixed(1)),
+                    backgroundColor: '#198754'
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true, max: 100 } }
+            }
+        });
     }
 }
 
-// Modal Handlers
-function openOfficerProfile(id) {
-    const officer = officersData.find(o => o.id === id);
-    const officerComplaints = complaintsData.filter(c => c.officer === officer.name);
-    
-    const content = document.getElementById('officer-profile-content');
-    content.innerHTML = `
-        <div class="row g-4">
-            <div class="col-md-4 text-center border-end">
-                <img src="https://ui-avatars.com/api/?name=${officer.name}&background=0d6efd&color=fff&size=128" class="rounded-circle mb-3 shadow-sm">
-                <h5 class="fw-bold">${officer.name}</h5>
-                <p class="text-muted">${officer.dept}</p>
-                <div class="badge bg-success mb-3">${officer.status}</div>
-                <div class="h4 fw-bold text-primary">${officer.score}%</div>
-                <div class="small text-muted">Performance Score</div>
-            </div>
-            <div class="col-md-8">
-                <div class="row text-center mb-4">
-                    <div class="col-4">
-                        <div class="h3 fw-bold mb-0">${officer.active + officer.resolved}</div>
-                        <div class="small text-muted">Total Handled</div>
+function renderDepartments() {
+    const grid = document.getElementById("departments-grid");
+    if (!grid) return;
+
+    const depts = [
+        { name: "Roads & Infrastructure", icon: "bi-hammer", desc: "Handles road repairs, potholes, and infrastructure complaints." },
+        { name: "Water Supply", icon: "bi-droplet-fill", desc: "Manages water supply issues and drainage." },
+        { name: "Electricity Issue", icon: "bi-lightning-charge-fill", desc: "Handles power outages and electrical issues." },
+        { name: "Garbage Issue", icon: "bi-trash3-fill", desc: "Manages garbage collection and sanitation." },
+        { name: "Cyber Crime", icon: "bi-shield-lock-fill", desc: "Handles online fraud and cyber complaints." },
+        { name: "Law & Order", icon: "bi-shield-shaded", desc: "General law enforcement complaints." },
+        { name: "Public Safety", icon: "bi-people-fill", desc: "Handles harassment and public safety issues." },
+        { name: "Land & Revenue", icon: "bi-map-fill", desc: "Handles land disputes and revenue matters." },
+        { name: "General Administration", icon: "bi-gear-wide-connected", desc: "Handles miscellaneous complaints." }
+    ];
+
+    let html = "";
+    depts.forEach((d, index) => {
+        const count = officersData.filter(o => o.department === d.name).length;
+        html += `
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 department-card shadow-sm border-0" onclick="viewOfficers('${d.name}')" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="dept-icon-circle">
+                        <i class="bi ${d.icon}"></i>
                     </div>
-                    <div class="col-4">
-                        <div class="h3 fw-bold mb-0 text-success">${officer.resolved}</div>
-                        <div class="small text-muted">Resolved</div>
+                    <h5 class="fw-bold mb-2">${d.name}</h5>
+                    <p class="text-muted small mb-3">${d.desc}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border-0">
+                            <i class="bi bi-people me-1"></i> ${count} Officers
+                        </span>
+                        <i class="bi bi-chevron-right text-muted"></i>
                     </div>
-                    <div class="col-4">
-                        <div class="h3 fw-bold mb-0 text-warning">${officer.active}</div>
-                        <div class="small text-muted">Pending</div>
-                    </div>
-                </div>
-                <h6 class="fw-bold mb-3">Currently Assigned Complaints</h6>
-                <div class="list-group list-group-flush">
-                    ${officerComplaints.map(c => `
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold small">${c.id} - ${c.title}</div>
-                                <div class="smaller text-muted">${c.date}</div>
-                            </div>
-                            <span class="badge bg-${getStatusColor(c.status)}">${c.status}</span>
-                        </div>
-                    `).join('') || '<p class="text-muted small">No active complaints.</p>'}
                 </div>
             </div>
         </div>
-    `;
-    
-    new bootstrap.Modal(document.getElementById('officerProfileModal')).show();
-}
-
-function openAssignModal(officerId) {
-    const officer = officersData.find(o => o.id === officerId);
-    document.getElementById('assign-officer-id').value = officer.id;
-    document.getElementById('assign-officer-name').value = officer.name;
-    
-    // Populate unassigned complaints (mock: just any pending ones)
-    const select = document.getElementById('assign-complaint-id');
-    select.innerHTML = '';
-    complaintsData.filter(c => !c.officer || c.officer.trim() === '').forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.innerText = `${c.id} - ${c.title}`;
-        select.appendChild(opt);
-    });
-    
-    new bootstrap.Modal(document.getElementById('assignComplaintModal')).show();
-}
-
-// called when assign button is clicked from complaints list
-function openAssignFromComplaint(complaintId) {
-    const complaint = complaintsData.find(c => c.id === complaintId);
-    if (!complaint) return;
-    document.getElementById('assign-complaint-fixed-id').value = complaint.id;
-    document.getElementById('assign-complaint-fixed-title').value = `${complaint.id} - ${complaint.title}`;
-    
-    const officerSelect = document.getElementById('assign-officer-select');
-    officerSelect.innerHTML = '';
-    officersData.forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o.name;
-        opt.innerText = o.name;
-        officerSelect.appendChild(opt);
-    });
-    
-    new bootstrap.Modal(document.getElementById('assignFromComplaintModal')).show();
-}
-
-function openReassignModal(complaintId) {
-    const complaint = complaintsData.find(c => c.id === complaintId);
-    document.getElementById('reassign-complaint-id').value = complaint.id;
-    document.getElementById('reassign-complaint-title').value = complaint.title;
-    document.getElementById('reassign-current-officer').value = complaint.officer;
-    
-    const select = document.getElementById('reassign-new-officer');
-    select.innerHTML = '';
-    officersData.filter(o => o.name !== complaint.officer).forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o.name;
-        opt.innerText = o.name;
-        select.appendChild(opt);
-    });
-    
-    new bootstrap.Modal(document.getElementById('reassignModal')).show();
-}
-
-function initModalHandlers() {
-    document.getElementById('assign-complaint-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const complaintId = document.getElementById('assign-complaint-id').value;
-        const officerName = document.getElementById('assign-officer-name').value;
-        
-        const complaint = complaintsData.find(c => c.id === complaintId);
-        if (complaint) {
-            complaint.officer = officerName;
-            complaint.status = 'In Progress';
-            
-            // Log activity
-            activityLog.unshift({ text: `Officer ${officerName} assigned to ${complaintId}`, time: "Just now" });
-            
-            // Update UI
-            bootstrap.Modal.getInstance(document.getElementById('assignComplaintModal')).hide();
-            renderTable();
-            renderWorkload();
-            renderActivityLog();
-            updateStats();
-            renderAssignmentTable();
-        }
-    });
-
-    document.getElementById('assign-fromcomplaint-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const complaintId = document.getElementById('assign-complaint-fixed-id').value;
-        const officerName = document.getElementById('assign-officer-select').value;
-        const complaint = complaintsData.find(c => c.id === complaintId);
-        if (complaint) {
-            complaint.officer = officerName;
-            complaint.status = 'In Progress';
-            activityLog.unshift({ text: `Officer ${officerName} assigned to ${complaintId}`, time: "Just now" });
-            bootstrap.Modal.getInstance(document.getElementById('assignFromComplaintModal')).hide();
-            renderTable();
-            renderWorkload();
-            renderActivityLog();
-            updateStats();
-            renderAssignmentTable();
-        }
-    });
-
-    // department form handler
-    const deptForm = document.getElementById('department-form');
-    if (deptForm) {
-        deptForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const nameInput = document.getElementById('dept-name-input');
-            const name = nameInput.value.trim();
-            if (name && !departments.includes(name)) {
-                departments.push(name);
-                // also add to complaints/officers? no
-                renderDepartmentsTable();
-                initDepartmentSelector();
-            }
-            bootstrap.Modal.getInstance(document.getElementById('addDepartmentModal')).hide();
-            nameInput.value = '';
-        });
-    }
-
-    document.getElementById('reassign-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const complaintId = document.getElementById('reassign-complaint-id').value;
-        const newOfficer = document.getElementById('reassign-new-officer').value;
-        
-        const complaint = complaintsData.find(c => c.id === complaintId);
-        if (complaint) {
-            const oldOfficer = complaint.officer;
-            complaint.officer = newOfficer;
-            
-            // Log activity
-            activityLog.unshift({ text: `Admin reassigned ${complaintId} from ${oldOfficer} to ${newOfficer}`, time: "Just now" });
-            
-            // Update UI
-            bootstrap.Modal.getInstance(document.getElementById('reassignModal')).hide();
-            renderTable();
-            renderWorkload();
-            renderActivityLog();
-        }
-    });
-}
-
-function toggleOfficerStatus(id) {
-    const officer = officersData.find(o => o.id === id);
-    if (officer) {
-        officer.status = officer.status === 'Active' ? 'Inactive' : 'Active';
-        renderOfficersTable();
-    }
-}
-
-// Table Rendering
-function renderTable() {
-    const tbody = document.getElementById('complaints-table-body');
-    tbody.innerHTML = '';
-
-    const filtered = complaintsData.filter(c => {
-        const matchesDept = currentDepartment === "All Departments" || c.dept === currentDepartment;
-        const matchesSearch = c.title.toLowerCase().includes(searchTerm) || c.id.toLowerCase().includes(searchTerm);
-        const matchesStatus = statusFilter === "All" || c.status === statusFilter;
-        const matchesPriority = priorityFilter === "All" || c.priority === priorityFilter;
-        const matchesOfficer = officerFilter === "All" || c.officer === officerFilter;
-        return matchesDept && matchesSearch && matchesStatus && matchesPriority && matchesOfficer;
-    });
-
-    filtered.forEach(c => {
-        const row = document.createElement('tr');
-        const assigned = c.officer && c.officer.trim().length > 0;
-        row.innerHTML = `
-            <td><span class="fw-bold text-primary">${c.id}</span></td>
-            <td>${c.title}</td>
-            <td>${c.dept}</td>
-            <td><span class="badge bg-${getPriorityColor(c.priority)}">${c.priority}</span></td>
-            <td><span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></td>
-            <td>${assigned ? c.officer : '<span class="text-muted">Unassigned</span>'}</td>
-            <td>${c.date}</td>
-            <td>
-                ${assigned ?
-                    `<button class="btn btn-sm btn-outline-warning" onclick="openReassignModal('${c.id}')">
-                        <i class="bi bi-person-gear"></i> Reassign
-                    </button>` :
-                    `<button class="btn btn-sm btn-outline-primary" onclick="openAssignFromComplaint('${c.id}')">
-                        <i class="bi bi-person-plus"></i> Assign
-                    </button>`
-                }
-            </td>
         `;
-        tbody.appendChild(row);
+    });
+    grid.innerHTML = html;
+}
+
+window.viewOfficers = function(deptName) {
+    const officers = officersData.filter(o => o.department === deptName);
+    const tbody = document.getElementById("dept-officers-body");
+    const tit = document.getElementById("dept-officers-title");
+    if(tit) tit.textContent = `${deptName} - Officers List`;
+    
+    let html = "";
+    if (officers.length === 0) {
+        html = '<tr><td colspan="4" class="text-center py-5"><i class="bi bi-people fs-1 d-block text-muted mb-2"></i>No officers assigned to this department.</td></tr>';
+    } else {
+        officers.forEach(o => {
+            html += `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(o.name)}&background=random" class="rounded-circle me-3" width="32" height="32">
+                        <div>
+                            <div class="fw-bold">${o.name}</div>
+                            <div class="text-muted small">${o.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="badge bg-light text-dark border fw-bold">${o.staffId || 'N/A'}</span></td>
+                <td>
+                    <div class="small fw-medium"><i class="bi bi-telephone-outbound me-1"></i> ${o.contactNumber || 'No Contact'}</div>
+                </td>
+                <td><span class="badge bg-success-subtle text-success border-success border-opacity-25">Operational</span></td>
+            </tr>
+            `;
+        });
+    }
+    if(tbody) tbody.innerHTML = html;
+    const modalEl = document.getElementById("deptOfficersModal");
+    if(modalEl) new bootstrap.Modal(modalEl).show();
+}
+
+/* =========================
+   EVENTS & ACTIONS
+========================= */
+
+function attachComplaintEvents() {
+    document.querySelectorAll(".assign-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            openAssignModal(btn.dataset.id, btn.dataset.dept);
+        });
     });
 
-    if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No complaints found matching the criteria.</td></tr>';
-    }
-}
-
-function getPriorityColor(p) {
-    switch(p) {
-        case 'High': return 'danger';
-        case 'Medium': return 'warning';
-        case 'Low': return 'info';
-        default: return 'secondary';
-    }
-}
-
-function getStatusColor(s) {
-    switch(s) {
-        case 'Pending': return 'secondary';
-        case 'In Progress': return 'primary';
-        case 'Resolved': return 'success';
-        default: return 'dark';
-    }
-}
-
-// Charts Initialization
-function initCharts() {
-    const ctxStatus = document.getElementById('statusChart');
-    const ctxPriority = document.getElementById('priorityChart');
-    const ctxTrend = document.getElementById('trendChart');
-    const ctxPerf = document.getElementById('officerPerformanceChart');
-
-    if (ctxStatus) {
-        charts.status = new Chart(ctxStatus.getContext('2d'), {
-            type: 'bar',
-            data: getStatusChartData(),
-            options: { responsive: true, maintainAspectRatio: false }
+    document.querySelectorAll(".view-details-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            openViewDetailsModal(btn.dataset.id);
         });
-    }
-
-    if (ctxPriority) {
-        charts.priority = new Chart(ctxPriority.getContext('2d'), {
-            type: 'pie',
-            data: getPriorityChartData(),
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    if (ctxTrend) {
-        charts.trend = new Chart(ctxTrend.getContext('2d'), {
-            type: 'line',
-            data: getTrendChartData(),
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    if (ctxPerf) {
-        charts.performance = new Chart(ctxPerf.getContext('2d'), {
-            type: 'bar',
-            data: getPerformanceChartData(),
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-}
-
-function updateCharts() {
-    if (charts.status) {
-        charts.status.data = getStatusChartData();
-        charts.status.update();
-    }
-    if (charts.priority) {
-        charts.priority.data = getPriorityChartData();
-        charts.priority.update();
-    }
-    if (charts.trend) {
-        // respect filter selection
-        updateTrendChart();
-    }
-    if (charts.performance) {
-        charts.performance.data = getPerformanceChartData();
-        charts.performance.update();
-    }
-}
-
-function getPerformanceChartData() {
-    return {
-        labels: officersData.map(o => o.name),
-        datasets: [{
-            label: 'Resolved Complaints',
-            data: officersData.map(o => o.resolved),
-            backgroundColor: '#198754'
-        }]
-    };
-}
-
-function getStatusChartData() {
-    const filtered = complaintsData.filter(c => currentDepartment === "All Departments" || c.dept === currentDepartment);
-    const counts = { Pending: 0, "In Progress": 0, Resolved: 0 };
-    filtered.forEach(c => counts[c.status]++);
-
-    return {
-        labels: Object.keys(counts),
-        datasets: [{
-            label: 'Complaints by Status',
-            data: Object.values(counts),
-            backgroundColor: ['#6c757d', '#0d6efd', '#198754']
-        }]
-    };
-}
-
-function getPriorityChartData() {
-    const filtered = complaintsData.filter(c => currentDepartment === "All Departments" || c.dept === currentDepartment);
-    const counts = { High: 0, Medium: 0, Low: 0 };
-    filtered.forEach(c => counts[c.priority]++);
-
-    return {
-        labels: Object.keys(counts),
-        datasets: [{
-            data: Object.values(counts),
-            backgroundColor: ['#dc3545', '#ffc107', '#0dcaf0']
-        }]
-    };
-}
-
-function getTrendChartData() {
-    // Mock monthly trend
-    return {
-        labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-        datasets: [{
-            label: 'New Complaints',
-            data: [12, 19, 15, 25, 22, 30],
-            borderColor: '#0d6efd',
-            tension: 0.4,
-            fill: true,
-            backgroundColor: 'rgba(13, 110, 253, 0.1)'
-        }]
-    };
-}
-
-// Global function for theme.js to call
-window.updateChartsTheme = (theme) => {
-    const color = theme === 'dark' ? '#e0e0e0' : '#666';
-    const gridColor = theme === 'dark' ? '#333' : '#eee';
-
-    Object.values(charts).forEach(chart => {
-        if (chart.options.scales) {
-            if (chart.options.scales.x) {
-                chart.options.scales.x.ticks.color = color;
-                chart.options.scales.x.grid.color = gridColor;
-            }
-            if (chart.options.scales.y) {
-                chart.options.scales.y.ticks.color = color;
-                chart.options.scales.y.grid.color = gridColor;
-            }
-        }
-        if (chart.options.plugins && chart.options.plugins.legend) {
-            chart.options.plugins.legend.labels.color = color;
-        }
-        chart.update();
     });
+}
+
+function openAssignModal(id, dept) {
+    const select = document.getElementById("assign-officer");
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Select Officer...</option>';
+    
+    // Show officers from matching department first
+    const sortedOfficers = [...officersData].sort((a, b) => {
+        if (a.department === dept && b.department !== dept) return -1;
+        if (a.department !== dept && b.department === dept) return 1;
+        return 0;
+    });
+
+    sortedOfficers.forEach(o => {
+        select.innerHTML += `<option value="${o._id}">${o.name} (${o.department || 'No Dept'})</option>`;
+    });
+
+    document.getElementById("assign-complaint-id").value = id;
+    const modal = new bootstrap.Modal(document.getElementById("assignModal"));
+    modal.show();
+}
+
+function openViewDetailsModal(id) {
+    const complaint = complaintsData.find(c => c._id === id);
+    if (!complaint) return;
+
+    // Create or get view details modal
+    let modalEl = document.getElementById("viewDetailsAdminModal");
+    if (!modalEl) {
+        modalEl = document.createElement("div");
+        modalEl.id = "viewDetailsAdminModal";
+        modalEl.className = "modal fade";
+        modalEl.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Complaint & Reporter Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="admin-view-details-content"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalEl);
+    }
+
+    const content = document.getElementById("admin-view-details-content");
+    const imageUrl = complaint.image ? `http://localhost:7000/uploads/${complaint.image}` : null;
+
+    content.innerHTML = `
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold text-muted small text-uppercase">Reporter Details (Citizen)</h6>
+                <div class="p-3 bg-light rounded mb-4">
+                    <p class="mb-1"><strong>Full Name:</strong> ${complaint.user?.name || 'Anonymous'}</p>
+                    <p class="mb-1"><strong>Email:</strong> ${complaint.user?.email || 'N/A'}</p>
+                    <p class="mb-0"><strong>Role:</strong> Citizen</p>
+                </div>
+
+                <h6 class="fw-bold text-muted small text-uppercase">Case Information</h6>
+                <div class="p-3 bg-light rounded">
+                    <p class="mb-1"><strong>Complaint ID:</strong> ${complaint.complaintId || id}</p>
+                    <p class="mb-1"><strong>Department:</strong> ${complaint.category}</p>
+                    <p class="mb-1"><strong>Status:</strong> <span class="badge bg-primary">${complaint.status}</span></p>
+                    <p class="mb-1"><strong>Assigned Officer:</strong> ${complaint.assignedOfficer?.name || 'Not yet assigned'}</p>
+                    <hr>
+                    <p class="mb-1"><strong>Title:</strong> ${complaint.title}</p>
+                    <p class="mb-0"><strong>Full Description:</strong> ${complaint.description}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold text-muted small text-uppercase">Evidence Image</h6>
+                ${imageUrl ? 
+                    `<img src="${imageUrl}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 400px; object-fit: contain;" onerror="this.src='https://placehold.co/600x400?text=Image+Not+Found'">` : 
+                    `<div class="border rounded d-flex align-items-center justify-content-center bg-light text-muted" style="height: 200px;">
+                        <div><i class="bi bi-image fs-1 d-block text-center"></i> No Evidence Provided</div>
+                     </div>`
+                }
+                
+                <h6 class="fw-bold text-muted small text-uppercase mt-4">Reported Location</h6>
+                <p class="p-3 bg-light rounded"><i class="bi bi-geo-alt me-2"></i>${complaint.location || 'Not provided'}</p>
+            </div>
+        </div>
+
+        ${complaint.status === 'Resolved' || complaint.status === 'Closed' ? `
+        <div class="mt-4 border-top pt-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Resolution & Feedback</h5>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-muted small text-uppercase">Proof of Resolution</h6>
+                    ${complaint.resolutionImage ? 
+                        `<img src="http://localhost:7000/uploads/${complaint.resolutionImage}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">` : 
+                        `<div class="p-3 bg-light text-muted rounded text-center">No image uploaded for resolution.</div>`
+                    }
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-muted small text-uppercase">Citizen Feedback & Rating</h6>
+                    <div class="p-3 border rounded">
+                        <div class="mb-2">
+                            <span class="fw-bold me-2">Rating:</span>
+                            ${complaint.rating ? 
+                                `<span class="text-warning">
+                                    ${Array(5).fill(0).map((_, i) => `<i class="bi bi-star${i < complaint.rating ? '-fill' : ''}"></i>`).join('')}
+                                </span>` : 
+                                '<span class="text-muted">Not yet rated</span>'
+                            }
+                        </div>
+                        <p class="mb-0 italic text-muted">${complaint.feedback || "No feedback provided by the citizen."}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+    `;
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+/* =========================
+   FILTERS
+========================= */
+
+function setupFilters() {
+    const searchBox = document.getElementById("search-box");
+    const statusFilter = document.getElementById("status-filter");
+    const priorityFilter = document.getElementById("priority-filter");
+
+    const runFilters = () => {
+        const search = searchBox.value.toLowerCase();
+        const status = statusFilter.value;
+        const priority = priorityFilter.value;
+
+        const filtered = complaintsData.filter(c => {
+            const matchesSearch = c.title.toLowerCase().includes(search) || 
+                                 c.description.toLowerCase().includes(search) ||
+                                 (c.complaintId && c.complaintId.toLowerCase().includes(search));
+            const matchesStatus = status === "All" || c.status === status;
+            const matchesPriority = priority === "All" || c.priority === priority;
+            
+            return matchesSearch && matchesStatus && matchesPriority;
+        });
+
+        renderComplaints(filtered);
+    };
+
+    if (searchBox) searchBox.addEventListener("input", runFilters);
+    if (statusFilter) statusFilter.addEventListener("change", runFilters);
+    if (priorityFilter) priorityFilter.addEventListener("change", runFilters);
+}
+
+function populateDepartmentFilters() {
+    const deptSelector = document.getElementById("dept-selector");
+    if (!deptSelector) return;
+
+    deptSelector.innerHTML = '<li><a class="dropdown-item" href="#" onclick="filterByDept(\'All\')">All Departments</a></li>';
+    departmentsData.forEach(dept => {
+        deptSelector.innerHTML += `<li><a class="dropdown-item" href="#" onclick="filterByDept('${dept}')">${dept}</a></li>`;
+    });
+}
+
+window.filterByDept = function(dept) {
+    const display = document.getElementById("current-dept-display");
+    if (display) display.textContent = dept === 'All' ? 'All Departments' : dept;
+
+    if (dept === 'All') {
+        renderComplaints(complaintsData);
+    } else {
+        const filtered = complaintsData.filter(c => c.category === dept);
+        renderComplaints(filtered);
+    }
+    switchSection('complaints');
 };
 
-function updateStats() {
-    const filtered = complaintsData.filter(c => currentDepartment === "All Departments" || c.dept === currentDepartment);
-    
-    // update subtitle when stats refresh
-    updateGreetingSubtitle();
-    const total = filtered.length;
-    const pending = filtered.filter(c => c.status === 'Pending').length;
-    const resolved = filtered.filter(c => c.status === 'Resolved').length;
-    const assigned = filtered.filter(c => c.officer && c.officer.trim() !== '').length;
-    const unassigned = filtered.filter(c => !c.officer || c.officer.trim() === '').length;
+/* =========================
+   API HANDLERS
+========================= */
 
-    const elTotal = document.getElementById('total-complaints');
-    if (elTotal) elTotal.innerText = total;
-    
-    const elPending = document.getElementById('pending-complaints');
-    if (elPending) elPending.innerText = pending;
-    
-    const elResolved = document.getElementById('resolved-complaints');
-    if (elResolved) elResolved.innerText = resolved;
-    
-    const elAssigned = document.getElementById('assigned-complaints');
-    if (elAssigned) elAssigned.innerText = assigned;
-    
-    const unassignedEl = document.getElementById('unassigned-complaints');
-    if (unassignedEl) unassignedEl.innerText = unassigned;
-}
+const assignForm = document.getElementById("assign-form");
+if (assignForm) {
+    assignForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const complaintId = document.getElementById("assign-complaint-id").value;
+        const officerId = document.getElementById("assign-officer").value;
 
-// adjust greeting subtitle based on selected department
-function updateGreetingSubtitle() {
-    const sub = document.getElementById('greeting-subtitle');
-    if (!sub) return;
-    if (currentDepartment && currentDepartment !== 'All Departments') {
-        sub.innerText = `Overview for ${currentDepartment}`;
-    } else {
-        sub.innerText = 'What do you want to manage today?';
-    }
-}
+        try {
+            const response = await fetch(`${API}/complaints/${complaintId}/assign`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token
+                },
+                body: JSON.stringify({ officerId })
+            });
 
-// New Dashboard functions
-function renderDepartmentsTable() {
-    const tbody = document.getElementById('departments-table-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    
-    const depts = departments.filter(d => d !== "All Departments");
-    depts.forEach(dept => {
-        const deptComplaints = complaintsData.filter(c => c.dept === dept).length;
-        const deptOfficers = officersData.filter(o => o.dept === dept).length;
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><span class="fw-bold">${dept}</span></td>
-            <td>${deptComplaints}</td>
-            <td>${deptOfficers}</td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Edit</button>
-                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
-            </td>
-        `;
-        row.style.cursor = 'pointer';
-        row.addEventListener('click', () => {
-            currentDepartment = dept;
-            document.getElementById('current-dept-display').innerText = dept;
-            updateGreetingSubtitle();
-            switchSection('dashboard');
-            updateStats();
-            renderTable();
-            renderDepartmentInfo();
-            renderAssignmentTable();
-            updateCharts();
-        });
-        tbody.appendChild(row);
+            if (!response.ok) throw new Error("Assignment failed");
+
+            bootstrap.Modal.getInstance(document.getElementById("assignModal")).hide();
+            alert("Officer assigned successfully");
+            loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            alert("Assignment failed");
+        }
     });
 }
 
-function updateTrendChart() {
-    const filter = document.getElementById('trend-time-filter').value;
-    if (charts.trend) {
-        if (filter === 'Weekly') {
-            charts.trend.data.labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            charts.trend.data.datasets[0].data = [5, 8, 3, 10, 7, 2, 4];
-        } else if (filter === 'Monthly') {
-            charts.trend.data.labels = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-            charts.trend.data.datasets[0].data = [12, 19, 15, 25, 22, 30];
-        } else if (filter === 'Yearly') {
-            charts.trend.data.labels = ['2023', '2024', '2025', '2026'];
-            charts.trend.data.datasets[0].data = [120, 180, 210, 250];
+const addOfficerForm = document.getElementById("add-officer-form");
+if (addOfficerForm) {
+    addOfficerForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById("off-name").value,
+            email: document.getElementById("off-email").value,
+            staffId: document.getElementById("off-staffId").value,
+            department: document.getElementById("off-dept").value,
+            password: document.getElementById("off-password").value,
+            role: "officer"
+        };
+
+        try {
+            const response = await fetch(`${API}/auth/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Failed to create officer");
+
+            bootstrap.Modal.getInstance(document.getElementById("addOfficerModal")).hide();
+            alert("Officer account created successfully");
+            addOfficerForm.reset();
+            loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            alert("Creation failed");
         }
-        charts.trend.update();
-    }
+    });
 }
 
+window.terminateOfficer = function(id, name) {
+    document.getElementById("terminate-off-name").textContent = name;
+    document.getElementById("res-target-name").textContent = name;
+    document.getElementById("confirm-termination").checked = false;
+    document.getElementById("confirm-terminate-btn").classList.add("disabled");
+
+    const modal = new bootstrap.Modal(document.getElementById("terminationModal"));
+    modal.show();
+
+    document.getElementById("confirm-termination").onchange = function() {
+        if(this.checked) document.getElementById("confirm-terminate-btn").classList.remove("disabled");
+        else document.getElementById("confirm-terminate-btn").classList.add("disabled");
+    };
+
+    document.getElementById("confirm-terminate-btn").onclick = async function() {
+        try {
+            const res = await fetch(`${API}/admin/users/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: "Bearer " + token }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Termination failed");
+            
+            alert(`Notice Sent! Officer ${name} has been terminated.`);
+            modal.hide();
+            loadDashboardData();
+        } catch (err) {
+            alert(err.message || "Termination failed");
+        }
+    };
+};
+
+window.logout = function() {
+    sessionStorage.clear();
+    window.location.href = "../index.html";
+};
