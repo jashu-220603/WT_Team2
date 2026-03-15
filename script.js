@@ -4,9 +4,8 @@ function toggleMenu(){
 }
 
 // store desired section so we can redirect after login
-let pendingSection = '';
-
-let currentSignupRole = 'user';
+window.pendingSection = window.pendingSection || '';
+window.currentSignupRole = window.currentSignupRole || 'user';
 
 function openLogin(role, section=''){
     pendingSection = section;

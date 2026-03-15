@@ -30,8 +30,11 @@ router.post('/', async (req, res) => {
 
         const API_KEY = process.env.AI_API_KEY ? process.env.AI_API_KEY.trim() : null;
         if (!API_KEY) {
+            console.error("AI CHAT ERROR: API_KEY is missing in process.env");
             return res.status(500).json({ message: "AI API Key not configured on server" });
         }
+
+        console.log(`AI CHAT: Sending request to OpenRouter. Key starts with: ${API_KEY.substring(0, 10)}... (Length: ${API_KEY.length})`);
 
         // Using OpenRouter for AI (supports the sk-or-v1 keys)
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -39,11 +42,11 @@ router.post('/', async (req, res) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${API_KEY}`,
-                // 'HTTP-Referer': 'https://wt-team2.vercel.app', // Optional for OpenRouter
-                // 'X-Title': 'Citizen Complaint Portal' // Optional for OpenRouter
+                'HTTP-Referer': 'https://wt-team2.vercel.app', 
+                'X-Title': 'Citizen Complaint Portal' 
             },
             body: JSON.stringify({
-                model: "google/gemini-flash-1.5", // Good balance of speed and smarts
+                model: "google/gemini-flash-1.5", 
                 messages: [
                     { role: "system", content: SYSTEM_PROMPT },
                     { role: "user", content: message }
