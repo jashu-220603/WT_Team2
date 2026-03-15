@@ -20,6 +20,9 @@ app.use(express.json());
 // serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// health check
+app.get('/', (req, res) => res.send('CMS Backend is running...'));
+
 // routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/complaints', require('./routes/complaints'));
