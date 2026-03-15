@@ -2,7 +2,7 @@
  * Officer Dashboard JavaScript (Connected to Backend)
  */
 
-const API = "http://localhost:7000/api";
+const API = (window.API_BASE_URL || "http://localhost:7000") + "/api";
 const token = sessionStorage.getItem("jwt");
 const role = sessionStorage.getItem("role");
 
@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const content = document.getElementById("view-details-content");
-        const imageUrl = complaint.image ? `http://localhost:7000/uploads/${complaint.image}` : null;
+        const imageUrl = complaint.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.image}` : null;
 
         content.innerHTML = `
             <div class="row g-4">

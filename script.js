@@ -109,7 +109,7 @@ function setupLoginRedirect(){
         }
 
         try {
-            const resp = await fetch('http://localhost:7000/api/auth/login', {
+            const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({email, password})
@@ -131,7 +131,7 @@ function setupLoginRedirect(){
 
             // fetch user profile to get name (login response may not include it)
             try {
-                const meResp = await fetch('http://localhost:7000/api/auth/me', {
+                const meResp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/me`, {
                     headers: { Authorization: 'Bearer ' + data.token }
                 });
                 if (meResp.ok) {
@@ -295,7 +295,7 @@ function setupSignup() {
         };
 
         try {
-            const resp = await fetch('http://localhost:7000/api/auth/register', {
+            const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newUser)

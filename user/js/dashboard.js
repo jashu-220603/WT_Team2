@@ -2,7 +2,7 @@
  * Citizen Dashboard JavaScript (Connected to Backend)
  */
 
-const API = "http://localhost:7000/api";
+const API = (window.API_BASE_URL || "http://localhost:7000") + "/api";
 const token = sessionStorage.getItem("jwt");
 
 if (!token) {
@@ -143,7 +143,7 @@ function openViewModal(c) {
     <p><b>Category:</b> ${c.category || "-"}</p>
     <p><b>Location:</b> ${c.location || "-"}</p>
     <p><b>Description:</b> ${c.description}</p>
-    ${c.image ? `<img src="http://localhost:7000/uploads/${c.image}" style="max-width:100%;margin-top:10px;">` : ""}
+    ${c.image ? `<img src="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}" style="max-width:100%;margin-top:10px;">` : ""}
     `;
 
     const modal = new bootstrap.Modal(

@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const API = "http://localhost:7000/api";
+const API = (window.API_BASE_URL || "http://localhost:7000") + "/api";
 
 // Get JWT token from session
 function getToken() {
@@ -410,7 +410,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         : "Issue has been successfully resolved.";
                     
                     if (complaint.resolutionImage) {
-                        resImageDisplay.src = `http://localhost:7000/uploads/${complaint.resolutionImage}`;
+                        resImageDisplay.src = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.resolutionImage}`;
                         resImageDisplay.style.display = "block";
                     } else {
                         resImageDisplay.style.display = "none";
