@@ -185,32 +185,7 @@ function closeFAQ(){
     document.getElementById("faqBox").style.display="none";
 }
 
-// =====================
-// CHATBOT
-// =====================
-function toggleChat(){
-    let chat=document.getElementById("chatbox");
-    chat.style.display = chat.style.display==="block" ? "none" : "block";
-}
-
-function sendMessage(){
-    let input=document.getElementById("userInput");
-    let chatBody=document.getElementById("chatBody");
-    let userText=input.value;
-    if(userText==="") return;
-
-    chatBody.innerHTML+=`<p><b>You:</b> ${userText}</p>`;
-
-    let botReply="Please contact the helpline for more support.";
-    const msg = userText.toLowerCase();
-    if(msg.includes("complaint")) botReply="You can file a complaint using the 'File Complaint' button.";
-    if(msg.includes("track")) botReply="Use the 'Track Complaint' option and enter your complaint ID.";
-    if(msg.includes("login")) botReply="Click the Login button at the top right to access your account.";
-
-    chatBody.innerHTML+=`<p><b>Bot:</b> ${botReply}</p>`;
-    input.value="";
-    chatBody.scrollTop = chatBody.scrollHeight;
-}
+// CHATBOT logic moved to chatbot.js
 
 // =====================
 // SLIDER

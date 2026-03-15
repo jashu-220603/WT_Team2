@@ -9,6 +9,7 @@
     <!-- Boxicons for Icons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../chatbot.css">
 </head>
 <body>
 
@@ -458,11 +459,27 @@
         </div>
     </div>
 
-    <div id="copyToast" class="right-toast">
-        <i class='bx bx-check'></i> Complaint ID copied to clipboard
-    </div>
+<!-- CHATBOT -->
+<div class="chatbot-icon" onclick="toggleChat()">
+    💬 
+</div>
 
-    <script src="../api-config.js"></script>
+<div id="chatbox" class="chatbox">
+    <div class="chat-header">
+        <span>CMS Assistant</span>
+        <span onclick="toggleChat()">&times;</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+        <p class="bot-msg">Hello 👋 How can I help you today with the Complaint Portal?</p>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your question...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script src="../api-config.js"></script>
+<script src="../chatbot.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

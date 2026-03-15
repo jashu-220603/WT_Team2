@@ -17,6 +17,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../chatbot.css">
 </head>
 
 <body>
@@ -69,6 +70,9 @@
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container-fluid">
+                <button id="mobile-sidebar-toggle" class="btn btn-outline-primary d-md-none me-2">
+                    <i class="bi bi-list"></i>
+                </button>
                 <span class="navbar-brand d-md-none fw-bold">Officer Portal</span>
 
                 <div class="d-flex align-items-center me-auto">
@@ -353,8 +357,29 @@
             </div>
         </div>
     </div>
+    
+    <!-- CHATBOT -->
+    <div class="chatbot-icon" onclick="toggleChat()">
+        💬 
+    </div>
+
+    <div id="chatbox" class="chatbox">
+        <div class="chat-header">
+            <span>CMS Assistant</span>
+            <span onclick="toggleChat()">&times;</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <p class="bot-msg">Hello 👋 How can I help you today with the Complaint Portal?</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your question...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../api-config.js"></script>
+    <script src="../chatbot.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 

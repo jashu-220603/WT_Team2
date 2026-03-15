@@ -6,6 +6,7 @@
 <title>Citizen Complaint Portal</title>
 
 <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
 
 </head>
 
@@ -408,30 +409,27 @@
 </div>
 
 <!-- CHATBOT -->
-
 <div class="chatbot-icon" onclick="toggleChat()">
-💬 
+    💬 
 </div>
 
 <div id="chatbox" class="chatbox">
-
-<div class="chat-header">
-Complaint Help Bot
-<span onclick="toggleChat()">✖</span>
+    <div class="chat-header">
+        <span>CMS Assistant</span>
+        <span onclick="toggleChat()">&times;</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+        <p class="bot-msg">Hello 👋 How can I help you today with the Complaint Portal?</p>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your question...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 </div>
 
-<div class="chat-body" id="chatBody">
-<p>Hello 👋</p>
-<p>How can I help you?</p>
-</div>
-
-<div class="chat-input">
-
-<input type="text" id="userInput" placeholder="Type your question...">
-
-<button onclick="sendMessage()">Send</button>
-
-</div>
+<script src="api-config.js"></script>
+<script src="chatbot.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>

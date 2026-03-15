@@ -807,3 +807,68 @@ margin-top: 10px;
 .signup-btn:hover{
 background:#218838;
 }
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+    .header {
+        padding: 0 15px;
+    }
+
+    .portal-name {
+        font-size: 16px;
+    }
+
+    .main h1 {
+        font-size: 30px;
+    }
+
+    .role-section {
+        gap: 20px;
+    }
+
+    .role-card {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .slider {
+        width: 95%;
+        margin-top: 80px;
+    }
+
+    .slides img {
+        height: 200px;
+    }
+
+    .steps {
+        gap: 30px;
+    }
+
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .announcement-card {
+        width: 100%;
+    }
+
+    .dept-card {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .main h1 {
+        font-size: 24px;
+    }
+
+    .main button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .left-header .logo {
+        width: 30px;
+    }
+}

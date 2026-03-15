@@ -39,18 +39,22 @@ document.addEventListener("DOMContentLoaded", () => {
        SIDEBAR & NAVIGATION
     ========================= */
 
-    const sidebar = document.getElementById("sidebar");
-    const mainContent = document.getElementById("main-content");
-    const sidebarToggle = document.getElementById("sidebar-toggle");
+    // Sidebar toggle (desktop/mobile)
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const mobileToggleBtn = document.getElementById('mobile-sidebar-toggle');
 
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener("click", () => {
-            if (window.innerWidth > 768) {
-                sidebar.classList.toggle("collapsed");
-                mainContent.classList.toggle("expanded");
-            } else {
-                sidebar.classList.toggle("show");
-            }
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+    }
+
+    if (mobileToggleBtn) {
+        mobileToggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
         });
     }
 
