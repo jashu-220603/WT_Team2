@@ -891,4 +891,44 @@ background:#218838;
 
 .forgot-link:hover {
     color: #4338ca;
+/* OVERVIEW MODAL */
+
+.overview-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    padding: 30px 20px;
+    border-radius: 10px;
+    width: 200px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: 0.3s;
+}
+
+.stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.stat-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.stat-box h3 {
+    font-size: 32px;
+    color: #002f5b;
+    margin-bottom: 5px;
+}
+
+.stat-box p {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+}
 }
