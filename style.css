@@ -453,6 +453,32 @@ font-size:16px;
 cursor:pointer;
 }
 
+.google-divider {
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+}
+
+.google-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #ddd;
+    z-index: 1;
+}
+
+.google-divider span {
+    background: white;
+    padding: 0 10px;
+    color: #888;
+    position: relative;
+    z-index: 2;
+    font-size: 14px;
+}
+
 .signup-text{
 margin-top:10px;
 font-size:14px;

@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="chatbot.css">
     <link rel="icon" type="image/png" href="images/favicon.png">
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -346,18 +348,46 @@
             <button class="tab" onclick="switchTab('admin')">Admin</button>
         </div>
         <form id="loginForm">
-            <div class="input-group">
-                <label id="loginEmailLabel">Email</label>
-                <input type="text" id="loginEmail" placeholder="your@email.com" required>
+            <div id="citizenLoginFields">
+                <div class="input-group">
+                    <label id="loginEmailLabel">Citizen Email</label>
+                    <input type="text" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="........" required>
+                </div>
+                <button type="submit" class="signin-btn">Sign In</button>
+                <div class="login-footer">
+                    <p>Don't have an account? <span class="signup-link" onclick="openSignup()">Sign Up</span></p>
+                    <p><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
+                </div>
+                <div class="google-divider"><span>or</span></div>
+                <div id="g_id_onload"
+                    data-client_id="588711916449-u7g72decg5agtfgddkielt0v8fh2htge.apps.googleusercontent.com"
+                    data-callback="handleGoogleLogin"
+                    data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                    data-type="standard"
+                    data-size="large"
+                    data-theme="outline"
+                    data-text="sign_in_with"
+                    data-shape="rectangular"
+                    data-logo_alignment="left"
+                    data-width="100%">
+                </div>
             </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="********" required>
-            </div>
-            <button type="submit" class="signin-btn">Sign In</button>
-            <div class="login-footer">
-                <p>Don't have an account? <span class="signup-link" onclick="openSignup()">Sign Up</span></p>
-                <p><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
+            <div id="officerAdminLoginFields" style="display:none;">
+                <div class="input-group">
+                    <label id="loginEmailLabel2">Email / Staff ID</label>
+                    <input type="text" id="loginEmail2" placeholder="your@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword2" placeholder="........">
+                </div>
+                <button type="button" class="signin-btn" onclick="handleOfficerAdminLogin()">Sign In</button>
             </div>
         </form>
     </div>

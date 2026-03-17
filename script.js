@@ -72,31 +72,27 @@ function switchTab(role){
     const tabs = document.querySelectorAll(".tab");
     tabs.forEach(tab => tab.classList.remove("active"));
 
-    const loginEmailLabel = document.getElementById("loginEmailLabel");
-    const loginEmailInput = document.getElementById("loginEmail");
-
-    const googleBtnContainer = document.getElementById("googleLoginBtnContainer");
+    const citizenFields = document.getElementById("citizenLoginFields");
+    const officerAdminFields = document.getElementById("officerAdminLoginFields");
 
     if(role==="citizen") {
         if(tabs[0]) tabs[0].classList.add("active");
-        if(loginEmailLabel) loginEmailLabel.textContent = "Citizen Email";
-        if(loginEmailInput) loginEmailInput.placeholder = "example: user@gmail.com";
-        if(googleBtnContainer) {
-            googleBtnContainer.style.display = "flex";
-            if (window.google) initializeGoogleSignIn();
-        }
+        if(citizenFields) citizenFields.style.display = "block";
+        if(officerAdminFields) officerAdminFields.style.display = "none";
     }
     if(role==="officer") {
         if(tabs[1]) tabs[1].classList.add("active");
-        if(loginEmailLabel) loginEmailLabel.textContent = "Officer ID";
-        if(loginEmailInput) loginEmailInput.placeholder = "example: off-001";
-        if(googleBtnContainer) googleBtnContainer.style.display = "none";
+        if(citizenFields) citizenFields.style.display = "none";
+        if(officerAdminFields) officerAdminFields.style.display = "block";
+        const lbl = document.getElementById("loginEmailLabel2");
+        if(lbl) lbl.textContent = "Officer ID / Email";
     }
     if(role==="admin") {
         if(tabs[2]) tabs[2].classList.add("active");
-        if(loginEmailLabel) loginEmailLabel.textContent = "Admin ID";
-        if(loginEmailInput) loginEmailInput.placeholder = "example: adm-001";
-        if(googleBtnContainer) googleBtnContainer.style.display = "none";
+        if(citizenFields) citizenFields.style.display = "none";
+        if(officerAdminFields) officerAdminFields.style.display = "block";
+        const lbl = document.getElementById("loginEmailLabel2");
+        if(lbl) lbl.textContent = "Admin ID / Email";
     }
 }
 
