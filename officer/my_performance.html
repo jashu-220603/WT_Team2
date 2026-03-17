@@ -47,6 +47,10 @@
                 <i class="bi bi-star"></i>
                 <span>Your Ratings</span>
             </a>
+            <a href="citizen_concerns.html" class="nav-link">
+                <i class="bi bi-chat-dots"></i>
+                <span>Citizen Concerns</span>
+            </a>
             <hr class="mx-3 opacity-25">
             <a href="admins_remarks.html" class="nav-link">
                 <i class="bi bi-chat-left-text"></i>
@@ -61,7 +65,7 @@
                 <span>Contact Admin</span>
             </a>
             <hr class="mx-3 opacity-25">
-            <a href="index.html" class="nav-link text-warning" data-section="legal-notices">
+            <a href="index.html?section=legal-notices" class="nav-link text-warning">
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>Legal Notices</span>
             </a>
@@ -455,20 +459,7 @@
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.dummyAssigned) {
-                const total = window.dummyAssigned.length;
-                const pending = window.dummyAssigned.filter(c => c.status === 'Pending').length;
-                const solved = window.dummyAssigned.filter(c => c.status === 'Resolved' || c.status === 'Solved').length;
-                
-                const perf = total > 0 ? Math.round((solved / total) * 100) : 0;
-                
-                document.getElementById('perf-percentage').textContent = perf + '%';
-                document.getElementById('perf-assigned').textContent = total;
-                document.getElementById('perf-pending').textContent = pending;
-                document.getElementById('perf-solved').textContent = solved;
-            }
-        });
+        // Data is now handled dynamically by js/dashboard.js
     </script>
 </body>
 </html>

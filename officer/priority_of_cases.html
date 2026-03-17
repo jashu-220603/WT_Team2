@@ -56,6 +56,10 @@
                 <i class="bi bi-star"></i>
                 <span>Your Ratings</span>
             </a>
+            <a href="citizen_concerns.html" class="nav-link">
+                <i class="bi bi-chat-dots"></i>
+                <span>Citizen Concerns</span>
+            </a>
             <hr class="mx-3 opacity-25">
             <a href="admins_remarks.html" class="nav-link">
                 <i class="bi bi-chat-left-text"></i>
@@ -70,7 +74,7 @@
                 <span>Contact Admin</span>
             </a>
             <hr class="mx-3 opacity-25">
-            <a href="index.html" class="nav-link text-warning" data-section="legal-notices">
+            <a href="index.html?section=legal-notices" class="nav-link text-warning">
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>Legal Notices</span>
             </a>
@@ -487,45 +491,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.dummyAssigned) {
-                const highCount = window.dummyAssigned.filter(c => c.priority === 'High').length;
-                const mediumCount = window.dummyAssigned.filter(c => c.priority === 'Medium').length;
-                const lowCount = window.dummyAssigned.filter(c => c.priority === 'Low').length;
-                
-                document.getElementById('card-high').textContent = highCount;
-                document.getElementById('card-medium').textContent = mediumCount;
-                document.getElementById('card-low').textContent = lowCount;
-                
-                const tbody = document.getElementById('priority-table-body');
-                let html = '';
-                
-                window.dummyAssigned.forEach(c => {
-                    let badgeClass = 'bg-secondary';
-                    if (c.status === 'Pending') badgeClass = 'bg-warning text-dark';
-                    else if (c.status === 'In Progress') badgeClass = 'bg-primary';
-                    else if (c.status === 'Resolved' || c.status === 'Solved') badgeClass = 'bg-success';
-        
-                    let priorityIcon = '';
-                    if (c.priority === 'High') priorityIcon = '🔴 High';
-                    else if (c.priority === 'Medium') priorityIcon = '🟠 Medium';
-                    else if (c.priority === 'Low') priorityIcon = '🟢 Low';
-                    
-                    html += `
-                        <tr>
-                            <td class="fw-medium">${c.id}</td>
-                            <td>${c.citizenName || 'N/A'}</td>
-                            <td>${c.title}</td>
-                            <td class="${c.priority === 'High' ? 'text-danger fw-bold' : (c.priority === 'Medium' ? 'text-warning fw-bold' : 'text-success fw-bold')}">${priorityIcon}</td>
-                            <td><span class="badge ${badgeClass}">${c.status}</span></td>
-                            <td>${c.date}</td>
-                        </tr>
-                    `;
-                });
-                
-                tbody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted">No cases found.</td></tr>';
-            }
-        });
+        // Data is now handled dynamically by js/dashboard.js
     </script>
 </body>
 </html>

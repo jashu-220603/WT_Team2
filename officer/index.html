@@ -41,6 +41,14 @@
                 <i class="bi bi-flag"></i>
                 <span>Priority of Cases</span>
             </a>
+            <a href="index.html" class="nav-link" data-section="assigned">
+                <i class="bi bi-folder-check"></i>
+                <span>Your Assigned Complaints</span>
+            </a>
+            <a href="index.html" class="nav-link" data-section="pending">
+                <i class="bi bi-clock-history"></i>
+                <span>Your Pending Complaints</span>
+            </a>
             <a href="complaint_tracking.html" class="nav-link">
                 <i class="bi bi-geo-alt"></i>
                 <span>Complaint Tracking</span>
@@ -56,6 +64,10 @@
             <a href="your_ratings.html" class="nav-link">
                 <i class="bi bi-star"></i>
                 <span>Your Ratings</span>
+            </a>
+            <a href="citizen_concerns.html" class="nav-link">
+                <i class="bi bi-chat-dots"></i>
+                <span>Citizen Concerns</span>
             </a>
             <hr class="mx-3 opacity-25">
             <a href="admins_remarks.html" class="nav-link">
@@ -105,8 +117,11 @@
                                 0
                             </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="width: 300px; padding: 0;">
-                            <li class="p-2 border-bottom text-center fw-bold bg-light">Notifications</li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="width: 360px; padding: 0;">
+                            <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-light">
+                                <span class="fw-bold"><i class="bi bi-bell-fill me-1 text-success"></i> Notifications</span>
+                                <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="markAllAsRead()">Mark all as read</button>
+                            </li>
                             <li>
                                 <ul class="nav nav-tabs nav-justified" id="notiTabs" role="tablist">
                                     <li class="nav-item" role="presentation">

@@ -12,13 +12,10 @@ const createTestUsers = async () => {
     const adminId = 'adm-001';
     let admin = await User.findOne({ staffId: adminId });
     if (!admin) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash('admin123', salt);
-      
       await User.create({
         name: 'Super Admin',
         email: 'admin_test_new@portal.gov',
-        password: hashedPassword,
+        password: 'admin123', // Model handles hashing
         role: 'admin',
         staffId: adminId
       });
@@ -31,13 +28,10 @@ const createTestUsers = async () => {
     const officerId = 'off-001';
     let officer = await User.findOne({ staffId: officerId });
     if (!officer) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash('officer123', salt);
-      
       await User.create({
         name: 'Officer John',
         email: 'officer_test_new@portal.gov',
-        password: hashedPassword,
+        password: 'officer123', // Model handles hashing
         role: 'officer',
         staffId: officerId,
         department: 'Cyber Crime'

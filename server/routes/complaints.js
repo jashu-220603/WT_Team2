@@ -127,7 +127,17 @@ router.get('/', protect, async (req, res) => {
       .populate('assignedOfficer', 'name email department contactNumber bio')
       .sort({ createdAt: -1 });
 
-    res.json(complaints);
+    // For officers, check which complaints have concerns
+    const Concern = require('../models/Concern');
+    const complaintsWithStatus = await Promise.all(complaints.map(async (c) => {
+      const concernCount = await Concern.countDocuments({ complaint: c._id });
+      return {
+        ...c.toObject(),
+        hasConcern: concernCount > 0
+      };
+    }));
+
+    res.json(complaintsWithStatus);
 
   } catch (err) {
 

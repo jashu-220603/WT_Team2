@@ -12,17 +12,26 @@ POST /api/auth/register
 -------------------------------------------------
 */
 router.post('/register', async (req, res) => {
-
   const { name, email, password, role, department, staffId } = req.body;
 
   try {
+    // Convert empty staffId to undefined so Mongoose sparse index ignores it
+    const finalStaffId = (staffId && staffId.trim() !== '') ? staffId.trim() : undefined;
 
     let user = await User.findOne({ 
-      $or: [{ email }, { staffId: staffId || 'NON_EXISTENT_ID' }] 
+      $or: [
+        { email }, 
+        { staffId: finalStaffId || '___NON_EXISTENT_ID___' }
+      ] 
     });
 
     if (user) {
       return res.status(400).json({ message: 'User already exists (Email or Staff ID taken)' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+        console.error('FATAL: JWT_SECRET is not defined in .env');
+        return res.status(500).json({ message: 'Server configuration error' });
     }
 
     user = new User({
@@ -31,7 +40,7 @@ router.post('/register', async (req, res) => {
       password,
       role,
       department,
-      staffId
+      staffId: finalStaffId
     });
 
     await user.save();
@@ -44,14 +53,16 @@ router.post('/register', async (req, res) => {
 
     res.json({
       token,
-      role: user.role
+      role: user.role,
+      name: user.name
     });
 
   } catch (err) {
-
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-
+    console.error('Registration error:', err);
+    if (err.code === 11000) {
+        return res.status(400).json({ message: 'Duplicate value error: Email or ID already in use.' });
+    }
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 
 });
@@ -93,6 +104,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    if (!process.env.JWT_SECRET) {
+        console.error('FATAL: JWT_SECRET is not defined in .env');
+        return res.status(500).json({ message: 'Server configuration error' });
+    }
+
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
@@ -107,10 +123,8 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (err) {
-
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 
 });

@@ -31,6 +31,14 @@
                 <i class="bi bi-flag"></i>
                 <span>Priority of Cases</span>
             </a>
+            <a href="index.html" class="nav-link" data-section="assigned">
+                <i class="bi bi-folder-check"></i>
+                <span>Your Assigned Complaints</span>
+            </a>
+            <a href="index.html" class="nav-link" data-section="pending">
+                <i class="bi bi-clock-history"></i>
+                <span>Your Pending Complaints</span>
+            </a>
             <a href="complaint_tracking.html" class="nav-link">
                 <i class="bi bi-geo-alt"></i>
                 <span>Complaint Tracking</span>
@@ -47,6 +55,10 @@
                 <i class="bi bi-star"></i>
                 <span>Your Ratings</span>
             </a>
+            <a href="citizen_concerns.html" class="nav-link">
+                <i class="bi bi-chat-dots"></i>
+                <span>Citizen Concerns</span>
+            </a>
             <hr class="mx-3 opacity-25">
             <a href="admins_remarks.html" class="nav-link active">
                 <i class="bi bi-chat-left-text"></i>
@@ -61,7 +73,7 @@
                 <span>Contact Admin</span>
             </a>
             <hr class="mx-3 opacity-25">
-            <a href="index.html" class="nav-link text-warning" data-section="legal-notices">
+            <a href="index.html?section=legal-notices" class="nav-link text-warning">
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>Legal Notices</span>
             </a>
@@ -460,6 +472,82 @@
                 <button class="signin-btn btn-success w-100" onclick="resetPassword()">Reset Password</button>
             </div>
         </div>
+    <div id="chatbox" class="chatbox">
+        <div class="chat-header">
+            <span>CMS Assistant</span>
+            <span onclick="toggleChat()">&times;</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <p class="bot-msg">Hello 👋 How can I help you today with the Complaint Portal?</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your question...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../api-config.js"></script>
+    <script src="../chatbot.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const tbody = document.querySelector('tbody');
+            const token = sessionStorage.getItem('jwt');
+            const API = (window.API_BASE_URL || "http://localhost:7000") + "/api";
+
+            try {
+                // Fetch complaints assigned to this officer that have history entries with remarks
+                const res = await fetch(`${API}/complaints`, {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                if (!res.ok) throw new Error("Failed to fetch complaints");
+
+                const complaints = await res.json();
+
+                // Collect all history entries that have remarks (admin or system remarks)
+                const remarkRows = [];
+                complaints.forEach(c => {
+                    if (c.history && c.history.length > 0) {
+                        c.history.forEach(h => {
+                            if (h.remarks && h.changedBy !== 'officer') {
+                                remarkRows.push({
+                                    complaintId: c.complaintId || c._id?.substring(0, 8).toUpperCase(),
+                                    remark: h.remarks,
+                                    date: h.changedAt || c.updatedAt,
+                                    status: c.status
+                                });
+                            }
+                        });
+                    }
+                });
+
+                let html = "";
+                if (remarkRows.length === 0) {
+                    html = '<tr><td colspan="4" class="text-center py-5 text-muted"><i class="bi bi-chat-left-text fs-2 d-block mb-2"></i>No admin remarks found for your cases.</td></tr>';
+                } else {
+                    remarkRows.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+                        let statusClass = "bg-secondary";
+                        if (r.status === "Assigned") statusClass = "bg-warning text-dark";
+                        if (r.status === "Pending") statusClass = "bg-info text-dark";
+                        if (r.status === "In Progress") statusClass = "bg-primary";
+                        if (r.status === "Resolved" || r.status === "Closed") statusClass = "bg-success";
+
+                        html += `
+                        <tr>
+                            <td class="fw-medium text-primary">${r.complaintId}</td>
+                            <td style="white-space: pre-wrap; word-break: break-word;">"${r.remark}"</td>
+                            <td>${new Date(r.date).toLocaleDateString()}</td>
+                            <td><span class="badge ${statusClass}">${r.status}</span></td>
+                        </tr>
+                        `;
+                    });
+                }
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load admin remarks.</td></tr>';
+            }
+        });
+    </script>
 </body>
 </html>

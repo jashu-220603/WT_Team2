@@ -60,6 +60,54 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
     }
 });
 
+// @route   GET /api/concerns/officer
+// @desc    Get all concerns for complaints assigned to the logged-in officer (privacy-safe)
+// @access  Officer only
+router.get('/officer', protect, async (req, res) => {
+    try {
+        if (req.user.role !== 'officer' && req.user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied." });
+        }
+
+        // Find all complaints assigned to this officer
+        const assignedComplaints = await Complaint.find({ assignedOfficer: req.user._id }, '_id complaintId title status');
+
+        const complaintIds = assignedComplaints.map(c => c._id);
+
+        // Fetch concerns for those complaints (no citizen info)
+        const concerns = await Concern.find({ complaint: { $in: complaintIds } })
+            .populate('complaint', 'complaintId title status')
+            .sort({ createdAt: -1 })
+            .select('description image status officerResponse adminResponse createdAt complaint');
+
+        res.json(concerns);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// @route   GET /api/concerns/:complaintId
+// @desc    Get concerns for a specific complaint (Private)
+// @access  Admin/User
+router.get('/:complaintId', protect, async (req, res) => {
+    try {
+        const complaint = await Complaint.findById(req.params.complaintId);
+        if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+        // Privacy: Only Admin or the User who owns the complaint/concern can see details
+        if (req.user.role !== 'admin' && !complaint.user.equals(req.user._id)) {
+            return res.status(403).json({ message: "Access denied. Officers cannot view concern details." });
+        }
+
+        const concerns = await Concern.find({ complaint: req.params.complaintId }).sort({ createdAt: -1 });
+        res.json(concerns);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // @route   PUT /api/concerns/:id/respond
 // @desc    Respond to a concern (Admin or Officer)
 // @access  Admin/Officer

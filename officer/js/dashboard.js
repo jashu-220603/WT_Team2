@@ -74,35 +74,78 @@ async function fetchNotifications() {
     }
 }
 
-function loadNotifications(notifications) {
-    const citizenList = document.getElementById("citizen-noti-list");
-    const adminList = document.getElementById("admin-noti-list");
-    if (!citizenList || !adminList) return;
-
-    const citizenNotifs = notifications.filter(n => ['concern_raised', 'assignment'].includes(n.type));
-    const adminNotifs = notifications.filter(n => !['concern_raised', 'assignment'].includes(n.type));
-
-    if (citizenNotifs.length === 0) {
-        citizenList.innerHTML = `<div class="p-3 text-center text-muted small">No citizen alerts</div>`;
-    } else {
-        citizenList.innerHTML = citizenNotifs.slice(0, 10).map(n => renderNotifItem(n)).join('');
-    }
-
-    if (adminNotifs.length === 0) {
-        adminList.innerHTML = `<div class="p-3 text-center text-muted small">No admin alerts</div>`;
-    } else {
-        adminList.innerHTML = adminNotifs.slice(0, 10).map(n => renderNotifItem(n)).join('');
+// Map notification type to redirect URL
+function getRedirectUrl(n) {
+    switch (n.type) {
+        case 'concern_raised':    return 'citizen_concerns.html';
+        case 'complaint_status':  return 'your_ratings.html';
+        case 'assignment':        return 'index.html?section=assigned';
+        case 'system_alert':      return 'admins_remarks.html';
+        case 'legal_notice':      return 'index.html?section=legal-notices';
+        default:                  return 'admins_remarks.html';
     }
 }
 
+function loadNotifications(notifications) {
+    const citizenList = document.getElementById("citizen-noti-list");
+    const adminList   = document.getElementById("admin-noti-list");
+    if (!citizenList || !adminList) return;
+
+    // Citizen = concern_raised, assignment, complaint_status (ratings)
+    const citizenTypes = ['concern_raised', 'assignment', 'complaint_status'];
+    const citizenNotifs = notifications.filter(n => citizenTypes.includes(n.type));
+    const adminNotifs   = notifications.filter(n => !citizenTypes.includes(n.type));
+
+    citizenList.innerHTML = citizenNotifs.length
+        ? citizenNotifs.slice(0, 15).map(n => renderNotifItem(n)).join('')
+        : `<div class="p-3 text-center text-muted small"><i class="bi bi-bell-slash fs-4 d-block mb-1"></i>No citizen alerts</div>`;
+
+    adminList.innerHTML = adminNotifs.length
+        ? adminNotifs.slice(0, 15).map(n => renderNotifItem(n)).join('')
+        : `<div class="p-3 text-center text-muted small"><i class="bi bi-bell-slash fs-4 d-block mb-1"></i>No admin alerts</div>`;
+}
+
 function renderNotifItem(n) {
+    const iconMap = {
+        concern_raised:   { icon: 'bi-exclamation-circle-fill', color: 'text-warning' },
+        complaint_status: { icon: 'bi-star-fill',               color: 'text-warning' },
+        assignment:       { icon: 'bi-folder-check',            color: 'text-primary' },
+        system_alert:     { icon: 'bi-megaphone-fill',          color: 'text-info'    },
+        legal_notice:     { icon: 'bi-file-earmark-text-fill',  color: 'text-danger'  },
+    };
+    const icon = iconMap[n.type] || { icon: 'bi-bell-fill', color: 'text-secondary' };
+    const timeStr = new Date(n.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' });
+    const redirectUrl = getRedirectUrl(n);
+
     return `
-        <div class="notification-item p-2 border-bottom ${n.isRead ? '' : 'bg-light'}" style="cursor: pointer;" onclick="markAsRead('${n._id}')">
-            <h6 class="mb-1 small fw-bold" style="font-size: 0.8rem;">${n.title}</h6>
-            <p class="mb-1 text-muted tiny" style="font-size: 0.7rem; line-height: 1.2;">${n.message}</p>
-            <span class="text-primary tiny" style="font-size: 0.6rem;">${new Date(n.createdAt).toLocaleString()}</span>
+    <div class="d-flex align-items-start p-2 border-bottom hover-bg notif-card ${n.isRead ? 'opacity-75' : ''}"
+         style="cursor:pointer; transition: background 0.15s;"
+         onclick="handleNotifClick('${n._id}','${redirectUrl}')">
+        <div class="me-2 pt-1">
+            <span class="badge rounded-pill bg-light border p-2">
+                <i class="bi ${icon.icon} ${icon.color}" style="font-size:1rem;"></i>
+            </span>
         </div>
-    `;
+        <div class="flex-grow-1 overflow-hidden">
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-semibold small ${n.isRead ? 'text-muted' : 'text-dark'}" style="font-size:0.82rem; line-height:1.3;">${n.title}</span>
+                ${!n.isRead ? '<span class="badge rounded-pill bg-primary ms-1" style="font-size:0.5rem; padding:3px 5px;">NEW</span>' : ''}
+            </div>
+            <p class="mb-0 text-muted" style="font-size:0.72rem; line-height:1.4; white-space:normal;">${n.message}</p>
+            <span class="text-muted" style="font-size:0.62rem;">${timeStr}</span>
+        </div>
+    </div>`;
+}
+
+async function handleNotifClick(id, redirectUrl) {
+    try {
+        await fetch(`${API}/notifications/${id}/read`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token }
+        });
+    } catch(e) { /* silent */ }
+    // Navigate to the relevant page
+    window.location.href = redirectUrl;
 }
 
 async function markAsRead(id) {
@@ -114,6 +157,21 @@ async function markAsRead(id) {
         fetchNotifications();
     } catch (err) { console.error(err); }
 }
+
+async function markAllAsRead() {
+    try {
+        await fetch(`${API}/notifications/read-all`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token }
+        });
+        fetchNotifications();
+    } catch (err) { console.error(err); }
+}
+
+// Make global
+window.markAsRead = markAsRead;
+window.markAllAsRead = markAllAsRead;
+window.handleNotifClick = handleNotifClick;
 
 function showToast(title, message) {
     const toastContainer = document.getElementById("toast-container");
@@ -152,7 +210,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Notifications Initialization
     fetchNotifications();
     setInterval(fetchNotifications, 30000); // Polling every 30s
-    
+
+    // ---- Handle ?section= URL param for Legal Notices / sections from other pages ----
+    const urlParams = new URLSearchParams(window.location.search);
+    const sectionParam = urlParams.get('section');
+    if (sectionParam) {
+        // Store it for use once DOM and data are ready
+        window._pendingSectionParam = sectionParam;
+    }
+
     // ... handle all sidebar links ...
 
     // Sidebar toggle (desktop/mobile)
@@ -427,10 +493,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const notifications = await res.json();
             
-            // Separate notifications into Admin and Citizen based on content or type
-            // (Assuming content starting with 'Admin' or coming from specific sources)
-            const adminAlerts = notifications.filter(n => n.message.toLowerCase().includes('admin') || n.message.toLowerCase().includes('legal'));
-            const citizenAlerts = notifications.filter(n => !n.message.toLowerCase().includes('admin') && !n.message.toLowerCase().includes('legal'));
+            // Separate notifications into Admin and Citizen based on type
+            const citizenAlerts = notifications.filter(n => ['concern_raised', 'assignment', 'complaint_status'].includes(n.type));
+            const adminAlerts = notifications.filter(n => !['concern_raised', 'assignment', 'complaint_status'].includes(n.type));
 
             // Set Badge (Unread only)
             const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -443,10 +508,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Render citizen alerts
             if (citizenAlerts.length > 0) {
-                citizenList.innerHTML = citizenAlerts.map(a => `
-                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}">
-                        <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.message}</p>
-                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                citizenList.innerHTML = citizenAlerts.slice(0, 10).map(a => `
+                    <div class="notification-item p-2 border-bottom ${!a.isRead ? 'bg-light' : ''}" style="cursor: pointer;" onclick="markAsRead('${a._id}')">
+                        <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.title}</p>
+                        <p class="mb-1 text-muted small" style="font-size: 0.75rem;">${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.65rem;">${new Date(a.createdAt).toLocaleString()}</small>
                     </div>
                 `).join("");
             } else {
@@ -455,10 +521,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Render admin alerts
             if (adminAlerts.length > 0) {
-                adminList.innerHTML = adminAlerts.map(a => `
-                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}">
-                        <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.message}</p>
-                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                adminList.innerHTML = adminAlerts.slice(0, 10).map(a => `
+                    <div class="notification-item p-2 border-bottom ${!a.isRead ? 'bg-light' : ''}" style="cursor: pointer;" onclick="markAsRead('${a._id}')">
+                        <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.title}</p>
+                        <p class="mb-1 text-muted small" style="font-size: 0.75rem;">${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.65rem;">${new Date(a.createdAt).toLocaleString()}</small>
                     </div>
                 `).join("");
             } else {
@@ -479,8 +546,8 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             complaints.forEach(c => {
                 let badgeClass = "bg-secondary";
-                if (c.status === "Submitted") badgeClass = "bg-warning text-dark";
-                if (c.status === "Assigned") badgeClass = "bg-info text-white";
+                if (c.status === "Assigned") badgeClass = "bg-warning text-dark";
+                if (c.status === "Pending") badgeClass = "bg-info text-dark";
                 if (c.status === "In Progress") badgeClass = "bg-primary text-white";
                 if (c.status === "Resolved" || c.status === "Closed") badgeClass = "bg-success text-white";
 
@@ -493,9 +560,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     ratingHtml += '</div>';
                 }
 
+                const concernIcon = c.hasConcern ? '<i class="bi bi-exclamation-triangle-fill text-danger ms-2" title="Citizen Concern Raised"></i>' : '';
+
                 html += `
                 <tr>
-                    <td><strong>${c.complaintId || (c._id ? c._id.substring(0, 8).toUpperCase() : 'N/A')}</strong></td>
+                    <td><strong>${c.complaintId || (c._id ? c._id.substring(0, 8).toUpperCase() : 'N/A')}</strong> ${concernIcon}</td>
                     <td>${c.citizenName || c.user?.name || "Citizen"}</td>
                     <td>
                         <div class="fw-bold">${c.title}</div>
@@ -544,14 +613,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let filtered = allComplaints;
-        let title = "Total Cases";
+        let title = "Total Assigned Complaints";
 
         if (section === "assigned") {
-            filtered = allComplaints.filter(c => c.status !== "Resolved");
-            title = "Assigned / Pending Cases";
-        } else if (section === "resolved") {
-            filtered = allComplaints.filter(c => c.status === "Resolved");
-            title = "Resolved Cases";
+            filtered = allComplaints; // Show everything assigned to them
+            title = "All Assigned Complaints";
+        } else if (section === "pending") {
+            filtered = allComplaints.filter(c => c.status === "Pending" || c.status === "In Progress" || c.status === "Assigned");
+            title = "Pending / Active Complaints";
         }
 
         document.getElementById("dynamic-table-title").textContent = title;
@@ -560,18 +629,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.showTable = function(type) {
         let filtered = allComplaints;
-        if (type === 'Assigned Cases') filtered = allComplaints.filter(c => c.status === "Assigned");
-        if (type === 'Pending Cases') filtered = allComplaints.filter(c => c.status === "In Progress" || c.status === "Submitted");
-        if (type === 'Solved Cases') filtered = allComplaints.filter(c => c.status === "Resolved");
+        let title = type;
+
+        if (type === 'Assigned Cases') {
+            filtered = allComplaints; 
+            title = "All Assigned Cases";
+        } else if (type === 'Pending Cases') {
+            filtered = allComplaints.filter(c => c.status === "Pending" || c.status === "In Progress" || c.status === "Assigned");
+            title = "Pending Cases";
+        } else if (type === 'Solved Cases') {
+            filtered = allComplaints.filter(c => c.status === "Resolved" || c.status === "Closed");
+            title = "Solved Cases";
+        }
         
-        document.getElementById("dynamic-table-title").textContent = type;
+        document.getElementById("dynamic-table-title").textContent = title;
         renderComplaints(filtered);
     };
 
     function updateStats(complaints) {
         const total = complaints.length;
-        const assigned = complaints.filter(c => c.status === "Assigned").length;
-        const pending = complaints.filter(c => c.status === "In Progress" || c.status === "Submitted").length;
+        // Assigned Cases Card: Total number of cases assigned to this officer
+        const assigned = total; 
+        // Pending Cases Card: Those not yet resolved/closed
+        const pending = complaints.filter(c => c.status === "Assigned" || c.status === "Pending" || c.status === "In Progress").length;
+        // Solved Cases Card: Those finished
         const solved = complaints.filter(c => c.status === "Resolved" || c.status === "Closed").length;
 
         const ratedComplaints = complaints.filter(c => c.rating);
@@ -579,10 +660,84 @@ document.addEventListener("DOMContentLoaded", () => {
             ? (ratedComplaints.reduce((acc, c) => acc + c.rating, 0) / ratedComplaints.length).toFixed(1)
             : "0.0";
 
-        document.getElementById("card-avg-rating").textContent = avgRating;
-        document.getElementById("card-assigned-cases").textContent = assigned;
-        document.getElementById("card-pending-cases").textContent = pending;
-        document.getElementById("card-solved-cases").textContent = solved;
+        if (document.getElementById("card-avg-rating")) document.getElementById("card-avg-rating").textContent = avgRating;
+        if (document.getElementById("card-assigned-cases")) document.getElementById("card-assigned-cases").textContent = assigned;
+        if (document.getElementById("card-pending-cases")) document.getElementById("card-pending-cases").textContent = pending;
+        if (document.getElementById("card-solved-cases")) document.getElementById("card-solved-cases").textContent = solved;
+
+        // Populate Priority Page if on that page
+        renderPriorityPage(complaints);
+        
+        // Populate Performance Page if on that page
+        renderPerformancePage(complaints);
+    }
+
+    function renderPriorityPage(complaints) {
+        const tbody = document.getElementById("priority-table-body");
+        if (!tbody) return;
+
+        const highCount = complaints.filter(c => c.priority === 'High').length;
+        const mediumCount = complaints.filter(c => c.priority === 'Medium').length;
+        const lowCount = complaints.filter(c => c.priority === 'Low').length;
+        
+        if (document.getElementById('card-high')) document.getElementById('card-high').textContent = highCount;
+        if (document.getElementById('card-medium')) document.getElementById('card-medium').textContent = mediumCount;
+        if (document.getElementById('card-low')) document.getElementById('card-low').textContent = lowCount;
+
+        let html = "";
+        if (complaints.length === 0) {
+            html = '<tr><td colspan="6" class="text-center py-4">No cases found.</td></tr>';
+        } else {
+            // Sort by priority (High > Medium > Low) then by date
+            const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
+            const sorted = [...complaints].sort((a, b) => {
+                const pA = priorityOrder[a.priority || 'Medium'];
+                const pB = priorityOrder[b.priority || 'Medium'];
+                if (pA !== pB) return pA - pB;
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+
+            sorted.forEach(c => {
+                let badgeClass = "bg-secondary";
+                if (c.status === "Assigned") badgeClass = "bg-warning text-dark";
+                if (c.status === "Pending") badgeClass = "bg-info text-dark";
+                if (c.status === "In Progress") badgeClass = "bg-primary text-white";
+                if (c.status === "Resolved" || c.status === "Closed") badgeClass = "bg-success text-white";
+
+                let priorityIcon = '';
+                let priorityTextClass = '';
+                if (c.priority === 'High') { priorityIcon = '🔴 High'; priorityTextClass = 'text-danger fw-bold'; }
+                else if (c.priority === 'Low') { priorityIcon = '🟢 Low'; priorityTextClass = 'text-success fw-bold'; }
+                else { priorityIcon = '🟠 Medium'; priorityTextClass = 'text-warning fw-bold'; }
+
+                html += `
+                    <tr>
+                        <td class="fw-medium">${c.complaintId || c._id.substring(0,8).toUpperCase()}</td>
+                        <td>${c.citizenName || c.user?.name || 'Anonymous'}</td>
+                        <td>${c.title}</td>
+                        <td class="${priorityTextClass}">${priorityIcon}</td>
+                        <td><span class="badge ${badgeClass}">${c.status}</span></td>
+                        <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            });
+        }
+        tbody.innerHTML = html;
+    }
+
+    function renderPerformancePage(complaints) {
+        if (!document.getElementById("perf-percentage")) return;
+
+        const total = complaints.length;
+        const pending = complaints.filter(c => (c.status === 'Assigned' || c.status === 'Pending' || c.status === 'In Progress')).length;
+        const solved = complaints.filter(c => (c.status === 'Resolved' || c.status === 'Closed')).length;
+        
+        const perf = total > 0 ? Math.round((solved / total) * 100) : 0;
+        
+        document.getElementById('perf-percentage').textContent = perf + '%';
+        document.getElementById('perf-assigned').textContent = total;
+        document.getElementById('perf-pending').textContent = pending;
+        document.getElementById('perf-solved').textContent = solved;
     }
 
     /* =========================
@@ -763,17 +918,29 @@ document.addEventListener("DOMContentLoaded", () => {
             if (total === 0) {
                 tableHtml = '<tr><td colspan="5" class="text-center py-4">No reviews yet.</td></tr>';
             } else {
-                ratedComplaints.slice(0, 10).forEach(c => {
+                ratedComplaints.forEach(c => {
                     let stars = "";
                     for(let i=1; i<=5; i++) stars += `<i class="bi bi-star${i <= c.rating ? '-fill' : ''}"></i>`;
                     
                     tableHtml += `
                     <tr>
-                        <td>${new Date(c.updatedAt || c.createdAt).toLocaleDateString()}</td>
-                        <td>${c.citizenName || 'Anonymous'}</td>
-                        <td><small class="fw-bold text-primary">${c.complaintId || c._id.substring(0,8).toUpperCase()}</small></td>
+                        <td>
+                            <div class="small fw-bold">${new Date(c.updatedAt || c.createdAt).toLocaleDateString()}</div>
+                            <div class="tiny text-muted">${new Date(c.updatedAt || c.createdAt).toLocaleTimeString()}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">${c.citizenName || c.user?.name || 'Anonymous'}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-primary">${c.complaintId || c._id.substring(0,8).toUpperCase()}</div>
+                            <div class="small text-muted">${c.title || ''}</div>
+                        </td>
                         <td class="text-warning">${stars}</td>
-                        <td class="fst-italic text-muted">"${c.feedback || 'No comments provided.'}"</td>
+                        <td>
+                            <div class="p-2 bg-light rounded small fst-italic shadow-sm" style="word-break: break-word; white-space: pre-wrap;">
+                                "${c.feedback || 'No comments provided.'}"
+                            </div>
+                        </td>
                     </tr>
                     `;
                 });
@@ -785,9 +952,16 @@ document.addEventListener("DOMContentLoaded", () => {
     /* =========================
        INIT
     ========================= */
+    window.filterComplaintsBySection = filterComplaintsBySection;
+
     loadComplaints().then(() => {
         if (document.getElementById("avg-rating-val")) {
             renderRatingsPage(allComplaints);
+        }
+        // Handle ?section= URL param after data loads
+        if (window._pendingSectionParam) {
+            filterComplaintsBySection(window._pendingSectionParam);
+            window._pendingSectionParam = null;
         }
     });
 });
