@@ -3,6 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE');
 
 
 /*
@@ -127,6 +129,74 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error: ' + err.message });
   }
 
+});
+
+/*
+-------------------------------------------------
+GOOGLE LOGIN
+POST /api/auth/google
+-------------------------------------------------
+*/
+router.post('/google', async (req, res) => {
+  const { credential, role } = req.body;
+  if (!credential) {
+    return res.status(400).json({ message: 'No Google credential provided' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      // If GOOGLE_CLIENT_ID is not set we omit audience requirement or let it use the fallback
+      audience: process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE'
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      if (role && role !== 'citizen') {
+        return res.status(403).json({ message: 'Google login is only allowed for citizens.' });
+      }
+      user = new User({
+        name,
+        email,
+        role: 'user', // maps to 'citizen' on frontend
+        googleId,
+        profilePhoto: picture
+      });
+      await user.save();
+    } else {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+      if (user.role !== 'user' && role === 'citizen') {
+        return res.status(403).json({ message: 'Officers and Admins must use regular login.' });
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      token,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      profilePhoto: user.profilePhoto, // Added this
+      department: user.department || ''
+    });
+
+  } catch (err) {
+    console.error('Google Auth Error:', err);
+    // As it is a boilerplate for users without ID, we can optionally bypass verification locally, but it's insecure.
+    res.status(500).json({ message: 'Google authentication failed. Please check Google Client ID.' });
+  }
 });
 
 const multer = require('multer');

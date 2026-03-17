@@ -19,8 +19,14 @@ const UserSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; },
     select: false
+  },
+
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
   },
 
   role: {
@@ -69,7 +75,7 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.pre('save', async function(next) {
 
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
 

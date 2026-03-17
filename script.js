@@ -43,6 +43,9 @@ function openLogin(role, section=''){
     pendingSection = section;
     document.getElementById("loginModal").style.display="flex";
     switchTab(role);
+    
+    // Ensure Google Sign-In is initialized whenever modal opens
+    setTimeout(initializeGoogleSignIn, 100);
 }
 
 function closeLogin(){
@@ -72,20 +75,28 @@ function switchTab(role){
     const loginEmailLabel = document.getElementById("loginEmailLabel");
     const loginEmailInput = document.getElementById("loginEmail");
 
+    const googleBtnContainer = document.getElementById("googleLoginBtnContainer");
+
     if(role==="citizen") {
         if(tabs[0]) tabs[0].classList.add("active");
         if(loginEmailLabel) loginEmailLabel.textContent = "Citizen Email";
         if(loginEmailInput) loginEmailInput.placeholder = "example: user@gmail.com";
+        if(googleBtnContainer) {
+            googleBtnContainer.style.display = "flex";
+            if (window.google) initializeGoogleSignIn();
+        }
     }
     if(role==="officer") {
         if(tabs[1]) tabs[1].classList.add("active");
         if(loginEmailLabel) loginEmailLabel.textContent = "Officer ID";
         if(loginEmailInput) loginEmailInput.placeholder = "example: off-001";
+        if(googleBtnContainer) googleBtnContainer.style.display = "none";
     }
     if(role==="admin") {
         if(tabs[2]) tabs[2].classList.add("active");
         if(loginEmailLabel) loginEmailLabel.textContent = "Admin ID";
         if(loginEmailInput) loginEmailInput.placeholder = "example: adm-001";
+        if(googleBtnContainer) googleBtnContainer.style.display = "none";
     }
 }
 
@@ -231,7 +242,88 @@ function setupLoginRedirect(){
     });
 }
 
-document.addEventListener('DOMContentLoaded', setupLoginRedirect);
+function handleCredentialResponse(response) {
+    if (!response.credential) {
+        alert('Google authentication failed.');
+        return;
+    }
+    fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential, role: 'citizen' })
+    })
+    .then(async resp => {
+        if (!resp.ok) {
+            const err = await resp.json();
+            alert('Google Login failed: ' + (err.message || resp.statusText));
+            throw new Error(err.message || 'Login failed');
+        }
+        return resp.json();
+    })
+    .then(data => {
+        // store token, role & name
+        sessionStorage.setItem('jwt', data.token);
+        sessionStorage.setItem('role', data.role);
+        if (data.name) sessionStorage.setItem('userName', data.name);
+        if (data.department) sessionStorage.setItem('department', data.department);
+        if (data.email) sessionStorage.setItem('userEmail', data.email); 
+        if (data.profilePhoto) sessionStorage.setItem('profilePhoto', data.profilePhoto); // Store photo URL
+
+        // store an auth flag so the dashboard scripts can recognize a logged-in user
+        const authRole = data.role === 'user' ? 'citizen' : data.role;
+        sessionStorage.setItem('authenticated', authRole);
+
+        // redirect based on role
+        let targetUrl = '';
+        if (data.role === 'admin') {
+            targetUrl = 'admin/index.html';
+        } else if (data.role === 'officer') {
+            targetUrl = 'officer/index.html';
+        } else {
+            targetUrl = 'user/index.html';
+        }
+
+        if(pendingSection){
+            targetUrl += '#' + pendingSection;
+            pendingSection = '';
+        }
+
+        // Robust redirection that works with Live Server and subfolders
+        const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        const finalUrl = currentDir + targetUrl;
+        console.log('Redirecting to:', finalUrl);
+        window.location.href = finalUrl;
+    })
+    .catch(err => {
+        console.error('Google Login error', err);
+        alert('Google Login failed. See console for details.');
+    });
+}
+
+function initializeGoogleSignIn() {
+    console.log('Initializing Google Sign-In...');
+    if (window.google) {
+        console.log('Google Script found, rendering button...');
+        google.accounts.id.initialize({
+            client_id: "588711916449-u7g72decg5agtfgddkielt0v8fh2htge.apps.googleusercontent.com", 
+            callback: handleCredentialResponse
+        });
+        const gc = document.getElementById("googleLoginBtnContainer");
+        if (gc) {
+            google.accounts.id.renderButton(
+                gc,
+                { theme: "outline", size: "large", width: "100%" }
+            );
+        }
+    } else {
+        console.warn('Google Script (gsi/client) not loaded yet.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupLoginRedirect();
+    setTimeout(initializeGoogleSignIn, 1000); // Wait for google identity script to load
+});
 // =====================
 // FAQ POPUP
 // =====================

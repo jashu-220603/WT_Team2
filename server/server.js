@@ -11,7 +11,13 @@ const app = express();
 
 // middlewares
 app.use(cors({
-  origin: ["http://localhost:5500", "http://127.0.0.1:5500", "https://wt-team2.vercel.app"],
+  origin: [
+    "http://localhost:5500", 
+    "http://127.0.0.1:5500", 
+    "http://localhost:5501", 
+    "http://127.0.0.1:5501", 
+    "https://wt-team2.vercel.app"
+  ],
   credentials: true
 }));
 
