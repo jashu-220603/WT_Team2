@@ -35,15 +35,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Initialize profile images from stored info
     const storedPhoto = sessionStorage.getItem("profilePhoto");
     const storedName = sessionStorage.getItem('userName') || "Citizen";
+    
+    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
-        const avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
-        const headerAv = document.getElementById("headerProfileAvatar");
-        if (headerAv) headerAv.src = avatarUrl;
-    } else {
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
-        const headerAv = document.getElementById("headerProfileAvatar");
-        if (headerAv) headerAv.src = avatarUrl;
+        avatarUrl = storedPhoto.startsWith('http') ? storedPhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
     }
+    const headerAv = document.getElementById("headerProfileAvatar");
+    if (headerAv) headerAv.src = avatarUrl;
 
     // Sidebar Toggle
     const sidebar = document.getElementById("sidebar");
@@ -760,11 +758,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
         const storedPhoto = sessionStorage.getItem("profilePhoto");
         if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
-            avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+            avatarUrl = storedPhoto.startsWith('http') ? storedPhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
         }
         
-        document.getElementById("headerProfileAvatar").src = avatarUrl;
-        document.getElementById("panelProfileAvatar").src = avatarUrl;
+        const headerAv = document.getElementById("headerProfileAvatar");
+        if (headerAv) headerAv.src = avatarUrl;
+        const panelAv = document.getElementById("panelProfileAvatar");
+        if (panelAv) panelAv.src = avatarUrl;
     }
 
     function closePanel() {
@@ -1010,7 +1010,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
             if (user.profilePhoto) {
-                avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+                avatarUrl = user.profilePhoto.startsWith('http') ? user.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
                 sessionStorage.setItem("profilePhoto", user.profilePhoto);
             }
             if (document.getElementById("standaloneProfileImg")) document.getElementById("standaloneProfileImg").src = avatarUrl;
@@ -1081,7 +1081,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (userGreeting) userGreeting.textContent = `Welcome, ${name}`;
                     if (data.user && data.user.profilePhoto) {
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
-                        const photoUrl = `${window.API_BASE_URL || "http://localhost:7000"}/uploads/${data.user.profilePhoto}`;
+                        const photoUrl = data.user.profilePhoto.startsWith('http') ? data.user.profilePhoto : `${window.API_BASE_URL || "http://localhost:7000"}/uploads/${data.user.profilePhoto}`;
                         document.getElementById("standaloneProfileImg").src = photoUrl;
                         const headerAv = document.getElementById("headerProfileAvatar");
                         if (headerAv) headerAv.src = photoUrl;
@@ -1152,7 +1152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (data.profilePhoto) {
                     sessionStorage.setItem("profilePhoto", data.profilePhoto);
                     // Update header avatar if it was already set to fallback
-                    const avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${data.profilePhoto}`;
+                    const avatarUrl = data.profilePhoto.startsWith('http') ? data.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${data.profilePhoto}`;
                     const headerAv = document.getElementById("headerProfileAvatar");
                     if (headerAv) headerAv.src = avatarUrl;
                 }
