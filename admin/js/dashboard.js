@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateProfileInfo();
     setupNavigation();
     loadDashboardData();
-    setupFilters();
     loadSettings();
+    setupAnnouncementForm();
     
     // Notifications Initialization
     fetchNotifications();
@@ -75,8 +75,12 @@ function loadNotifications(notifications) {
         return;
     }
 
-    list.innerHTML = notifications.slice(0, 5).map(n => `
-        <div class="notification-item p-3 border-bottom ${n.isRead ? '' : 'bg-light'}" onclick="markAsRead('${n._id}')">
+    list.innerHTML = notifications.slice(0, 5).map(n => {
+        const complaintId = n.relatedComplaint || (n.message.match(/ID: ([A-Z0-9]+)/) ? n.message.match(/ID: ([A-Z0-9]+)/)[1] : null);
+        
+        return `
+        <div class="notification-item p-3 border-bottom ${n.isRead ? '' : 'bg-light'}" 
+             onclick="handleNotificationClick('${n._id}', '${n.type}', '${complaintId}')" style="cursor: pointer;">
             <div class="d-flex gap-3">
                 <div class="notif-icon bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                     <i class="bi ${getNotifIcon(n.type)}"></i>
@@ -88,7 +92,31 @@ function loadNotifications(notifications) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;}).join('');
+}
+
+async function handleNotificationClick(notifId, type, complaintId) {
+    try {
+        await markAsRead(notifId);
+        
+        if (complaintId) {
+            // Find the full MongoDB ID if we only have the short readable ID
+            let targetId = complaintId;
+            const fullComplaint = complaintsData.find(c => (c.complaintId === complaintId || c._id === complaintId));
+            if (fullComplaint) targetId = fullComplaint._id;
+            
+            switchSection('complaints');
+            setTimeout(() => {
+                openViewDetailsModal(targetId);
+            }, 300);
+        } else {
+            // Default behavior or specific sections
+            if (type === 'concern_raised') switchSection('complaints');
+            else if (type === 'assignment') switchSection('officers');
+        }
+    } catch (err) {
+        console.error("Error handling notification click:", err);
+    }
 }
 
 function getNotifIcon(type) {
@@ -148,12 +176,17 @@ function updateProfileInfo() {
     const adminGreeting = document.getElementById("admin-greeting");
     if (adminGreeting) adminGreeting.textContent = `Hello, ${storedName}`;
 
-    // Sidebar & Profile Dropdown
-    const adminNameEls = document.querySelectorAll(".text-dark.fw-medium");
+    // Header & Profile Dropdown
+    const headerName = document.getElementById("header-admin-name");
+    if (headerName) headerName.textContent = storedName;
+    
+    const adminNameEls = document.querySelectorAll(".admin-name-display");
     adminNameEls.forEach(el => el.textContent = storedName);
 
     // Profile Image
-    const profileImgs = document.querySelectorAll("img[alt='Profile'], #admin-prof-img");
+    const headerImg = document.getElementById("header-profile-img");
+    const adminProfImg = document.getElementById("admin-prof-img");
+    
     let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
     
     const storedPhoto = sessionStorage.getItem("profilePhoto");
@@ -165,7 +198,10 @@ function updateProfileInfo() {
         }
     }
     
-    profileImgs.forEach(img => img.src = avatarUrl);
+    if (headerImg) headerImg.src = avatarUrl;
+    if (adminProfImg) adminProfImg.src = avatarUrl;
+    
+    document.querySelectorAll("img[alt='Profile']").forEach(img => img.src = avatarUrl);
 }
 
 function setupNavigation() {
@@ -302,7 +338,10 @@ window.switchSection = function(sectionId) {
         "departments-section",
         "reports-section",
         "settings-section",
-        "feedbacks-section"
+        "feedbacks-section",
+        "concerns-section",
+        "legal-notices-section",
+        "announcements-section"
     ];
 
     sections.forEach(id => {
@@ -316,16 +355,31 @@ window.switchSection = function(sectionId) {
         if (sectionId === "feedbacks") loadFeedbacks();
         if (sectionId === "tasks") loadTasks();
         if (sectionId === "settings") loadSettings();
+        if (sectionId === "announcements") loadAnnouncements();
+        if (sectionId === "concerns") loadConcerns();
+        if (sectionId === "legal-notices") loadLegalNotices();
     }
     
     // Refresh data if needed when switching to specific sections
     if (sectionId === 'analytics') renderAnalytics();
     if (sectionId === 'departments') renderDepartments();
+    
+    // Update Sidebar active state
+    const navLinks = document.querySelectorAll(".nav-link[data-section]");
+    navLinks.forEach(link => {
+        if (link.getAttribute("data-section") === sectionId) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
 };
 
 /* =========================
    LOAD DATA FROM BACKEND
 ========================= */
+let concernsData = [];
+let legalNoticesData = [];
 
 async function loadDashboardData() {
     try {
@@ -345,24 +399,48 @@ async function loadDashboardData() {
         
         if (deptsRes.ok) {
             departmentsData = await deptsRes.json();
+            
+            // Check if default departments exist, if not, create them (client-side initialization for first run)
+            const defaults = ["Police", "Water Supply", "Electricity", "Sanitation", "Roads & Transport"];
+            const existingNames = departmentsData.map(d => d.name || d);
+            
+            for (const name of defaults) {
+                if (!existingNames.includes(name)) {
+                    // Just add to local list for now, user can persist them by using the 'Add Department' flow or we can auto-POST
+                    departmentsData.push({ name, description: `Official ${name} Department` });
+                }
+            }
         } else {
             // Fallback: extract from officers
             const uniqueDepts = [...new Set(officersData.map(o => o.department).filter(Boolean))];
             departmentsData = uniqueDepts.map(name => ({ name }));
         }
 
-        renderComplaints();
-        renderOfficers();
-        updateStatsFromServer(); // Use backend stats for accuracy
-        renderRecentActivity();
-        populateDepartmentFilters();
         renderDepartments();
         populateTasksOfficers();
         populateTaskDepartments();
 
+        // Load new sections
+        loadConcerns();
+        loadLegalNotices();
+        populateLNOfficers(); // For the manual notice modal
+
+        // Final UI Initialization
+        initializeUI();
+
     } catch (err) {
         console.error("Dashboard load error:", err);
     }
+}
+
+function initializeUI() {
+    updateStatsFromServer(); 
+    renderComplaints();
+    renderOfficers();
+    renderRecentActivity();
+    populateDepartmentFilters();
+    populateOfficersFilter();
+    setupFilters();
 }
 
 async function updateStatsFromServer() {
@@ -377,12 +455,12 @@ async function updateStatsFromServer() {
         const totalEl = document.getElementById("total-complaints");
         const pendingEl = document.getElementById("pending-complaints");
         const assignedEl = document.getElementById("assigned-complaints");
-        const unassignedEl = document.getElementById("unassigned-complaints");
+        const resolvedEl = document.getElementById("resolved-complaints");
 
         if (totalEl) totalEl.textContent = stats.totalComplaints;
         if (pendingEl) pendingEl.textContent = stats.submitted;
-        if (assignedEl) assignedEl.textContent = stats.assigned + stats.inProgress + stats.resolved;
-        if (unassignedEl) unassignedEl.textContent = stats.submitted; // Or more specific if needed
+        if (assignedEl) assignedEl.textContent = stats.assigned + stats.inProgress;
+        if (resolvedEl) resolvedEl.textContent = stats.resolved;
         
         // Update greeting subtitle with count
         const subtitle = document.getElementById("greeting-subtitle");
@@ -435,6 +513,9 @@ function renderComplaints(filteredData = null) {
                         <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${c._id}" title="View Details">
                             <i class="bi bi-eye"></i>
                         </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="viewConcerns('${c._id}')" title="View Concerns">
+                            <i class="bi bi-exclamation-octagon"></i>
+                        </button>
                         <button class="btn btn-sm btn-primary assign-btn" 
                                 data-id="${c._id}" 
                                 data-dept="${c.category}" title="Assign Officer">
@@ -451,11 +532,11 @@ function renderComplaints(filteredData = null) {
     attachComplaintEvents();
 }
 
-function renderRecentActivity() {
+function renderRecentActivity(data = complaintsData) {
     const tbody = document.getElementById("recent-complaints-mini");
     if (!tbody) return;
 
-    const recent = complaintsData.slice(0, 5);
+    const recent = data.slice(0, 4);
     let html = "";
 
     recent.forEach(c => {
@@ -478,12 +559,12 @@ function renderRecentActivity() {
     tbody.innerHTML = html;
 }
 
-function renderOfficers() {
+function renderOfficers(data = officersData) {
     const tbody = document.getElementById("officers-table-body");
     if (!tbody) return;
 
     let html = "";
-    officersData.forEach(o => {
+    data.forEach(o => {
         html += `
         <tr>
             <td><span class="badge bg-light text-dark border">${o.staffId || "-"}</span></td>
@@ -553,49 +634,58 @@ if (legalNoticeForm) {
    STATS & ANALYTICS
 ========================= */
 
-function updateStats() {
-    const total = complaintsData.length;
-    const pending = complaintsData.filter(c => c.status === "Pending" || c.status === "Submitted").length;
-    const assigned = complaintsData.filter(c => c.status === "Assigned" || c.status === "In Progress" || c.status === "Resolved").length;
-    let unassigned = 0;
-    complaintsData.forEach(c => {
-        if (!c.assignedOfficer || c.assignedOfficer === null || c.assignedOfficer === undefined || c.status === "Submitted" || c.status === "Pending") {
-            unassigned++;
-        }
-    });
+function updateStats(data = complaintsData) {
+    const total = data.length;
+    const pending = data.filter(c => c.status === "Submitted" || c.status === "Pending").length;
+    const assigned = data.filter(c => c.status === "Assigned" || c.status === "In Progress").length;
+    const resolved = data.filter(c => c.status === "Resolved" || c.status === "Closed").length;
 
     // Correct IDs based on Admin HTML
     const totalEl = document.getElementById("total-complaints");
     const pendingEl = document.getElementById("pending-complaints");
     const assignedEl = document.getElementById("assigned-complaints");
-    const unassignedEl = document.getElementById("unassigned-complaints");
+    const resolvedEl = document.getElementById("resolved-complaints");
 
     if (totalEl) totalEl.textContent = total;
     if (pendingEl) pendingEl.textContent = pending;
     if (assignedEl) assignedEl.textContent = assigned;
-    if (unassignedEl) unassignedEl.textContent = unassigned;
+    if (resolvedEl) resolvedEl.textContent = resolved;
 }
 
-function renderAnalytics() {
+window.filterAndSwitch = function(status) {
+    switchSection('complaints');
+    setTimeout(() => {
+        const statusFilter = document.getElementById("status-filter");
+        if (statusFilter) {
+            statusFilter.value = status === 'All' ? 'All' : status;
+            statusFilter.dispatchEvent(new Event('change'));
+        }
+    }, 100);
+};
+
+function renderAnalytics(filterDept = 'All') {
+    const dataSource = filterDept === 'All' ? complaintsData : complaintsData.filter(c => c.category === filterDept);
+    
     const ctxDept = document.getElementById('detailedDeptChart');
     if (ctxDept) {
-        
         // Remove existing chart instance if we are re-rendering
         if (window.detailedDeptChartInstance) {
             window.detailedDeptChartInstance.destroy();
         }
         
         const deptCounts = {};
-        // Initialize dynamic departments with 0
-        departmentsData.forEach(d => { deptCounts[d.name || d] = 0; });
-        
-        complaintsData.forEach(c => {
-            if(deptCounts[c.category] !== undefined) {
-                deptCounts[c.category]++;
-            } else {
-                deptCounts[c.category] = 1;
-            }
-        });
+        if (filterDept === 'All') {
+            departmentsData.forEach(d => { deptCounts[d.name || d] = 0; });
+            complaintsData.forEach(c => {
+                if(deptCounts[c.category] !== undefined) {
+                    deptCounts[c.category]++;
+                } else {
+                    deptCounts[c.category] = (deptCounts[c.category] || 0) + 1;
+                }
+            });
+        } else {
+            deptCounts[filterDept] = dataSource.length;
+        }
 
         window.detailedDeptChartInstance = new Chart(ctxDept, {
             type: 'bar',
@@ -623,7 +713,7 @@ function renderAnalytics() {
             'In Progress': 0,
             'Resolved': 0
         };
-        complaintsData.forEach(c => {
+        dataSource.forEach(c => {
             if (statusCounts.hasOwnProperty(c.status)) {
                 statusCounts[c.status]++;
             }
@@ -646,7 +736,7 @@ function renderAnalytics() {
         if (window.detailedTrendChartInstance) window.detailedTrendChartInstance.destroy();
         
         const trendData = {};
-        complaintsData.forEach(c => {
+        dataSource.forEach(c => {
             const month = new Date(c.createdAt).toLocaleString('default', { month: 'short' });
             trendData[month] = (trendData[month] || 0) + 1;
         });
@@ -656,7 +746,7 @@ function renderAnalytics() {
             data: {
                 labels: Object.keys(trendData),
                 datasets: [{
-                    label: 'Complaints Trend',
+                    label: filterDept === 'All' ? 'Overall Complaints Trend' : `${filterDept} Trend`,
                     data: Object.values(trendData),
                     borderColor: '#0d6efd',
                     tension: 0.3,
@@ -955,7 +1045,56 @@ document.querySelectorAll('#reports-section .btn').forEach(btn => {
                 btn.textContent = text;
             }
         } else if (text.includes("Download PDF") || text.includes("View Online") || text.includes("Summary")) {
-            alert("PDF reports are not yet implemented. Use CSV Export instead.");
+            // Simple approach: create a printable report window
+            const reportWindow = window.open('', '_blank');
+            const summaryData = {
+                total: complaintsData.length,
+                pending: complaintsData.filter(c => c.status === 'Submitted' || c.status === 'Pending').length,
+                resolved: complaintsData.filter(c => c.status === 'Resolved').length,
+                date: new Date().toLocaleDateString()
+            };
+
+            let tableHtml = complaintsData.map(c => `
+                <tr>
+                    <td>${c.complaintId || c._id.substring(0,8)}</td>
+                    <td>${c.title}</td>
+                    <td>${c.category}</td>
+                    <td>${c.status}</td>
+                    <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+
+            reportWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Complaints Summary Report</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <style>
+                            @media print { .no-print { display: none; } }
+                            body { padding: 40px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Complaints Summary Report</h2>
+                            <button onclick="window.print()" class="btn btn-primary no-print">Print / Save as PDF</button>
+                        </div>
+                        <p class="text-muted">Generated on: ${summaryData.date}</p>
+                        <div class="row mb-4">
+                            <div class="col-4"><div class="card p-3"><h5>Total</h5><h3>${summaryData.total}</h3></div></div>
+                            <div class="col-4"><div class="card p-3"><h5>Pending</h5><h3>${summaryData.pending}</h3></div></div>
+                            <div class="col-4"><div class="card p-3"><h5>Resolved</h5><h3>${summaryData.resolved}</h3></div></div>
+                        </div>
+                        <table class="table table-striped border">
+                            <thead>
+                                <tr><th>ID</th><th>Title</th><th>Category</th><th>Status</th><th>Date</th></tr>
+                            </thead>
+                            <tbody>${tableHtml}</tbody>
+                        </table>
+                    </body>
+                </html>
+            `);
+            reportWindow.document.close();
         }
     });
 });
@@ -1150,20 +1289,32 @@ function setupFilters() {
     const searchBox = document.getElementById("search-box");
     const statusFilter = document.getElementById("status-filter");
     const priorityFilter = document.getElementById("priority-filter");
+    const officerFilter = document.getElementById("officer-filter");
 
     const runFilters = () => {
-        const search = searchBox.value.toLowerCase();
-        const status = statusFilter.value;
-        const priority = priorityFilter.value;
+        const search = searchBox ? searchBox.value.toLowerCase() : "";
+        const status = statusFilter ? statusFilter.value : "All";
+        const priority = priorityFilter ? priorityFilter.value : "All";
+        const officerName = officerFilter ? officerFilter.value : "All";
 
         const filtered = complaintsData.filter(c => {
-            const matchesSearch = c.title.toLowerCase().includes(search) || 
-                                 c.description.toLowerCase().includes(search) ||
+            const matchesSearch = !search || 
+                                 (c.title && c.title.toLowerCase().includes(search)) || 
+                                 (c.description && c.description.toLowerCase().includes(search)) ||
                                  (c.complaintId && c.complaintId.toLowerCase().includes(search));
+                                 
             const matchesStatus = status === "All" || c.status === status;
-            const matchesPriority = priority === "All" || c.priority === priority;
             
-            return matchesSearch && matchesStatus && matchesPriority;
+            // Handle case sensitivity or missing priority
+            const cPriority = c.priority || "Medium";
+            const matchesPriority = priority === "All" || cPriority.toLowerCase() === priority.toLowerCase();
+            
+            let matchesOfficer = true;
+            if (officerName !== "All") {
+                matchesOfficer = c.assignedOfficer && c.assignedOfficer.name === officerName;
+            }
+            
+            return matchesSearch && matchesStatus && matchesPriority && matchesOfficer;
         });
 
         renderComplaints(filtered);
@@ -1172,6 +1323,25 @@ function setupFilters() {
     if (searchBox) searchBox.addEventListener("input", runFilters);
     if (statusFilter) statusFilter.addEventListener("change", runFilters);
     if (priorityFilter) priorityFilter.addEventListener("change", runFilters);
+    if (officerFilter) officerFilter.addEventListener("change", runFilters);
+}
+
+function populateOfficersFilter() {
+    const officerFilter = document.getElementById("officer-filter");
+    if (!officerFilter) return;
+
+    officerFilter.innerHTML = '<option value="All">All Officers</option>';
+    
+    // Get unique officer names from complaintsData to ensure we only filter by officers who actually have complaints
+    // OR get them from officersData. Let's use both to be safe and ensure the filter is useful.
+    const namesFromOfficers = officersData.map(o => o.name || o.email || o.staffId).filter(Boolean);
+    const namesFromComplaints = complaintsData.map(c => c.assignedOfficer?.name).filter(Boolean);
+    
+    const uniqueNames = [...new Set([...namesFromOfficers, ...namesFromComplaints])].sort();
+    
+    uniqueNames.forEach(name => {
+        officerFilter.innerHTML += `<option value="${name}">${name}</option>`;
+    });
 }
 
 function populateDepartmentFilters() {
@@ -1199,13 +1369,26 @@ window.filterByDept = function(dept) {
     const display = document.getElementById("current-dept-display");
     if (display) display.textContent = dept === 'All' ? 'All Departments' : dept;
 
-    if (dept === 'All') {
-        renderComplaints(complaintsData);
-    } else {
-        const filtered = complaintsData.filter(c => c.category === dept);
+    // Detect current active section to act accordingly
+    const activeLink = document.querySelector(".nav-link.active[data-section]");
+    const currentSection = activeLink ? activeLink.getAttribute("data-section") : "dashboard";
+
+    if (currentSection === 'complaints') {
+        const filtered = dept === 'All' ? complaintsData : complaintsData.filter(c => c.category === dept);
         renderComplaints(filtered);
+    } else if (currentSection === 'officers') {
+        const filtered = dept === 'All' ? officersData : officersData.filter(o => o.department === dept);
+        renderOfficers(filtered);
+    } else if (currentSection === 'analytics') {
+        renderAnalytics(dept);
+    } else if (currentSection === 'dashboard') {
+        const filtered = dept === 'All' ? complaintsData : complaintsData.filter(c => c.category === dept);
+        updateStats(filtered);
+        renderRecentActivity(filtered);
+    } else {
+        // Fallback for sections that don't have their own filtering yet
+        console.log(`Filtering not implemented for section: ${currentSection}`);
     }
-    switchSection('complaints');
 };
 
 /* =========================
@@ -1401,9 +1584,6 @@ if(sidebarToggleBtn && sidebar) {
 ========================= */
 
 async function loadFeedbacks() {
-    const tbody = document.getElementById('feedbacks-table-body');
-    if (!tbody) return;
-
     try {
         const response = await fetch(API + '/feedback/all', {
             headers: { Authorization: 'Bearer ' + token }
@@ -1412,27 +1592,348 @@ async function loadFeedbacks() {
         if (!response.ok) throw new Error('Failed to load feedbacks');
 
         const feedbacks = await response.json();
+        const container = document.getElementById('feedbacks-section');
+        const contentArea = container.querySelector('.table-container');
+        
+        if (feedbacks.length === 0) {
+            contentArea.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-chat-left-dots fs-1 d-block mb-3"></i>No feedbacks found yet.</div>';
+        } else {
+            let cardsHtml = '<div class="row g-4">';
+            feedbacks.forEach(f => {
+                let typeBadge = 'bg-secondary';
+                if (f.type === 'General') typeBadge = 'bg-info';
+                else if (f.type === 'Complaint') typeBadge = 'bg-primary';
+                else if (f.type === 'Concern') typeBadge = 'bg-danger';
+
+                const dateStr = new Date(f.createdAt).toLocaleDateString();
+                
+                cardsHtml += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feedback-card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-0">${f.name}</h6>
+                                    <small class="text-muted">${f.email}</small>
+                                </div>
+                                <span class="badge ${typeBadge}">${f.type || 'General'}</span>
+                            </div>
+                            <p class="card-text text-secondary mb-3">${f.feedbackText || f.feedback}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                                <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${dateStr}</small>
+                                ${f.complaint ? `<span class="badge bg-light text-dark border">ID: ${f.complaint.complaintId || 'REF'}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            cardsHtml += '</div>';
+            contentArea.innerHTML = cardsHtml;
+        }
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load feedbacks.</td></tr>';
+    }
+}
+
+/* =========================
+   ANNOUNCEMENTS
+========================= */
+
+async function loadAnnouncements() {
+    const tbody = document.getElementById('announcements-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch(API + '/announcements/admin', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const announcements = await response.json();
         let html = '';
 
-        if (feedbacks.length === 0) {
-            html = '<tr><td colspan="4" class="text-center py-4">No feedbacks found.</td></tr>';
+        if (announcements.length === 0) {
+            html = '<tr><td colspan="4" class="text-center py-4">No announcements found.</td></tr>';
         } else {
-            feedbacks.forEach(f => {
+            announcements.forEach(a => {
                 html += `
                 <tr>
-                    <td><strong>${f.name}</strong></td>
-                    <td>${f.email}</td>
-                    <td><div class="text-wrap" style="max-width: 400px;">${f.feedback}</div></td>
-                    <td><small>${new Date(f.createdAt).toLocaleDateString()}</small></td>
+                    <td><strong>${a.title}</strong></td>
+                    <td><div class="text-wrap" style="max-width: 400px;">${a.content}</div></td>
+                    <td><small>${new Date(a.createdAt).toLocaleDateString()}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement('${a._id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
                 </tr>
                 `;
             });
         }
-
         tbody.innerHTML = html;
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load feedbacks.</td></tr>';
     }
+}
+
+function setupAnnouncementForm() {
+    const form = document.getElementById('announcement-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            title: document.getElementById('ann-title').value,
+            content: document.getElementById('ann-content').value
+        };
+
+        try {
+            const res = await fetch(API + '/announcements', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token 
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Announcement published!');
+                form.reset();
+                bootstrap.Modal.getInstance(document.getElementById('addAnnouncementModal')).hide();
+                loadAnnouncements();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+}
+
+window.deleteAnnouncement = async function(id) {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+    try {
+        const res = await fetch(API + '/announcements/' + id, {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        if (res.ok) {
+            loadAnnouncements();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+/* =========================
+   CONCERNS
+========================= */
+
+window.viewConcerns = async function(complaintId) {
+    const container = document.getElementById('concerns-list-container');
+    container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    
+    new bootstrap.Modal(document.getElementById('viewConcernsModal')).show();
+
+    try {
+        const res = await fetch(`${API}/concerns/complaint/${complaintId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const concerns = await res.json();
+        
+        if (concerns.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted">No concerns raised for this complaint.</div>';
+            return;
+        }
+
+        let html = '';
+        concerns.forEach(c => {
+            const imageUrl = c.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}` : null;
+            html += `
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="fw-bold mb-0">${c.user?.name || 'Citizen'}</h6>
+                        <small class="text-muted">${new Date(c.createdAt).toLocaleString()}</small>
+                    </div>
+                    <p class="mb-3">${c.description}</p>
+                    ${imageUrl ? `<img src="${imageUrl}" class="img-fluid rounded mb-3" style="max-height: 200px;">` : ''}
+                    <div class="p-2 bg-light rounded small">
+                        <strong>Status:</strong> ${c.status}
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="text-center py-4 text-danger">Failed to load concerns.</div>';
+    }
+};
+
+/* =========================
+   CONCERNS TRACKING TABLE
+========================= */
+
+async function loadConcerns() {
+    try {
+        const res = await fetch(`${API}/concerns/all`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+            concernsData = await res.json();
+            renderConcerns(concernsData);
+        }
+    } catch (err) {
+        console.error("Failed to load concerns", err);
+    }
+}
+
+window.filterConcerns = function(level) {
+    if (level === 'All') {
+        renderConcerns(concernsData);
+    } else {
+        const filtered = concernsData.filter(c => c.escalationLevel === level);
+        renderConcerns(filtered);
+    }
+};
+
+function renderConcerns(data) {
+    const tbody = document.getElementById("concerns-table-body");
+    if (!tbody) return;
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No concerns found.</td></tr>';
+        return;
+    }
+
+    let html = "";
+    data.forEach(c => {
+        let escBadge = "bg-secondary";
+        if (c.escalationLevel === "Warning") escBadge = "bg-warning text-dark";
+        if (c.escalationLevel === "Critical") escBadge = "bg-danger";
+
+        const complaintId = c.complaint?.complaintId || 'Unknown';
+        const date = new Date(c.createdAt).toLocaleDateString();
+
+        html += `
+        <tr>
+            <td><span class="badge ${escBadge}">${c.escalationLevel} (${c.concernNumber || 1})</span></td>
+            <td><strong>${complaintId}</strong></td>
+            <td><span class="d-inline-block text-truncate" style="max-width: 200px;">${c.description}</span></td>
+            <td><span class="badge bg-light text-dark border">${c.status}</span></td>
+            <td>${date}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewConcerns('${c.complaint?._id}')">View History</button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+/* =========================
+   LEGAL NOTICES
+========================= */
+
+async function loadLegalNotices() {
+    try {
+        const res = await fetch(`${API}/legal-notices/all`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            legalNoticesData = data.notices;
+            renderLegalNotices();
+        }
+    } catch (err) {
+        console.error("Failed to load legal notices", err);
+    }
+}
+
+function renderLegalNotices() {
+    const tbody = document.getElementById("legal-notices-table-body");
+    if (!tbody) return;
+
+    if (legalNoticesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No legal notices sent yet.</td></tr>';
+        return;
+    }
+
+    let html = "";
+    legalNoticesData.forEach(ln => {
+        const officerName = ln.officerId?.name || 'Unknown Officer';
+        const typeBadge = ln.isAutoGenerated ? `<span class="badge bg-danger">Auto-Generated</span>` : `<span class="badge bg-secondary">Manual</span>`;
+        let statusBadge = "bg-warning text-dark";
+        if (ln.status === "Read") statusBadge = "bg-info text-dark";
+        if (ln.status === "Responded") statusBadge = "bg-success";
+
+        const responseText = ln.officerResponse 
+            ? `<span class="d-inline-block text-truncate" style="max-width: 150px;" title="${ln.officerResponse}">${ln.officerResponse}</span>` 
+            : '<span class="text-muted small">Pending...</span>';
+
+        const date = new Date(ln.createdAt).toLocaleDateString();
+        const displayComplaint = ln.complaint ? ln.complaint.complaintId : `<span class="text-muted small">N/A</span>`;
+
+        html += `
+        <tr>
+            <td>
+                <div class="fw-bold text-truncate" style="max-width: 150px;" title="${ln.title}">${ln.title}</div>
+                <small class="text-muted">${displayComplaint}</small>
+            </td>
+            <td>${officerName}</td>
+            <td>${typeBadge}</td>
+            <td><span class="badge ${statusBadge}">${ln.status}</span></td>
+            <td>${responseText}</td>
+            <td>${date}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function populateLNOfficers() {
+    const select = document.getElementById("ln-officer-id");
+    if (!select) return;
+    
+    select.innerHTML = '<option value="" disabled selected>Select an Officer</option>';
+    officersData.forEach(o => {
+        select.innerHTML += `<option value="${o._id}">${o.name} (${o.department})</option>`;
+    });
+}
+
+// Handle manual legal notice form submission
+const lnForm = document.getElementById("send-legal-notice-form");
+if (lnForm) {
+    lnForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const officerId = document.getElementById("ln-officer-id").value;
+        const complaintId = document.getElementById("ln-complaint-id").value.trim() || undefined; // Note: For a robust system this should map to the ObjectId of complaint if provided
+        const title = document.getElementById("ln-title").value.trim();
+        const content = document.getElementById("ln-content").value.trim();
+
+        try {
+            const res = await fetch(`${API}/legal-notices`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token 
+                },
+                body: JSON.stringify({ officerId, title, content }) // Passing string complaintId for now as reference
+            });
+
+            if (res.ok) {
+                alert("Legal notice sent successfully.");
+                bootstrap.Modal.getInstance(document.getElementById("sendLegalNoticeModal")).hide();
+                lnForm.reset();
+                loadLegalNotices();
+            } else {
+                const data = await res.json();
+                alert(data.message || "Failed to send notice.");
+            }
+        } catch (err) {
+            console.error("Notice error:", err);
+            alert("Error sending notice.");
+        }
+    });
 }
 

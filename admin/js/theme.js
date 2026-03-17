@@ -57,14 +57,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
-// Scroll to pending section after page loads
-// store pending section in sessionStorage so target page can scroll to it
-if(pendingSection){
-    sessionStorage.setItem('pendingSection', pendingSection);
-    pendingSection = '';
-}
-
-// redirect based on role
-if(targetUrl){
-    window.location.href = targetUrl;
-}
