@@ -152,11 +152,22 @@ function updateProfileInfo() {
     const adminNameEls = document.querySelectorAll(".text-dark.fw-medium");
     adminNameEls.forEach(el => el.textContent = storedName);
 
-    // Profile Image
     const profileImgs = document.querySelectorAll("img[alt='Profile'], #admin-prof-img");
     let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
     
-    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    // Use role-specific storage to avoid collision with other portals
+    let storedPhoto = sessionStorage.getItem("adminPhoto");
+    
+    // If adminPhoto doesn't exist, try to sync from common profilePhoto if it was just set
+    if (!storedPhoto) {
+        const commonPhoto = sessionStorage.getItem("profilePhoto");
+        const storedRole = sessionStorage.getItem("role");
+        if (commonPhoto && storedRole === "admin") {
+            storedPhoto = commonPhoto;
+            sessionStorage.setItem("adminPhoto", commonPhoto);
+        }
+    }
+
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
         if (storedPhoto.startsWith('http')) {
             avatarUrl = storedPhoto;
@@ -266,6 +277,7 @@ function setupNavigation() {
                     alert("Profile updated successfully");
                     sessionStorage.setItem("userName", data.user.name);
                     if (data.user.profilePhoto) {
+                        sessionStorage.setItem("adminPhoto", data.user.profilePhoto);
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                     }
                     updateProfileInfo();

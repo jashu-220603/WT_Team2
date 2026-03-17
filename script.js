@@ -191,7 +191,13 @@ function setupLoginRedirect(){
             sessionStorage.setItem('role', data.role);
             if (data.name) sessionStorage.setItem('userName', data.name);
             if (data.department) sessionStorage.setItem('department', data.department);
-            if (data.profilePhoto) sessionStorage.setItem('profilePhoto', data.profilePhoto);
+            if (data.profilePhoto) {
+                sessionStorage.setItem('profilePhoto', data.profilePhoto);
+                // Set role-specific photo
+                if (data.role === 'admin') sessionStorage.setItem('adminPhoto', data.profilePhoto);
+                else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', data.profilePhoto);
+                else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', data.profilePhoto);
+            }
 
             // fetch user profile to get name (login response may not include it)
             try {
@@ -202,7 +208,13 @@ function setupLoginRedirect(){
                     const me = await meResp.json();
                     if (me.name) sessionStorage.setItem('userName', me.name);
                     if (me.department) sessionStorage.setItem('department', me.department);
-                    if (me.profilePhoto) sessionStorage.setItem('profilePhoto', me.profilePhoto);
+                    if (me.profilePhoto) {
+                        sessionStorage.setItem('profilePhoto', me.profilePhoto);
+                        // Set role-specific photo
+                        if (data.role === 'admin') sessionStorage.setItem('adminPhoto', me.profilePhoto);
+                        else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', me.profilePhoto);
+                        else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', me.profilePhoto);
+                    }
                 }
             } catch(_) {}
 
@@ -271,6 +283,12 @@ async function handleOfficerAdminLogin() {
         sessionStorage.setItem('role', data.role);
         if (data.name) sessionStorage.setItem('userName', data.name);
         if (data.department) sessionStorage.setItem('department', data.department);
+        if (data.profilePhoto) {
+            sessionStorage.setItem('profilePhoto', data.profilePhoto);
+            if (data.role === 'admin') sessionStorage.setItem('adminPhoto', data.profilePhoto);
+            else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', data.profilePhoto);
+            else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', data.profilePhoto);
+        }
 
         const authRole = data.role === 'user' ? 'citizen' : data.role;
         sessionStorage.setItem('authenticated', authRole);
@@ -315,7 +333,11 @@ function handleCredentialResponse(response) {
         if (data.name) sessionStorage.setItem('userName', data.name);
         if (data.department) sessionStorage.setItem('department', data.department);
         if (data.email) sessionStorage.setItem('userEmail', data.email); 
-        if (data.profilePhoto) sessionStorage.setItem('profilePhoto', data.profilePhoto); // Store photo URL
+        if (data.profilePhoto) {
+            sessionStorage.setItem('profilePhoto', data.profilePhoto); // Store photo URL
+            // Google login is always for citizens in this app
+            sessionStorage.setItem('citizenPhoto', data.profilePhoto);
+        }
 
         // store an auth flag so the dashboard scripts can recognize a logged-in user
         const authRole = data.role === 'user' ? 'citizen' : data.role;

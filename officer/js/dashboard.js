@@ -30,8 +30,19 @@ function updateProfileInfo() {
     const profileImgs = document.querySelectorAll("img[alt='Profile'], #off-prof-img");
     let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=198754&color=fff`;
     
-    // Check if user has a profile photo in session (added during login/update)
-    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    // Check role-specific storage to avoid collision with other portals
+    let storedPhoto = sessionStorage.getItem("officerPhoto");
+    
+    // Sync from common profilePhoto if it was just set for this role
+    if (!storedPhoto) {
+        const commonPhoto = sessionStorage.getItem("profilePhoto");
+        const storedRole = sessionStorage.getItem("role");
+        if (commonPhoto && storedRole === "officer") {
+            storedPhoto = commonPhoto;
+            sessionStorage.setItem("officerPhoto", commonPhoto);
+        }
+    }
+
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
         if (storedPhoto.startsWith('http')) {
             avatarUrl = storedPhoto;
@@ -351,6 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     sessionStorage.setItem("userName", data.user.name);
                     sessionStorage.setItem("userEmail", data.user.email);
                     if (data.user.profilePhoto) {
+                        sessionStorage.setItem("officerPhoto", data.user.profilePhoto);
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                     }
                     bootstrap.Modal.getInstance(document.getElementById("offProfileModal")).hide();
