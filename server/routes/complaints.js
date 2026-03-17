@@ -8,6 +8,26 @@ const upload = require('../middleware/upload');
 const Complaint = require('../models/Complaint');
 const Notification = require('../models/Notification');
 
+/*
+-------------------------------------------------------
+Get Public Stats
+GET /api/complaints/public/stats
+-------------------------------------------------------
+*/
+router.get('/public/stats', async (req, res) => {
+  try {
+    const totalComplaints = await Complaint.countDocuments();
+    const resolvedComplaints = await Complaint.countDocuments({ status: { $in: ['Resolved', 'Closed'] } });
+    
+    res.json({
+      total: totalComplaints,
+      resolved: resolvedComplaints
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 /*
 -------------------------------------------------------

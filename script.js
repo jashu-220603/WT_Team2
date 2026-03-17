@@ -490,3 +490,92 @@ async function resetPassword() {
     openLogin('citizen');
 }
 
+// =====================
+// OVERVIEW MODAL
+// =====================
+async function openOverview() {
+    closeSidebar();
+    document.getElementById("overviewModal").style.display = "flex";
+    
+    const totalEl = document.getElementById("overviewTotal");
+    const resolvedEl = document.getElementById("overviewResolved");
+    
+    // reset to loading state
+    totalEl.textContent = "...";
+    resolvedEl.textContent = "...";
+    
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
+        if (resp.ok) {
+            const data = await resp.json();
+            // Animate counting up (optional polish)
+            animateValue(totalEl, 0, data.total, 1000);
+            animateValue(resolvedEl, 0, data.resolved, 1000);
+        } else {
+            console.error('Failed to fetch public stats');
+            totalEl.textContent = "Error";
+            resolvedEl.textContent = "Error";
+        }
+    } catch (err) {
+        console.error('Error fetching public stats:', err);
+        totalEl.textContent = "Err";
+        resolvedEl.textContent = "Err";
+    }
+}
+
+function closeOverview() {
+    document.getElementById("overviewModal").style.display = "none";
+}
+
+// Simple counter animation helper
+function animateValue(obj, start, end, duration) {
+    if (!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.textContent = Math.floor(progress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            obj.textContent = end; // ensure exact final value
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+
+// =====================
+// HOMEPAGE STATS FETCH
+// =====================
+async function fetchHomepageStats() {
+    const totalEl = document.getElementById('dynamicTotal');
+    const resolvedEl = document.getElementById('dynamicResolved');
+    const pendingEl = document.getElementById('dynamicPending');
+    
+    if (!totalEl || !resolvedEl || !pendingEl) return;
+
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
+        if (resp.ok) {
+            const data = await resp.json();
+            animateValue(totalEl, 0, data.total, 1500);
+            animateValue(resolvedEl, 0, data.resolved, 1500);
+            // Calculate or fetch pending if not in API. 
+            // Most public stats APIs return total and resolved; pending = total - resolved.
+            const pending = data.pending !== undefined ? data.pending : (data.total - data.resolved);
+            animateValue(pendingEl, 0, pending, 1500);
+        }
+    } catch (err) {
+        console.error('Error fetching homepage stats:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', fetchHomepageStats);
+
+function scrollToOverview(){
+    const overviewSec = document.getElementById('overviewSection');
+    if (overviewSec) {
+        overviewSec.scrollIntoView({ behavior:'smooth' });
+    }
+    closeSidebar();
+}

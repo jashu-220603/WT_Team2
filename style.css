@@ -213,8 +213,24 @@ margin-bottom:35px;
 .steps{
 display:flex;
 justify-content:center;
-gap:50px;
+align-items: center;
+gap:20px;
 flex-wrap:wrap;
+}
+
+.step-arrow {
+    font-size: 24px;
+    color: #ffb347;
+    animation: slideRight 1.5s infinite ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes slideRight {
+    0% { transform: translateX(-5px); opacity: 0.3; }
+    50% { transform: translateX(5px); opacity: 1; }
+    100% { transform: translateX(-5px); opacity: 0.3; }
 }
 
 .step{
@@ -892,3 +908,113 @@ background:#218838;
 .forgot-link:hover {
     color: #4338ca;
 }
+
+/* OVERVIEW SECTION ON HOMEPAGE */
+.overview-section {
+    padding: 60px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.overview-section h1 {
+    font-size: 42px;
+    background: linear-gradient(90deg, #002f5b, #007bff, #002f5b);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 3s linear infinite;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+@keyframes shine {
+    to { background-position: 200% center; }
+}
+
+.overview-description {
+    max-width: 800px;
+    margin: 0 auto 35px auto;
+    font-size: 18px;
+    color: #444;
+    line-height: 1.8;
+    position: relative;
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.overview-section h2 {
+    margin-bottom: 35px;
+    font-size: 30px;
+    color: #003366;
+    letter-spacing: 1px;
+}
+
+.overview-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.overview-box {
+    width: 260px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+}
+
+.overview-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.box-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.box-icon {
+    font-size: 36px;
+    margin-bottom: 5px;
+}
+
+.overview-box h3 {
+    font-size: 32px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.overview-box p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Light Colors for Boxes */
+.total-complaints {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    color: #0369a1;
+}
+
+.resolved-complaints {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #15803d;
+}
+
+.pending-complaints {
+    background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+    color: #854d0e;
+}
+
+/* Reuse / override existing stat-box for modal if needed, 
+   but keeping them separate is cleaner as requested. */
