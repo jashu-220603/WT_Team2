@@ -199,32 +199,8 @@ router.post('/google', async (req, res) => {
   }
 });
 
-const multer = require('multer');
-const path = require('path');
+const upload = require('../middleware/upload');
 
-// Configure multer for profile photo uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Make sure this folder exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Images only!'));
-    }
-  }
-});
 
 /*
 -------------------------------------------------
@@ -270,7 +246,8 @@ router.put('/profile', protect, upload.single('profilePhoto'), async (req, res) 
     
     // Add profile photo update if file is uploaded
     if (req.file) {
-      user.profilePhoto = req.file.filename;
+      // If using Cloudinary, path is the secure URL. If local, use only filename.
+      user.profilePhoto = req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename;
     }
     
     if (password) {

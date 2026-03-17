@@ -158,7 +158,11 @@ function updateProfileInfo() {
     
     const storedPhoto = sessionStorage.getItem("profilePhoto");
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
-        avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        if (storedPhoto.startsWith('http')) {
+            avatarUrl = storedPhoto;
+        } else {
+            avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        }
     }
     
     profileImgs.forEach(img => img.src = avatarUrl);
@@ -205,7 +209,7 @@ function setupNavigation() {
                 
                 let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0d6efd&color=fff&size=100`;
                 if (user.profilePhoto) {
-                    avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+                    avatarUrl = user.profilePhoto.startsWith('http') ? user.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
                 }
                 document.getElementById("admin-prof-img").src = avatarUrl;
 

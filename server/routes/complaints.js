@@ -70,7 +70,7 @@ async (req, res) => {
       subcategory,
       location,
       user: req.user._id,
-      image: req.file ? req.file.filename : null
+      image: req.file ? (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename) : null
     });
 
     await complaint.save();
@@ -248,7 +248,8 @@ router.put('/:id/status', protect, authorize('officer','admin'), upload.single('
     complaint.status = status;
     
     if (req.file) {
-      complaint.resolutionImage = req.file.filename;
+      // If using Cloudinary, path is the secure URL. If local, use only filename.
+      complaint.resolutionImage = req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename;
     }
 
     complaint.history.push({

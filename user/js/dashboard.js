@@ -137,14 +137,18 @@ function openViewModal(c) {
 
     const content = document.getElementById("complaint-details-content");
 
+    const imgVal = c.image;
+    const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
+
     content.innerHTML = `
     <p><b>Title:</b> ${c.title}</p>
     <p><b>Status:</b> ${c.status}</p>
     <p><b>Category:</b> ${c.category || "-"}</p>
     <p><b>Location:</b> ${c.location || "-"}</p>
     <p><b>Description:</b> ${c.description}</p>
-    ${c.image ? `<img src="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}" style="max-width:100%;margin-top:10px;">` : ""}
+    ${imageUrl ? `<img src="${imageUrl}" style="max-width:100%;margin-top:10px;">` : ""}
     `;
+
 
     const modal = new bootstrap.Modal(
         document.getElementById("viewComplaintModal")

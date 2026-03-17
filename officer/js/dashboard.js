@@ -33,7 +33,11 @@ function updateProfileInfo() {
     // Check if user has a profile photo in session (added during login/update)
     const storedPhoto = sessionStorage.getItem("profilePhoto");
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
-        avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        if (storedPhoto.startsWith('http')) {
+            avatarUrl = storedPhoto;
+        } else {
+            avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        }
     }
     
     profileImgs.forEach(img => {
@@ -289,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Update profile photo in modal
                 let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=198754&color=fff&size=100`;
                 if (user.profilePhoto) {
-                    avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+                    avatarUrl = user.profilePhoto.startsWith('http') ? user.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
                     sessionStorage.setItem("profilePhoto", user.profilePhoto);
                 }
                 document.getElementById("off-prof-img").src = avatarUrl;
@@ -793,7 +797,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const content = document.getElementById("view-details-content");
-        const imageUrl = complaint.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.image}` : null;
+        const imgVal = complaint.image;
+        const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
 
         content.innerHTML = `
             <div class="row g-4">
