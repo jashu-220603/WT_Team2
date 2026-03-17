@@ -25,7 +25,7 @@
 <ul>
 
 <div class="menu-title">Home</div>
-<li onclick="openOverview()">Overview</li>
+<li onclick="scrollToOverview()">Overview</li>
 <li onclick="openLogin('citizen','file-complaint-section')">Register Complaint</li>
 <li onclick="openLogin('citizen','track-complaint-section')">Track Complaint</li>
 <li onclick="scrollToAnnouncements()">Latest Announcements</li>
@@ -89,9 +89,9 @@
 
 <h4>Contact Support</h4>
 
-<p><b>Helpline Number:</b> +91 9876543210</p>
+<p><b>Helpline Number:</b> 1800-11-4000 </p>
 
-<p><b>Email:</b> support@citizenportal.gov</p>
+<p><b>Email: citizencomplaint@mha.gov.in</p>
 
 </div>
 
@@ -175,11 +175,15 @@
 <p>Citizen registers complaint with details.</p>
 </div>
 
+<div class="step-arrow">➤</div>
+
 <div class="step">
 <div class="circle">2</div>
 <h4>Admin Review</h4>
 <p>Admin verifies the complaint.</p>
 </div>
+
+<div class="step-arrow">➤</div>
 
 <div class="step">
 <div class="circle">3</div>
@@ -187,11 +191,15 @@
 <p>Complaint assigned to department officer.</p>
 </div>
 
+<div class="step-arrow">➤</div>
+
 <div class="step">
 <div class="circle">4</div>
 <h4>Investigation</h4>
 <p>Officer investigates the issue.</p>
 </div>
+
+<div class="step-arrow">➤</div>
 
 <div class="step">
 <div class="circle">5</div>
@@ -214,19 +222,19 @@
 
 <div class="announcement-card">
 <h4>New Complaint Tracking System</h4>
-<p>Citizens can now track their complaint status in real-time using the Track Complaint feature.</p>
+<p>Users can now track the status of their complaints directly through the portal. Updates will be provided as the complaint progresses.</p>
 <span>Posted: 10 June 2026</span>
 </div>
 
 <div class="announcement-card">
-<h4>Cyber Crime Awareness Campaign</h4>
-<p>The government has launched a cyber safety awareness campaign to protect citizens from online fraud.</p>
+<h4>User Guidance</h4>
+<p>The complaint portal is regularly monitored to ensure timely resolution of issues. Users are requested to provide accurate details while submitting complaints for faster processing.</p>
 <span>Posted: 5 June 2026</span>
 </div>
 
 <div class="announcement-card">
-<h4>Faster Complaint Resolution</h4>
-<p>Complaints will now be assigned to officers within 24 hours for quicker resolution.</p>
+<h4>User Guidance</h4>
+<p>Please ensure that all complaints are submitted with correct information and supporting details to help authorities resolve the issue efficiently.</p>
 <span>Posted: 1 June 2026</span>
 </div>
 
@@ -235,6 +243,37 @@
 </section>
 
 </div>
+
+<!-- OVERVIEW SECTION -->
+<section id="overviewSection" class="overview-section">
+    <h1>Overview</h1>
+    <p class="overview-description">Our portal enables citizens to raise complaints regarding public services and infrastructure. It helps ensure that reported issues are tracked and resolved properly.</p>
+    
+    <h2>Complaint Statistics</h2>
+    <div class="overview-container">
+        <div class="overview-box total-complaints">
+            <div class="box-inner">
+                <span class="box-icon">📊</span>
+                <h3 id="dynamicTotal">0</h3>
+                <p>Total Complaints</p>
+            </div>
+        </div>
+        <div class="overview-box resolved-complaints">
+            <div class="box-inner">
+                <span class="box-icon">✅</span>
+                <h3 id="dynamicResolved">0</h3>
+                <p>Resolved Complaints</p>
+            </div>
+        </div>
+        <div class="overview-box pending-complaints">
+            <div class="box-inner">
+                <span class="box-icon">⏳</span>
+                <h3 id="dynamicPending">0</h3>
+                <p>Pending Complaints</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- FEEDBACK FORM -->
 
@@ -283,9 +322,9 @@
 
 <div class="footer">
 
-<p>Contact: +91 9876543210</p>
-<p>Email: support@citizenportal.gov</p>
-<p>Location: Vijayawada, India</p>
+<p>Contact: 1800-11-4000 </p>
+<p>Email: citizencomplaint@mha.gov.in</p>
+<p>Location:📍 Guntur, Andhra Pradesh, India</p>
 
 </div>
 
