@@ -1017,4 +1017,104 @@ background:#218838;
 }
 
 /* Reuse / override existing stat-box for modal if needed, 
-   but keeping them separate is cleaner as requested. */
+   but keeping them separate is cleaner as requested. */
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 992px) {
+    .role-section {
+        gap: 20px;
+    }
+    .announcement-container {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 0 15px;
+    }
+    
+    .portal-name {
+        font-size: 16px;
+    }
+    
+    .logo {
+        width: 30px;
+    }
+
+    .main h1 {
+        font-size: 28px;
+    }
+
+    .slider {
+        width: 100%;
+        margin-top: 70px;
+        border-radius: 0;
+    }
+
+    .slides img {
+        height: 200px;
+    }
+
+    .role-section {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .role-card {
+        width: 90%;
+        max-width: 300px;
+    }
+
+    .steps {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .step-arrow {
+        transform: rotate(90deg);
+        margin: 10px 0;
+    }
+
+    .announcement-card {
+        width: 90%;
+        margin: 0 auto;
+    }
+
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .faq-box {
+        width: 95%;
+        right: 2.5%;
+        left: 2.5%;
+    }
+    
+    .helpline-box {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+    }
+}
+
+@media (max-width: 480px) {
+    .portal-name {
+        display: none; /* Hide portal name on tiny screens to save space */
+    }
+    
+    .header-btn {
+        font-size: 12px;
+    }
+
+    .main h1 {
+        font-size: 24px;
+    }
+
+    .slides img {
+        height: 180px;
+    }
+}

@@ -35,10 +35,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Sidebar Toggle
     const sidebar = document.getElementById("sidebar");
     const btnMenu = document.getElementById("btn-menu");
+    const mobileBtnMenu = document.getElementById("mobile-btn-menu");
 
     if (btnMenu) {
         btnMenu.addEventListener("click", () => {
             sidebar.classList.toggle("closed");
+            sidebar.classList.toggle("show"); // for mobile
+        });
+    }
+
+    if (mobileBtnMenu) {
+        mobileBtnMenu.addEventListener("click", () => {
+            sidebar.classList.toggle("show");
         });
     }
 
