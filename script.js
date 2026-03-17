@@ -543,3 +543,39 @@ function animateValue(obj, start, end, duration) {
     };
     window.requestAnimationFrame(step);
 }
+
+// =====================
+// HOMEPAGE STATS FETCH
+// =====================
+async function fetchHomepageStats() {
+    const totalEl = document.getElementById('dynamicTotal');
+    const resolvedEl = document.getElementById('dynamicResolved');
+    const pendingEl = document.getElementById('dynamicPending');
+    
+    if (!totalEl || !resolvedEl || !pendingEl) return;
+
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
+        if (resp.ok) {
+            const data = await resp.json();
+            animateValue(totalEl, 0, data.total, 1500);
+            animateValue(resolvedEl, 0, data.resolved, 1500);
+            // Calculate or fetch pending if not in API. 
+            // Most public stats APIs return total and resolved; pending = total - resolved.
+            const pending = data.pending !== undefined ? data.pending : (data.total - data.resolved);
+            animateValue(pendingEl, 0, pending, 1500);
+        }
+    } catch (err) {
+        console.error('Error fetching homepage stats:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', fetchHomepageStats);
+
+function scrollToOverview(){
+    const overviewSec = document.getElementById('overviewSection');
+    if (overviewSec) {
+        overviewSec.scrollIntoView({ behavior:'smooth' });
+    }
+    closeSidebar();
+}
