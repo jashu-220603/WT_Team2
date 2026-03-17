@@ -238,6 +238,58 @@ function setupLoginRedirect(){
     });
 }
 
+// Officer/Admin login handler for the separate fields
+async function handleOfficerAdminLogin() {
+    const email = document.getElementById("loginEmail2").value.trim();
+    const password = document.getElementById("loginPassword2").value.trim();
+
+    if(!email || !password){
+        alert("Enter email/ID and password");
+        return;
+    }
+
+    const tabs = document.querySelectorAll("#loginModal .tab");
+    let role = 'user';
+    if (tabs[1] && tabs[1].classList.contains('active')) role = 'officer';
+    if (tabs[2] && tabs[2].classList.contains('active')) role = 'admin';
+
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({email, password, role})
+        });
+
+        if(!resp.ok){
+            const err = await resp.json();
+            alert('Login failed: ' + (err.message || resp.status));
+            return;
+        }
+
+        const data = await resp.json();
+        sessionStorage.setItem('jwt', data.token);
+        sessionStorage.setItem('role', data.role);
+        if (data.name) sessionStorage.setItem('userName', data.name);
+        if (data.department) sessionStorage.setItem('department', data.department);
+
+        const authRole = data.role === 'user' ? 'citizen' : data.role;
+        sessionStorage.setItem('authenticated', authRole);
+
+        let targetUrl = data.role === 'admin' ? 'admin/index.html' : (data.role === 'officer' ? 'officer/index.html' : 'user/index.html');
+        if(pendingSection) { targetUrl += '#' + pendingSection; pendingSection = ''; }
+        const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        window.location.href = currentDir + targetUrl;
+    } catch(err){
+        console.error('Login error', err);
+        alert('Login error. Check backend server.');
+    }
+}
+
+// Alias for Google Identity Services callback
+function handleGoogleLogin(response) {
+    handleCredentialResponse(response);
+}
+
 function handleCredentialResponse(response) {
     if (!response.credential) {
         alert('Google authentication failed.');
