@@ -349,6 +349,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 popupComplaintId.textContent = complId;
                 successModal.classList.remove("hidden");
 
+                // Auto-sync phone number to profile
+                const phoneVal = document.getElementById("phone")?.value?.trim();
+                if (phoneVal) {
+                    const phoneForm = new FormData();
+                    phoneForm.append("contactNumber", phoneVal);
+                    fetch(`${API}/auth/profile`, {
+                        method: "PUT",
+                        headers: { Authorization: "Bearer " + getToken() },
+                        body: phoneForm
+                    }).catch(() => {}); // Silent sync — no error needed
+                }
+
                 // Reset form
                 complaintForm.reset();
                 if (subcategorySelect) {
@@ -515,6 +527,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (concernCompId) {
                     concernCompId.value = searchId;
                     concernCompId.setAttribute('data-real-id', complaint._id);
+                    
+                    // Add click event for the raise concern button to check eligibility
+                    const rcBtn = document.getElementById("triggerRaiseConcernBtn");
+                    if (rcBtn) {
+                        rcBtn.onclick = () => checkConcernEligibility(complaint._id, complaint.complaintId);
+                    }
                 }
                 
                 // Show concern section
@@ -625,16 +643,44 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             try {
-                const res = await fetch(`${API}/complaints/${complaintId}/rate`, {
+                // 1. Update rating on the complaint document itself
+                const compRes = await fetch(`${API}/complaints/${complaintId}/rate`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: "Bearer " + getToken()
-                    },
+                    headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
                     body: JSON.stringify({ rating: ratingInput.value, feedback })
                 });
 
-                if (res.ok) {
+                // 2. Also submit to centralized feedback system with officer link
+                const storedName = sessionStorage.getItem('userName') || "Citizen";
+                const storedEmail = sessionStorage.getItem('userEmail') || "citizen@portal.com";
+                
+                // Fetch complaint to get assignedOfficer
+                let officerId = null;
+                try {
+                    const cResp = await fetch(`${API}/complaints/${complaintId}`, {
+                        headers: { Authorization: "Bearer " + getToken() }
+                    });
+                    if (cResp.ok) {
+                        const cData = await cResp.json();
+                        officerId = cData.assignedOfficer?._id || cData.assignedOfficer || null;
+                    }
+                } catch(e) {}
+                
+                await fetch(`${API}/feedback/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                    body: JSON.stringify({ 
+                        name: storedName, 
+                        email: storedEmail, 
+                        feedbackText: `Rating: ${ratingInput.value}/5. ${feedback}`,
+                        type: 'Complaint',
+                        complaintId: complaintId,
+                        officerId: officerId,
+                        rating: parseInt(ratingInput.value)
+                    })
+                });
+
+                if (compRes.ok) {
                     document.getElementById("ratingForm").classList.add("hidden");
                     document.getElementById("ratingSuccess").classList.remove("hidden");
                 } else {
@@ -706,7 +752,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (dataTable) dataTable.classList.remove("hidden");
                 if (noData) noData.classList.add("hidden");
 
-                complaints.forEach(c => {
+                complaints.slice(0, 4).forEach(c => {
                     const tr = document.createElement("tr");
 
                     let statusClass = "";
@@ -938,6 +984,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- PAGE: Feedback ---
+    let feedbackComplaintsCache = [];
+
     async function loadFeedbackDropdown() {
         const select = document.getElementById("feedbackComplaintSelect");
         if(!select) return;
@@ -949,15 +997,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             const complaints = await resp.json();
             
             const resolved = complaints.filter(c => ["Resolved", "Closed"].includes(c.status));
+            feedbackComplaintsCache = resolved; // cache for officer lookup
             
             select.innerHTML = '<option value="" disabled selected>Select a complaint</option>';
-            resolved.forEach(c => {
-                const id = c.complaintId || c._id.substring(0,8);
-                select.innerHTML += `<option value="${c._id}">${id} - ${c.category}</option>`;
-            });
+            if (resolved.length === 0) {
+                select.innerHTML += '<option disabled>No resolved complaints yet</option>';
+            } else {
+                resolved.forEach(c => {
+                    const id = c.complaintId || c._id.substring(0,8);
+                    const category = c.category || c.title || 'Complaint';
+                    select.innerHTML += `<option value="${c._id}">${id} — ${category}</option>`;
+                });
+            }
             
         } catch(err) {
-            console.error("Feedback dropdwn err", err);
+            console.error("Feedback dropdown err", err);
         }
     }
 
@@ -966,32 +1020,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         standaloneFeedbackForm.addEventListener("submit", async(e) => {
             e.preventDefault();
             const cid = document.getElementById("feedbackComplaintSelect").value;
-            const text = document.getElementById("standaloneFeedbackText").value;
+            const text = document.getElementById("standaloneFeedbackText").value.trim();
             const ratingEl = document.querySelector('input[name="standaloneRating"]:checked');
             
-            if(!cid || !ratingEl) {
-                alert("Please select a complaint and provide a star rating.");
-                return;
-            }
+            if(!cid) { alert("Please select a complaint."); return; }
+            if(!ratingEl) { alert("Please provide a star rating."); return; }
+            if(!text) { alert("Please add a comment."); return; }
             
+            // Get officerId from cache
+            const complaintObj = feedbackComplaintsCache.find(c => c._id === cid);
+            const officerId = complaintObj?.assignedOfficer?._id || complaintObj?.assignedOfficer || null;
+
             try {
-                const res = await fetch(`${API}/complaints/${cid}/rate`, {
+                // 1. Update rating on the complaint document
+                const compRes = await fetch(`${API}/complaints/${cid}/rate`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: "Bearer " + getToken()
-                    },
+                    headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
                     body: JSON.stringify({ rating: ratingEl.value, feedback: text })
                 });
+
+                // 2. Submit to centralized feedback system with officer link
+                const storedName = sessionStorage.getItem('userName') || "Citizen";
+                const storedEmail = sessionStorage.getItem('userEmail') || "citizen@portal.com";
+
+                await fetch(`${API}/feedback/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                    body: JSON.stringify({ 
+                        name: storedName, 
+                        email: storedEmail, 
+                        feedbackText: `Rating: ${ratingEl.value}/5. ${text}`,
+                        type: 'Complaint',
+                        complaintId: cid,
+                        officerId: officerId,
+                        rating: parseInt(ratingEl.value)
+                    })
+                });
                 
-                if(res.ok) {
+                if(compRes.ok) {
                     standaloneFeedbackForm.classList.add("hidden");
                     document.getElementById("standaloneFeedbackSuccess").classList.remove("hidden");
                 } else {
-                    alert("Failed to submit feedback.");
+                    const err = await compRes.json();
+                    alert("Failed to submit feedback: " + (err.message || "Unknown error"));
                 }
             } catch(e) {
                 console.error(e);
+                alert("Error submitting feedback.");
             }
         });
     }
@@ -1006,10 +1081,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             if (document.getElementById("profNameMain")) document.getElementById("profNameMain").value = user.name || "";
             if (document.getElementById("profEmailMain")) document.getElementById("profEmailMain").value = user.email || "";
+            // Use contactNumber from DB (the correct field)
             if (document.getElementById("profPhoneMain")) document.getElementById("profPhoneMain").value = user.contactNumber || "";
+            if (document.getElementById("profAddressMain")) document.getElementById("profAddressMain").value = user.address || "";
             
             let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
-            if (user.profilePhoto) {
+            if (user.profilePhoto && user.profilePhoto !== '' && user.profilePhoto !== 'undefined') {
                 avatarUrl = user.profilePhoto.startsWith('http') ? user.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
                 sessionStorage.setItem("profilePhoto", user.profilePhoto);
             }
@@ -1051,14 +1128,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if(standaloneProfileForm) {
-        standaloneProfileForm.addEventListener("submit", async(e) => {
+        standaloneProfileForm.addEventListener("submit", async function(e) {
             e.preventDefault();
             const submitBtn = standaloneProfileForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Saving...";
+            }
 
-            const name = document.getElementById("profNameMain").value;
-            const phone = document.getElementById("profPhoneMain").value;
-            const photo = document.getElementById("profPhotoMain").files[0];
+            const name = document.getElementById("profNameMain").value.trim();
+            const phone = document.getElementById("profPhoneMain").value.trim();
+            const photoPicker = document.getElementById("profPhotoMain");
+            const photo = photoPicker ? photoPicker.files[0] : null;
+
+            if (!name) {
+                alert("Name is required.");
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Update Profile"; }
+                return;
+            }
 
             const formData = new FormData();
             formData.append("name", name);
@@ -1068,32 +1155,49 @@ document.addEventListener("DOMContentLoaded", async () => {
             try {
                 const res = await fetch(`${API}/auth/profile`, {
                     method: "PUT",
-                    headers: {
-                        "Authorization": `Bearer ${getToken()}`
-                    },
+                    headers: { "Authorization": `Bearer ${getToken()}` },
                     body: formData
                 });
 
                 if (res.ok) {
                     const data = await res.json();
-                    alert("Profile updated successfully!");
+                    // Update session
                     sessionStorage.setItem('userName', name);
                     if (userGreeting) userGreeting.textContent = `Welcome, ${name}`;
+                    // Update panel name
+                    const panelName = document.getElementById("panelUserName");
+                    if (panelName) panelName.textContent = name;
+                    
+                    // Update avatar if photo changed
                     if (data.user && data.user.profilePhoto) {
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                         const photoUrl = data.user.profilePhoto.startsWith('http') ? data.user.profilePhoto : `${window.API_BASE_URL || "http://localhost:7000"}/uploads/${data.user.profilePhoto}`;
-                        document.getElementById("standaloneProfileImg").src = photoUrl;
+                        
+                        const profImg = document.getElementById("standaloneProfileImg");
+                        if (profImg) profImg.src = photoUrl;
                         const headerAv = document.getElementById("headerProfileAvatar");
                         if (headerAv) headerAv.src = photoUrl;
+                        sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                     }
+                    // Show success inline
+                    let successMsg = document.getElementById("profileUpdateSuccess");
+                    if (!successMsg) {
+                        successMsg = document.createElement("p");
+                        successMsg.id = "profileUpdateSuccess";
+                        successMsg.style.cssText = "color:#10B981; font-weight:600; text-align:center; margin-top:0.5rem;";
+                        standaloneProfileForm.appendChild(successMsg);
+                    }
+                    successMsg.innerHTML = "<i class='bx bx-check-circle'></i> Profile updated successfully!";
+                    setTimeout(() => { successMsg.innerHTML = ""; }, 4000);
                 } else {
-                    alert("Failed to update profile.");
+                    const err = await res.json();
+                    alert("Failed to update profile: " + (err.message || "Unknown error"));
                 }
             } catch (err) {
                 console.error(err);
-                alert("Error updating profile.");
+                alert("Error updating profile. Make sure the server is running.");
             } finally {
-                submitBtn.disabled = false;
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Update Profile"; }
             }
         });
 
@@ -1104,7 +1208,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (this.files && this.files[0]) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        document.getElementById("standaloneProfileImg").src = e.target.result;
+                        const profImg = document.getElementById("standaloneProfileImg");
+                        if (profImg) profImg.src = e.target.result;
                     };
                     reader.readAsDataURL(this.files[0]);
                 }
@@ -1221,6 +1326,25 @@ async function resetPassword() {
     closeForgotPassword();
 }
 
+// Mark single notification as read and handle navigation
+async function handleNotificationClick(notifId, type, complaintId, concernId) {
+    try {
+        await markAsRead(notifId);
+        
+        // Navigate based on type and attached IDs
+        if (complaintId) {
+            // Wait a bit for the UI to update if needed
+            setTimeout(() => {
+                trackSpecificComplaint(complaintId);
+            }, 100);
+        } else if (type === 'general' || type === 'alert') {
+            switchPage('notifications-section');
+        }
+    } catch (err) {
+        console.error("Error handling notification click:", err);
+    }
+}
+
 // --- NOTIFICATION HELPERS ---
 async function checkNotifications() {
     try {
@@ -1265,8 +1389,10 @@ async function loadNotificationsForDropdown() {
             return;
         }
         
-        list.innerHTML = notifications.slice(0, 10).map(notif => `
-            <div class="notif-item ${notif.isRead ? '' : 'unread'}" onclick="markAsRead('${notif._id}')">
+        list.innerHTML = notifications.slice(0, 10).map(notif => {
+            const complaintIdStr = notif.relatedComplaint ? (notif.relatedComplaint.complaintId || notif.relatedComplaint) : '';
+            return `
+            <div class="notif-item ${notif.isRead ? '' : 'unread'}" onclick="handleNotificationClick('${notif._id}', '${notif.type}', '${complaintIdStr}', '${notif.relatedConcern || ''}')">
                 <div class="notif-icon ${getNotifColor(notif.type)}">
                     <i class='${getNotifIcon(notif.type)}'></i>
                 </div>
@@ -1276,7 +1402,8 @@ async function loadNotificationsForDropdown() {
                     <div class="notif-time">${new Date(notif.createdAt).toLocaleString([], {hour: '2-digit', minute:'2-digit', month:'short', day:'numeric'})}</div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         list.innerHTML = '<div class="notif-placeholder">Failed to load notifications</div>';
     }
@@ -1352,3 +1479,185 @@ function updateDashboardNotifSummary(notifs) {
         </div>
     `).join('');
 }
+
+// --- CONCERN ESCALATION LOGIC ---
+
+async function checkConcernEligibility(realId, displayId) {
+    try {
+        const res = await fetch(`${API}/concerns/eligible/${realId}`, {
+            headers: { Authorization: "Bearer " + getToken() }
+        });
+        const data = await res.json();
+        
+        if (data.eligible) {
+            document.getElementById('rc-cid').value = realId;
+            document.getElementById('rc-complaint-id').textContent = displayId;
+            document.getElementById('rc-escalation').textContent = data.nextEscalationLevel + " (" + (data.concernCount + 1) + "/3)";
+            document.getElementById('raiseConcernModal').classList.remove('hidden');
+        } else {
+            alert("Concern Eligibility: " + data.reason);
+        }
+    } catch (err) {
+        console.error("Eligibility check error", err);
+        alert("Failed to check concern eligibility. Please try again later.");
+    }
+}
+
+const raiseConcernForm = document.getElementById('raise-concern-form');
+if (raiseConcernForm) {
+    raiseConcernForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const complaintId = document.getElementById('rc-cid').value;
+        const description = document.getElementById('rc-description').value;
+        const imageFile = document.getElementById('rc-image').files[0];
+        
+        const formData = new FormData();
+        formData.append('complaintId', complaintId);
+        formData.append('description', description);
+        if (imageFile) formData.append('image', imageFile);
+        
+        const submitBtn = raiseConcernForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
+        try {
+            const res = await fetch(`${API}/concerns`, {
+                method: "POST",
+                headers: { Authorization: "Bearer " + getToken() },
+                body: formData
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Concern raised successfully! Escalation Level: ${data.escalationLevel}`);
+                document.getElementById('raiseConcernModal').classList.add('hidden');
+                raiseConcernForm.reset();
+            } else {
+                alert(data.message || "Failed to raise concern.");
+            }
+        } catch (err) {
+            console.error("Raise concern error", err);
+            alert("Failed to raise concern. Please check your connection.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Concern';
+        }
+    });
+}
+
+document.getElementById('closeRaiseConcernModal')?.addEventListener('click', () => {
+    document.getElementById('raiseConcernModal').classList.add('hidden');
+});
+
+// Replace the existing handleRaiseConcern
+async function handleRaiseConcern(e) {
+    e.preventDefault();
+    const inputField = document.getElementById("concernComplaintId");
+    const realId = inputField.getAttribute('data-real-id');
+    const displayId = inputField.value;
+    
+    if (!realId) {
+        alert("Please track a valid complaint first.");
+        return;
+    }
+    
+    checkConcernEligibility(realId, displayId);
+}
+
+// Ensure the form uses the new handler
+const oldConcernForm = document.getElementById("concernForm");
+if (oldConcernForm) {
+    // Remove old listeners if any (by replacing the button or cloning form) - simplest is to just overwrite onsubmit
+    oldConcernForm.onsubmit = handleRaiseConcern;
+    // Remove the old addEventListener if it existed by replacing the element
+    const newForm = oldConcernForm.cloneNode(true);
+    oldConcernForm.parentNode.replaceChild(newForm, oldConcernForm);
+    newForm.addEventListener("submit", handleRaiseConcern);
+    
+    // Wire up the button for eligibility check directly
+    const triggerBtn = newForm.querySelector('button');
+    if (triggerBtn) {
+        triggerBtn.id = "triggerRaiseConcernBtn";
+        triggerBtn.type = "button"; // Change from submit to button so it doesn't trigger standard form submission
+        triggerBtn.addEventListener("click", () => {
+            const inputField = document.getElementById("concernComplaintId");
+            const realId = inputField.getAttribute('data-real-id');
+            const displayId = inputField.value;
+            if (realId) checkConcernEligibility(realId, displayId);
+            else alert("Please track a valid complaint first.");
+        });
+    }
+}
+
+// --- VIEW CONCERNS LOGIC ---
+const viewConcernsBtn = document.getElementById("viewConcernsBtn");
+if (viewConcernsBtn) {
+    // Overwrite any existing onclick from the HTML
+    viewConcernsBtn.onclick = async (e) => {
+        e.preventDefault();
+        const inputField = document.getElementById("concernComplaintId");
+        const realId = inputField.getAttribute('data-real-id');
+        
+        if (!realId) {
+            alert("No tracked complaint found.");
+            return;
+        }
+
+        const container = document.getElementById("view-concerns-container");
+        container.innerHTML = '<div class="text-center p-4">Loading concerns...</div>';
+        document.getElementById('viewConcernsModal').classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${API}/concerns/${realId}`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const concerns = await res.json();
+            
+            if (concerns.length === 0) {
+                container.innerHTML = '<div class="text-center p-4 text-muted">No concerns raised for this complaint yet.</div>';
+                return;
+            }
+
+            let html = '';
+            concerns.forEach((c, index) => {
+                const isWarning = c.escalationLevel === 'Warning';
+                const isCritical = c.escalationLevel === 'Critical';
+                let borderClass = 'border-info';
+                if (isWarning) borderClass = 'border-warning';
+                if (isCritical) borderClass = 'border-danger';
+
+                const imageUrl = c.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}` : null;
+                
+                html += `
+                <div class="mb-3 p-3 bg-light rounded border-start border-4 ${borderClass}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong class="${isCritical ? 'text-danger' : isWarning ? 'text-warning text-dark' : 'text-info'}">
+                            Concern #${c.concernNumber} (${c.escalationLevel})
+                        </strong>
+                        <small class="text-muted">${new Date(c.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <p class="mb-2" style="font-size: 0.9rem;">${c.description}</p>
+                    ${imageUrl ? `<img src="${imageUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; display: block;">` : ''}
+                    <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded border small mt-2">
+                        <span><strong>Status:</strong> <span class="badge ${c.status === 'Pending' ? 'bg-danger' : 'bg-success'}">${c.status}</span></span>
+                        ${c.adminResponse ? `<span class="text-success fw-bold"><i class="bx bx-check-circle"></i> Resolved by Admin</span>` : '<span class="text-danger small">Awaiting Review</span>'}
+                    </div>
+                    ${c.adminResponse ? `
+                    <div class="mt-2 p-2 bg-success bg-opacity-10 border border-success rounded small">
+                        <strong>Admin Response:</strong><br>${c.adminResponse}
+                    </div>` : ''}
+                </div>`;
+            });
+            container.innerHTML = html;
+        } catch (err) {
+            console.error("View concerns error", err);
+            container.innerHTML = '<div class="text-center p-4 text-danger">Failed to load concern history.</div>';
+        }
+    };
+}
+
+document.getElementById('closeViewConcernsModal')?.addEventListener('click', () => {
+    document.getElementById('viewConcernsModal').classList.add('hidden');
+});
+

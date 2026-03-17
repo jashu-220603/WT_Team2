@@ -2,12 +2,54 @@ const express = require('express');
 const router = express.Router();
 const Concern = require('../models/Concern');
 const Complaint = require('../models/Complaint');
+const Feedback = require('../models/Feedback');
 const Notification = require('../models/Notification');
+const LegalNotice = require('../models/LegalNotice');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const User = require('../models/User');
+
+// ---- Business Logic Helpers ----
+
+/**
+ * Count working days (Mon-Fri) between two dates
+ */
+function countWorkingDays(startDate, endDate) {
+    let count = 0;
+    const cur = new Date(startDate);
+    cur.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    while (cur < end) {
+        const day = cur.getDay();
+        if (day !== 0 && day !== 6) count++; // Skip Saturday (6) and Sunday (0)
+        cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+}
+
+/**
+ * Check if two dates fall on the same calendar day
+ */
+function isSameDay(date1, date2) {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+}
+
+/**
+ * Determine escalation level based on concern number
+ */
+function getEscalationLevel(concernNumber) {
+    if (concernNumber === 1) return 'Normal';
+    if (concernNumber === 2) return 'Warning';
+    return 'Critical';
+}
 
 // @route   POST /api/concerns
-// @desc    Raise a new concern
+// @desc    Raise a new concern (with 7-day, same-day, and 3-concern rules)
 // @access  User only
 router.post('/', protect, authorize('user'), upload.single('image'), async (req, res) => {
     try {
@@ -22,38 +64,152 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
             return res.status(404).json({ message: "Complaint not found." });
         }
 
+        if (complaint && complaint.status && ['Resolved', 'Closed'].includes(complaint.status)) {
+            return res.status(400).json({ message: "Cannot raise a concern for a resolved or closed complaint." });
+        }
+
+        // Rule: 7 working days must have passed
+        const complaintDate = complaint.createdAt || complaint.timestamps?.createdAt;
+        const workingDaysPassed = countWorkingDays(complaintDate, new Date());
+        if (workingDaysPassed < 7) {
+            const remaining = 7 - workingDaysPassed;
+            return res.status(400).json({ 
+                message: `Raise Concern will be available in ${remaining} working day(s). The complaint must be unresolved for 7 working days first.`,
+                workingDaysPassed,
+                remaining
+            });
+        }
+
+        // Rule: Max 3 concerns per complaint
+        const concernCount = await Concern.countDocuments({ complaint: complaintId });
+        if (concernCount >= 3) {
+            return res.status(400).json({ message: "Maximum of 3 concerns per complaint reached." });
+        }
+
+        // Rule: Only 1 concern per day per complaint
+        if (complaint.lastConcernDate && isSameDay(complaint.lastConcernDate, new Date())) {
+            return res.status(400).json({ message: "You can only raise one concern per day for this complaint." });
+        }
+
+        const newConcernNumber = concernCount + 1;
+        const escalationLevel = getEscalationLevel(newConcernNumber);
+
         const newConcern = new Concern({
             complaint: complaintId,
             user: req.user._id,
             description,
-            image: req.file ? req.file.filename : null
+            image: req.file ? req.file.filename : null,
+            escalationLevel,
+            concernNumber: newConcernNumber
         });
 
         await newConcern.save();
 
-        // Notify Admin and assigned Officer
-        const admins = await require('../models/User').find({ role: 'admin' });
+        // Update complaint concernCount and lastConcernDate
+        complaint.concernCount = newConcernNumber;
+        complaint.lastConcernDate = new Date();
+        await complaint.save();
+
+        // Log feedback entry
+        const feedbackEntry = new Feedback({
+            name: req.user.name,
+            email: req.user.email,
+            feedbackText: `[Concern #${newConcernNumber} - ${escalationLevel}]: ${description}`,
+            type: 'Concern',
+            complaint: complaintId
+        });
+        await feedbackEntry.save();
+
+        // Build notification text
+        const evidenceAttached = req.file ? 'Yes' : 'No';
+        const notificationTitle = `Concern #${newConcernNumber} Raised — ${escalationLevel}`;
+        const notificationText = `Complaint ID: ${complaint.complaintId}\nEscalation: ${escalationLevel}\nDescription: ${description}\nEvidence: ${evidenceAttached}`;
+
+        // Notify Admin ONLY (not user themselves, not officer — officers get notified separately below)
+        const admins = await User.find({ role: 'admin' });
         const notifications = admins.map(admin => ({
             user: admin._id,
             type: 'concern_raised',
-            title: 'New Concern Raised',
-            message: `A concern has been raised for Complaint ID: ${complaint.complaintId}`,
-            relatedComplaint: complaintId
+            title: notificationTitle,
+            message: notificationText,
+            relatedComplaint: complaint._id,
+            relatedConcern: newConcern._id
         }));
 
         if (complaint.assignedOfficer) {
             notifications.push({
                 user: complaint.assignedOfficer,
                 type: 'concern_raised',
-                title: 'New Concern Raised',
-                message: `A concern has been raised for your assigned Complaint ID: ${complaint.complaintId}`,
-                relatedComplaint: complaintId
+                title: notificationTitle,
+                message: notificationText,
+                relatedComplaint: complaint._id,
+                relatedConcern: newConcern._id
             });
         }
 
         await Notification.insertMany(notifications);
 
-        res.status(201).json({ message: "Concern raised successfully.", concern: newConcern });
+        // ---- AUTO LEGAL NOTICE on 3rd concern ----
+        let legalNotice = null;
+        if (newConcernNumber === 3 && complaint.assignedOfficer) {
+            const noticeContent = 
+                `This is a formal notice issued due to the failure to resolve Complaint ${complaint.complaintId} ` +
+                `(Category: ${complaint.category}) within the prescribed time.\n\n` +
+                `Three formal concerns have been raised by the complainant. ` +
+                `This complaint has remained unresolved for more than 7 working days. ` +
+                `You are hereby required to take immediate action and provide a written response within 3 working days.\n\n` +
+                `Complainant Concern Summary: ${description}`;
+
+            legalNotice = new LegalNotice({
+                officerId: complaint.assignedOfficer,
+                complaint: complaint._id,
+                complainantId: req.user._id,
+                title: `Legal Notice — Complaint ${complaint.complaintId}`,
+                content: noticeContent,
+                escalationLevel: 'Critical',
+                isAutoGenerated: true,
+                status: 'Pending'
+            });
+            await legalNotice.save();
+
+            // Add remark to complaint history
+            complaint.history.push({
+                status: complaint.status,
+                changedBy: req.user._id,
+                remarks: `Legal Notice automatically generated after 3rd concern. Notice ID: ${legalNotice._id}`
+            });
+            await complaint.save();
+
+            // Notify officer about the legal notice
+            await Notification.create({
+                user: complaint.assignedOfficer,
+                type: 'legal_notice',
+                title: '⚠ Legal Notice Issued Against You',
+                message: `A legal notice has been auto-generated for unresolved Complaint ${complaint.complaintId}. Please respond immediately.`,
+                relatedComplaint: complaint._id,
+                relatedConcern: newConcern._id
+            });
+
+            // Notify admins about legal notice generation
+            for (const admin of admins) {
+                await Notification.create({
+                    user: admin._id,
+                    type: 'legal_notice',
+                    title: `Legal Notice Auto-Generated — ${complaint.complaintId}`,
+                    message: `A legal notice was automatically generated for Complaint ${complaint.complaintId} (3 concerns raised).`,
+                    relatedComplaint: complaint._id,
+                    relatedConcern: newConcern._id
+                });
+            }
+        }
+
+        res.status(201).json({ 
+            message: "Concern raised successfully.", 
+            concern: newConcern,
+            escalationLevel,
+            concernNumber: newConcernNumber,
+            legalNoticeGenerated: !!legalNotice
+        });
     } catch (err) {
         console.error("Raise Concern Error:", err);
         res.status(500).json({ message: "Server error while raising concern." });
@@ -87,24 +243,34 @@ router.get('/officer', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/concerns/:complaintId
-// @desc    Get concerns for a specific complaint (Private)
-// @access  Admin/User
-router.get('/:complaintId', protect, async (req, res) => {
+// @route   GET /api/concerns/complaint/:complaintId
+// @desc    Get all concerns for a specific complaint
+// @access  Protected
+router.get('/complaint/:complaintId', protect, async (req, res) => {
     try {
-        const complaint = await Complaint.findById(req.params.complaintId);
-        if (!complaint) return res.status(404).json({ message: "Complaint not found" });
-
-        // Privacy: Only Admin or the User who owns the complaint/concern can see details
-        if (req.user.role !== 'admin' && !complaint.user.equals(req.user._id)) {
-            return res.status(403).json({ message: "Access denied. Officers cannot view concern details." });
-        }
-
-        const concerns = await Concern.find({ complaint: req.params.complaintId }).sort({ createdAt: -1 });
+        const concerns = await Concern.find({ complaint: req.params.complaintId })
+            .populate('user', 'name email')
+            .sort({ createdAt: 1 }); // oldest first so numbering is chronological
         res.json(concerns);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
+        console.error("Get Concerns Error:", err);
+        res.status(500).json({ message: "Server error while fetching concerns." });
+    }
+});
+
+// @route   GET /api/concerns/all
+// @desc    Get all concerns with complaint & user details (Admin view)
+// @access  Admin
+router.get('/all', protect, authorize('admin'), async (req, res) => {
+    try {
+        const concerns = await Concern.find()
+            .populate('complaint', 'complaintId category status concernCount')
+            .populate('user', 'name email')
+            .sort({ createdAt: -1 });
+        res.json(concerns);
+    } catch (err) {
+        console.error("Get All Concerns Error:", err);
+        res.status(500).json({ message: "Server error." });
     }
 });
 
@@ -129,13 +295,24 @@ router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, r
         if (status) concern.status = status;
         await concern.save();
 
+        // Add to complaint history
+        if (concern.complaint) {
+            concern.complaint.history.push({
+                status: concern.complaint.status,
+                changedBy: req.user._id,
+                remarks: `[Concern Response by ${req.user.role}] ${response}`
+            });
+            await concern.complaint.save();
+        }
+
         // Notify User
         const newNotification = new Notification({
             user: concern.user,
             type: 'concern_responded',
             title: 'Response to your Concern',
-            message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} responded to your concern for Complaint: ${concern.complaint.complaintId}`,
-            relatedComplaint: concern.complaint._id
+            message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} (${req.user.name}) responded to your concern for Complaint: ${concern.complaint?.complaintId || ''}\nResponse: ${response}`,
+            relatedComplaint: concern.complaint?._id,
+            relatedConcern: concern._id
         });
 
         await newNotification.save();
@@ -144,6 +321,51 @@ router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, r
     } catch (err) {
         console.error("Respond Concern Error:", err);
         res.status(500).json({ message: "Server error while responding to concern." });
+    }
+});
+
+// @route   GET /api/concerns/eligible/:complaintId
+// @desc    Check if concern can be raised for a complaint
+// @access  User
+router.get('/eligible/:complaintId', protect, authorize('user'), async (req, res) => {
+    try {
+        const complaint = await Complaint.findById(req.params.complaintId);
+        if (!complaint) return res.status(404).json({ message: "Complaint not found." });
+
+        if (['Resolved', 'Closed'].includes(complaint.status)) {
+            return res.json({ eligible: false, reason: "Complaint is already resolved or closed." });
+        }
+
+        const workingDaysPassed = countWorkingDays(complaint.createdAt, new Date());
+        const remainingDays = Math.max(0, 7 - workingDaysPassed);
+        const alreadyToday = complaint.lastConcernDate && isSameDay(complaint.lastConcernDate, new Date());
+        const concernCount = complaint.concernCount || 0;
+
+        if (workingDaysPassed < 7) {
+            return res.json({ 
+                eligible: false, 
+                reason: `Raise Concern available in ${remainingDays} working day(s).`,
+                workingDaysPassed,
+                remainingDays,
+                concernCount
+            });
+        }
+        if (alreadyToday) {
+            return res.json({ eligible: false, reason: "You already raised a concern today.", concernCount });
+        }
+        if (concernCount >= 3) {
+            return res.json({ eligible: false, reason: "Maximum 3 concerns reached.", concernCount });
+        }
+
+        return res.json({ 
+            eligible: true, 
+            workingDaysPassed, 
+            concernCount,
+            nextEscalationLevel: getEscalationLevel(concernCount + 1)
+        });
+    } catch (err) {
+        console.error("Eligible check error:", err);
+        res.status(500).json({ message: "Server error." });
     }
 });
 

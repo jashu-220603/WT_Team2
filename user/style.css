@@ -633,6 +633,7 @@ input:focus, select:focus, textarea:focus {
     color: var(--secondary);
     margin-bottom: 0.25rem;
     line-height: 1.4;
+    white-space: pre-wrap;
 }
 
 .notif-time {

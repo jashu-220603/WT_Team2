@@ -443,6 +443,53 @@
         </div>
     </div>
     
+    <!-- View Concerns Modal -->
+    <div class="modal fade" id="viewConcernsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-octagon me-2"></i>Complaint Concerns</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="concerns-list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Respond to Legal Notice Modal -->
+    <div class="modal fade" id="respondNoticeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-reply-fill me-2"></i>Respond to Legal Notice</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <h6 class="fw-bold" id="rn-title"></h6>
+                        <small class="text-muted d-block mb-2" id="rn-date"></small>
+                        <p class="mb-0" id="rn-content" style="white-space: pre-wrap; font-size: 0.9rem;"></p>
+                    </div>
+                    <form id="respond-notice-form">
+                        <input type="hidden" id="rn-notice-id">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Your Response</label>
+                            <textarea id="rn-response-text" class="form-control" rows="5" required placeholder="Type your official response here..."></textarea>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Submit Response</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CHATBOT -->
     <div class="chatbot-icon" onclick="toggleChat()">
         💬 

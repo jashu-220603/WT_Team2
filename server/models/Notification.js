@@ -24,6 +24,11 @@ const NotificationSchema = new mongoose.Schema({
     ref: 'Complaint',
     default: null
   },
+  relatedConcern: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Concern',
+    default: null
+  },
   isRead: {
     type: Boolean,
     default: false

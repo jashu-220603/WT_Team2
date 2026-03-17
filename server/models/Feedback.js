@@ -15,6 +15,24 @@ const FeedbackSchema = new mongoose.Schema({
   feedbackText: {
     type: String,
     required: true
+  },
+  type: {
+    type: String,
+    enum: ['General', 'Complaint', 'Concern'],
+    default: 'General'
+  },
+  complaint: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Complaint'
+  },
+  officer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5
   }
 }, {
   timestamps: true

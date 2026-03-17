@@ -26,7 +26,7 @@
     <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-check me-2"></i>CMS Admin</h5>
+            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-shield-check me-2"></i>CMS Portal</h5>
             <button id="sidebar-toggle" class="btn btn-link text-white p-0 d-none d-md-block">
                 <i class="bi bi-list fs-4"></i>
             </button>
@@ -54,10 +54,25 @@
                 <i class="bi bi-chat-text"></i>
                 <span>Citizen Feedbacks</span>
             </a>
+            <!-- Concern Tracking -->
+            <a href="#" class="nav-link" data-section="concerns">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Concern Tracking</span>
+            </a>
+            <!-- Legal Notices -->
+            <a href="#" class="nav-link" data-section="legal-notices">
+                <i class="bi bi-file-earmark-ruled"></i>
+                <span>Legal Notices</span>
+            </a>
             <!-- Tasks -->
             <a href="#" class="nav-link" data-section="tasks">
                 <i class="bi bi-check2-square"></i>
                 <span>Tasks</span>
+            </a>
+            <!-- Announcements -->
+            <a href="#" class="nav-link" data-section="announcements">
+                <i class="bi bi-megaphone"></i>
+                <span>Announcements</span>
             </a>
             <a href="#" class="nav-link" data-section="analytics">
                 <i class="bi bi-graph-up"></i>
@@ -68,7 +83,7 @@
                 <span>Reports</span>
             </a>
             <hr class="mx-3 opacity-25">
-            <a href="#" class="nav-link mt-auto">
+            <a href="#" class="nav-link mt-auto" data-section="settings">
                 <i class="bi bi-gear"></i>
                 <span>Settings</span>
             </a>
@@ -145,9 +160,9 @@
                     <div class="dropdown">
                         <button class="btn btn-link p-0 d-flex align-items-center text-decoration-none" type="button"
                             data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=Admin+User&background=0d6efd&color=fff"
-                                alt="Profile" class="rounded-circle me-2" width="32" height="32">
-                            <span class="d-none d-md-inline text-dark fw-medium">Admin User</span>
+                            <img src="https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff"
+                                alt="Profile" class="rounded-circle me-2" id="header-profile-img" width="32" height="32">
+                            <span class="d-none d-md-inline text-dark fw-medium" id="header-admin-name">Admin</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                             <li><a class="dropdown-item" href="#" id="adminProfileBtn"><i class="bi bi-person me-2"></i>Profile</a></li>
@@ -180,7 +195,7 @@
             <!-- Stats Cards -->
             <div class="row g-4 mb-5">
                 <div class="col-12 col-sm-6 col-md-3 col-xl-3">
-                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="filterAndSwitch('All')">
                         <div class="card-body">
                             <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-file-earmark-text"></i>
@@ -193,7 +208,7 @@
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3 col-xl-3">
-                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="filterAndSwitch('Submitted')">
                         <div class="card-body">
                             <div class="stat-icon bg-warning bg-opacity-10 text-warning mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-clock-history"></i>
@@ -206,7 +221,7 @@
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3 col-xl-3">
-                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('complaints')">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="filterAndSwitch('Assigned')">
                         <div class="card-body">
                             <div class="stat-icon bg-info bg-opacity-10 text-info mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
                                 <i class="bi bi-person-check"></i>
@@ -219,14 +234,14 @@
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3 col-xl-3">
-                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="switchSection('tasks')">
+                    <div class="card stat-card h-100 hover-highlight" style="cursor:pointer;" onclick="filterAndSwitch('Resolved')">
                         <div class="card-body">
-                            <div class="stat-icon bg-secondary bg-opacity-10 text-secondary mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
-                                <i class="bi bi-person-dash"></i>
+                            <div class="stat-icon bg-success bg-opacity-10 text-success mb-3 mx-auto" style="width:48px;height:48px;font-size:1.5rem;">
+                                <i class="bi bi-check-circle"></i>
                             </div>
                             <div class="text-center">
-                                <h6 class="text-muted mb-1 small fw-bold">Unassigned Complaints</h6>
-                                <h3 class="fw-bold mb-0" id="unassigned-complaints">0</h3>
+                                <h6 class="text-muted mb-1 small fw-bold">Resolved Complaints</h6>
+                                <h3 class="fw-bold mb-0" id="resolved-complaints">0</h3>
                             </div>
                         </div>
                     </div>
@@ -284,7 +299,8 @@
                         </div>
                         <select id="status-filter" class="form-select form-select-sm" style="width: auto;">
                             <option value="All">All Status</option>
-                            <option value="Pending">Pending</option>
+                            <option value="Submitted">Pending</option>
+                            <option value="Assigned">Assigned</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Resolved">Resolved</option>
                         </select>
@@ -487,6 +503,36 @@
             </div>
         </div>
 
+        <!-- Announcements Section -->
+        <div id="announcements-section" class="container-fluid py-4 px-md-5 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h3 class="fw-bold mb-1">Manage Announcements</h3>
+                    <p class="text-muted small mb-0">Create and manage public announcements for the homepage.</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAnnouncementModal">
+                    <i class="bi bi-plus-circle me-1"></i> New Announcement
+                </button>
+            </div>
+            <div class="table-container border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Content</th>
+                                <th>Posted On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcements-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Feedbacks Section -->
         <div id="feedbacks-section" class="container-fluid py-4 px-md-5 d-none">
             <div class="d-flex justify-content-between align-items-center mb-5">
@@ -501,7 +547,8 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Name</th>
-                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Complaint/Concern</th>
                                 <th>Feedback Message</th>
                                 <th>Submitted On</th>
                             </tr>
@@ -513,6 +560,80 @@
                 </div>
             </div>
         </div>
+
+        <!-- Concerns Tracking Section -->
+        <div id="concerns-section" class="container-fluid py-4 px-md-5 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h3 class="fw-bold mb-1">Concern Tracking</h3>
+                    <p class="text-muted small mb-0">Track and respond to escalated citizen concerns.</p>
+                </div>
+                <!-- Filters for Escalation Levels -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-funnel me-1"></i> Escalation Filter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="filterConcerns('All')">All Concerns</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterConcerns('Normal')">Normal (1)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterConcerns('Warning')">Warning (2)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="filterConcerns('Critical')">Critical (3)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="table-container border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Escalation Level</th>
+                                <th>Complaint ID</th>
+                                <th>Concern</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="concerns-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legal Notices Section -->
+        <div id="legal-notices-section" class="container-fluid py-4 px-md-5 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h3 class="fw-bold mb-1">Legal Notice System</h3>
+                    <p class="text-muted small mb-0">Manage automatic and manual legal notices sent to officers.</p>
+                </div>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#sendLegalNoticeModal">
+                    <i class="bi bi-envelope-exclamation me-1"></i> Send Manual Notice
+                </button>
+            </div>
+            <div class="table-container border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title / Complaint</th>
+                                <th>Officer</th>
+                                <th>Generation Type</th>
+                                <th>Status</th>
+                                <th>Officer Response</th>
+                                <th>Sent Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="legal-notices-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Reports Section -->
         <div id="reports-section" class="container-fluid py-4 px-md-5 d-none">
@@ -981,7 +1102,89 @@
     <script src="../chatbot.js"></script>
     <script src="js/dashboard.js"></script>
 
-    <!-- FORGOT PASSWORD MODAL -->
+    <!-- Send Legal Notice Modal -->
+    <div class="modal fade" id="sendLegalNoticeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-envelope-exclamation me-2"></i>Send Legal Notice</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="send-legal-notice-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Officer</label>
+                            <select id="ln-officer-id" class="form-select" required>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Complaint ID (Optional Reference)</label>
+                            <input type="text" id="ln-complaint-id" class="form-control" placeholder="e.g. CMP-1234">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notice Title</label>
+                            <input type="text" id="ln-title" class="form-control" required placeholder="e.g. Action Required on Unresolved Complaints">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notice Content</label>
+                            <textarea id="ln-content" class="form-control" rows="5" required placeholder="Detail the legal notice here..."></textarea>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Send Notice</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Announcement Modal -->
+    <div class="modal fade" id="addAnnouncementModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">New Announcement</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="announcement-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Title</label>
+                            <input type="text" id="ann-title" class="form-control" required placeholder="e.g. New Tracking System">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Content</label>
+                            <textarea id="ann-content" class="form-control" rows="4" required placeholder="Announcement details..."></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Publish</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Concerns Modal -->
+    <div class="modal fade" id="viewConcernsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-octagon me-2"></i>Complaint Concerns</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="concerns-list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="forgotPasswordModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeForgotPassword()">✖</span>

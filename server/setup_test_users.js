@@ -8,7 +8,7 @@ const createTestUsers = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to DB');
 
-    // Create Admin
+    // Create or Update Admin
     const adminId = 'adm-001';
     let admin = await User.findOne({ staffId: adminId });
     if (!admin) {
@@ -21,10 +21,12 @@ const createTestUsers = async () => {
       });
       console.log('Test Admin created: adm-001 / admin123');
     } else {
-        console.log('Admin adm-001 already exists');
+        admin.password = 'admin123';
+        await admin.save();
+        console.log('Admin adm-001 password refreshed to admin123');
     }
 
-    // Create Officer
+    // Create or Update Officer
     const officerId = 'off-001';
     let officer = await User.findOne({ staffId: officerId });
     if (!officer) {
@@ -38,7 +40,26 @@ const createTestUsers = async () => {
       });
       console.log('Test Officer created: off-001 / officer123');
     } else {
-        console.log('Officer off-001 already exists');
+        officer.password = 'officer123';
+        await officer.save();
+        console.log('Officer off-001 password refreshed to officer123');
+    }
+
+    // Create or Update Citizen User
+    const citizenEmail = 'user1@example.com';
+    let citizen = await User.findOne({ email: citizenEmail });
+    if (!citizen) {
+      await User.create({
+        name: 'John Citizen',
+        email: citizenEmail,
+        password: 'password123',
+        role: 'user'
+      });
+      console.log('Test Citizen created: user1@example.com / password123');
+    } else {
+        citizen.password = 'password123';
+        await citizen.save();
+        console.log('Citizen user1@example.com password refreshed');
     }
 
     process.exit();

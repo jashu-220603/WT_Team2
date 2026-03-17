@@ -510,33 +510,66 @@ document.addEventListener("DOMContentLoaded", () => {
                 badge.style.display = 'none';
             }
 
-            // Render citizen alerts
             if (citizenAlerts.length > 0) {
-                citizenList.innerHTML = citizenAlerts.slice(0, 10).map(a => `
-                    <div class="notification-item p-2 border-bottom ${!a.isRead ? 'bg-light' : ''}" style="cursor: pointer;" onclick="markAsRead('${a._id}')">
-                        <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.title}</p>
-                        <p class="mb-1 text-muted small" style="font-size: 0.75rem;">${a.message}</p>
-                        <small class="text-muted" style="font-size: 0.65rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                citizenList.innerHTML = citizenAlerts.map(a => {
+                    const complaintId = a.message.match(/ID: ([A-Z0-9]+)/) ? a.message.match(/ID: ([A-Z0-9]+)/)[1] : null;
+                    return `
+                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}" 
+                         onclick="handleNotificationClick('${a._id}', '${a.type}', '${complaintId}')" style="cursor: pointer;">
+                        <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
                     </div>
-                `).join("");
+                `;}).join("");
             } else {
                 citizenList.innerHTML = '<div class="text-center text-muted small py-3">No new citizen alerts</div>';
             }
 
             // Render admin alerts
             if (adminAlerts.length > 0) {
-                adminList.innerHTML = adminAlerts.slice(0, 10).map(a => `
-                    <div class="notification-item p-2 border-bottom ${!a.isRead ? 'bg-light' : ''}" style="cursor: pointer;" onclick="markAsRead('${a._id}')">
-                        <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.title}</p>
-                        <p class="mb-1 text-muted small" style="font-size: 0.75rem;">${a.message}</p>
-                        <small class="text-muted" style="font-size: 0.65rem;">${new Date(a.createdAt).toLocaleString()}</small>
+                adminList.innerHTML = adminAlerts.map(a => {
+                    const complaintId = a.message.match(/ID: ([A-Z0-9]+)/) ? a.message.match(/ID: ([A-Z0-9]+)/)[1] : null;
+                    return `
+                    <div class="border-bottom p-2 text-start ${!a.isRead ? 'bg-light' : ''}"
+                         onclick="handleNotificationClick('${a._id}', '${a.type}', '${complaintId}')" style="cursor: pointer;">
+                        <p class="mb-1 fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-exclamation-circle-fill me-1"></i>${a.message}</p>
+                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(a.createdAt).toLocaleString()}</small>
                     </div>
-                `).join("");
+                `;}).join("");
             } else {
                 adminList.innerHTML = '<div class="text-center text-muted small py-3">No new admin alerts</div>';
             }
         } catch (err) {
             console.error("Notifications fetch error:", err);
+        }
+    }
+
+    async function handleNotificationClick(notifId, type, complaintId) {
+        try {
+            await markAsRead(notifId);
+            
+            if (complaintId) {
+                // Find the full MongoDB ID
+                const fullComplaint = allComplaints.find(c => (c.complaintId === complaintId || c._id === complaintId));
+                if (fullComplaint) {
+                    openViewDetailsModal(fullComplaint._id);
+                }
+            } else if (type === 'legal_notice' || type === 'legal') {
+                filterComplaintsBySection('legal-notices');
+            }
+        } catch (err) {
+            console.error("Error handling notification click:", err);
+        }
+    }
+
+    async function markAsRead(id) {
+        try {
+            const res = await fetch(`${API}/notifications/${id}/read`, {
+                method: "PUT",
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (res.ok) fetchNotifications();
+        } catch (err) {
+            console.error("Error marking as read:", err);
         }
     }
 
@@ -548,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (complaints.length === 0) {
             html = '<tr><td colspan="7" class="text-center py-4">No complaints found.</td></tr>';
         } else {
-            complaints.forEach(c => {
+            complaints.slice(0, 4).forEach(c => {
                 let badgeClass = "bg-secondary";
                 if (c.status === "Assigned") badgeClass = "bg-warning text-dark";
                 if (c.status === "Pending") badgeClass = "bg-info text-dark";
@@ -581,6 +614,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="btn-group">
                             <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${c._id}" title="View Details">
                                 <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewConcerns('${c._id}')" title="View Concerns">
+                                <i class="bi bi-exclamation-octagon"></i>
                             </button>
                             ${(c.status !== 'Resolved' && c.status !== 'Closed') ? `
                             <button class="btn btn-sm btn-success update-btn" data-id="${c._id}">
@@ -917,7 +953,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Update Recent Feedback Table
-        const tbody = document.querySelector(".table-container tbody");
+        const tbody = document.getElementById("ratings-table-body");
         if (tbody) {
             let tableHtml = "";
             if (total === 0) {
@@ -970,6 +1006,56 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+/* =========================
+   CONCERNS
+========================= */
+
+window.viewConcerns = async function(complaintId) {
+    const container = document.getElementById('concerns-list-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    
+    new bootstrap.Modal(document.getElementById('viewConcernsModal')).show();
+
+    try {
+        const res = await fetch(`${API}/concerns/complaint/${complaintId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const concerns = await res.json();
+        
+        if (concerns.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted">No concerns raised for this complaint.</div>';
+            return;
+        }
+
+        let html = '';
+        concerns.forEach(c => {
+            const imageUrl = c.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}` : null;
+            html += `
+            <div class="card mb-3 border-0 shadow-sm border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="fw-bold mb-0">${c.user?.name || 'Citizen'}</h6>
+                        <small class="text-muted">${new Date(c.createdAt).toLocaleString()}</small>
+                    </div>
+                    <p class="mb-3">${c.description}</p>
+                    ${imageUrl ? `<img src="${imageUrl}" class="img-fluid rounded mb-3" style="max-height: 200px;">` : ''}
+                    <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded small">
+                        <span><strong>Status:</strong> ${c.status}</span>
+                        ${c.adminResponse ? `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Admin Responded</span>` : ''}
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="text-center py-4 text-danger">Failed to load concerns.</div>';
+    }
+};
 
 window.logout = function () {
     sessionStorage.removeItem("jwt");
@@ -1035,5 +1121,134 @@ async function resetPassword() {
     
     alert("Password reset successfully!");
     closeForgotPassword();
+}
+
+/* =========================
+   LEGAL NOTICES (OFFICER)
+========================= */
+
+async function loadLegalNotices() {
+    try {
+        const res = await fetch(`${API}/legal-notices/mine`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            renderOfficerLegalNotices(data.notices);
+        }
+    } catch (err) {
+        console.error("Failed to load legal notices", err);
+    }
+}
+
+function renderOfficerLegalNotices(notices) {
+    const tbody = document.getElementById("officer-legal-notices-tbody");
+    if (!tbody) return;
+
+    if (notices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No legal notices received.</td></tr>';
+        return;
+    }
+
+    let html = "";
+    notices.forEach(ln => {
+        let statusBadge = "bg-danger"; // Pending
+        if (ln.status === "Read") statusBadge = "bg-warning text-dark";
+        if (ln.status === "Responded") statusBadge = "bg-success";
+
+        const date = new Date(ln.createdAt).toLocaleDateString();
+        const displayComplaint = ln.complaint ? ln.complaint.complaintId : `<span class="text-muted small">General Notice</span>`;
+
+        html += `
+        <tr class="${ln.status === 'Pending' ? 'table-danger bg-opacity-10' : ''}">
+            <td><div class="fw-bold">${ln.title}</div></td>
+            <td>${displayComplaint}</td>
+            <td><span class="badge ${statusBadge}">${ln.status}</span></td>
+            <td>${date}</td>
+            <td>
+                <button class="btn btn-sm btn-danger respond-notice-btn" 
+                    data-id="${ln._id}" 
+                    data-title="${ln.title}" 
+                    data-content="${ln.content.replace(/"/g, '&quot;')}"
+                    data-date="${date}"
+                    data-status="${ln.status}"
+                    data-response="${ln.officerResponse || ''}">
+                    ${ln.status === 'Responded' ? 'View/Edit Response' : 'Respond Now'}
+                </button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+
+    // Attach event listeners for the respond buttons
+    document.querySelectorAll(".respond-notice-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const id = this.dataset.id;
+            
+            // Mark as read if pending
+            if (this.dataset.status === 'Pending') {
+                markNoticeAsRead(id);
+            }
+
+            document.getElementById("rn-notice-id").value = id;
+            document.getElementById("rn-title").textContent = this.dataset.title;
+            document.getElementById("rn-date").textContent = "Received: " + this.dataset.date;
+            document.getElementById("rn-content").textContent = this.dataset.content;
+            document.getElementById("rn-response-text").value = this.dataset.response || '';
+            
+            new bootstrap.Modal(document.getElementById("respondNoticeModal")).show();
+        });
+    });
+}
+
+async function markNoticeAsRead(id) {
+    try {
+        await fetch(`${API}/legal-notices/${id}/read`, {
+            method: 'PUT',
+            headers: { Authorization: "Bearer " + token }
+        });
+        fetchNotifications(); // Update badges since a notice notification might be cleared
+    } catch (err) {
+        console.error("Error marking notice as read", err);
+    }
+}
+
+// Handle response submission
+const respondForm = document.getElementById("respond-notice-form");
+if (respondForm) {
+    respondForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const noticeId = document.getElementById("rn-notice-id").value;
+        const responseText = document.getElementById("rn-response-text").value.trim();
+
+        if (!responseText) {
+            alert("Please enter a response.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/legal-notices/${noticeId}/respond`, {
+                method: "PUT",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token 
+                },
+                body: JSON.stringify({ response: responseText })
+            });
+
+            if (res.ok) {
+                alert("Response submitted successfully to Administration.");
+                bootstrap.Modal.getInstance(document.getElementById("respondNoticeModal")).hide();
+                loadLegalNotices();
+            } else {
+                const data = await res.json();
+                alert(data.message || "Failed to submit response.");
+            }
+        } catch (err) {
+            console.error("Response error:", err);
+            alert("Error submitting response.");
+        }
+    });
 }
 

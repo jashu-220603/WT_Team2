@@ -9,14 +9,15 @@ connectDB();
 
 const app = express();
 
-// middlewares
 app.use(cors({
   origin: [
     "http://localhost:5500", 
     "http://127.0.0.1:5500", 
     "http://localhost:5501", 
     "http://127.0.0.1:5501", 
-    "https://wt-team2.vercel.app"
+    "http://localhost:3000",
+    "https://wt-team2.vercel.app",
+    "https://wt-team2.onrender.com"
   ],
   credentials: true
 }));
@@ -42,6 +43,7 @@ app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/departments', require('./routes/departments'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/announcements', require('./routes/announcements'));
 
 // DEBUG ROUTE: See files in the backend (Since Render Shell is blocked)
 app.get('/api/admin/debug-files', (req, res) => {

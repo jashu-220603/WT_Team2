@@ -31,6 +31,15 @@ const ConcernSchema = new mongoose.Schema({
     enum: ['Open', 'Addressed', 'Closed'],
     default: 'Open'
   },
+  escalationLevel: {
+    type: String,
+    enum: ['Normal', 'Warning', 'Critical'],
+    default: 'Normal'
+  },
+  concernNumber: {
+    type: Number,
+    default: 1
+  },
   createdAt: {
     type: Date,
     default: Date.now

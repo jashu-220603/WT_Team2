@@ -5,10 +5,10 @@ const { protect, authorize } = require('../middleware/auth');
 
 // @route   POST /api/feedback/submit
 // @desc    Submit new citizen feedback
-// @access  Public
+// @access  Protected (users) or Public (homepage form)
 router.post('/submit', async (req, res) => {
     try {
-        const { name, email, feedbackText } = req.body;
+        const { name, email, feedbackText, type, complaintId, officerId, rating } = req.body;
 
         if (!name || !email || !feedbackText) {
             return res.status(400).json({ message: "Please provide name, email, and feedback text." });
@@ -17,7 +17,11 @@ router.post('/submit', async (req, res) => {
         const newFeedback = new Feedback({
             name,
             email,
-            feedbackText
+            feedbackText,
+            type: type || 'General',
+            complaint: complaintId || null,
+            officer: officerId || null,
+            rating: rating ? parseInt(rating) : null
         });
 
         await newFeedback.save();
@@ -34,7 +38,7 @@ router.post('/submit', async (req, res) => {
 // @access  Admin only
 router.get('/all', protect, authorize('admin'), async (req, res) => {
     try {
-        const feedbacks = await Feedback.find().sort({ createdAt: -1 });
+        const feedbacks = await Feedback.find().populate('complaint', 'complaintId title').sort({ createdAt: -1 });
         res.status(200).json(feedbacks);
     } catch (err) {
         console.error("Get Feedbacks Error:", err);

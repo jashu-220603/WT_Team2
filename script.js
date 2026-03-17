@@ -157,8 +157,19 @@ function setupLoginRedirect(){
     loginForm.addEventListener('submit', async function(e){
         e.preventDefault();
 
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value.trim();
+        const tabs = document.querySelectorAll("#loginModal .tab");
+        let loginRole = 'user';
+        if (tabs[1] && tabs[1].classList.contains('active')) loginRole = 'officer';
+        if (tabs[2] && tabs[2].classList.contains('active')) loginRole = 'admin';
+
+        let email, password;
+        if (loginRole === 'user') {
+            email = document.getElementById("loginEmail").value.trim();
+            password = document.getElementById("loginPassword").value.trim();
+        } else {
+            email = document.getElementById("loginEmail2").value.trim();
+            password = document.getElementById("loginPassword2").value.trim();
+        }
 
         if(!email || !password){
             alert("Enter email and password");
@@ -166,11 +177,7 @@ function setupLoginRedirect(){
         }
 
         try {
-            // Determine active role from tabs
-            const tabs = document.querySelectorAll("#loginModal .tab");
-            let role = 'user';
-            if (tabs[1] && tabs[1].classList.contains('active')) role = 'officer';
-            if (tabs[2] && tabs[2].classList.contains('active')) role = 'admin';
+            const role = loginRole;
 
             const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
                 method: 'POST',
@@ -552,7 +559,7 @@ function setupFeedbackForm() {
             const resp = await fetch((window.API_BASE_URL || 'http://localhost:7000') + '/api/feedback/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, feedbackText })
+                body: JSON.stringify({ name, email, feedbackText, type: 'General' })
             });
 
             if (resp.ok) {
@@ -710,7 +717,39 @@ async function fetchHomepageStats() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', fetchHomepageStats);
+// DYNAMIC ANNOUNCEMENTS
+// =====================
+async function loadAnnouncements() {
+    const container = document.getElementById('announcements-dynamic-container');
+    if (!container) return;
+
+    try {
+        const resp = await fetch((window.API_BASE_URL || 'http://localhost:7000') + '/api/announcements');
+        if (resp.ok) {
+            const announcements = await resp.json();
+            if (announcements.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 w-100">No recent announcements.</div>';
+                return;
+            }
+
+            container.innerHTML = announcements.map(a => `
+                <div class="announcement-card">
+                    <h4>${a.title}</h4>
+                    <p>${a.content}</p>
+                    <span>Posted: ${new Date(a.createdAt).toLocaleDateString()}</span>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('Error fetching announcements:', err);
+        container.innerHTML = '<div class="text-center py-4 w-100 text-danger">Failed to load announcements.</div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchHomepageStats();
+    loadAnnouncements();
+});
 
 function scrollToOverview(){
     const overviewSec = document.getElementById('overviewSection');

@@ -93,6 +93,16 @@ const ComplaintSchema = new mongoose.Schema({
 
   resolutionImage: {
     type: String
+  },
+
+  concernCount: {
+    type: Number,
+    default: 0
+  },
+
+  lastConcernDate: {
+    type: Date,
+    default: null
   }
 
 },
