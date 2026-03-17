@@ -32,6 +32,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // Initialize profile images from stored info
+    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    const storedName = sessionStorage.getItem('userName') || "Citizen";
+    if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
+        const avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${storedPhoto}`;
+        const headerAv = document.getElementById("headerProfileAvatar");
+        if (headerAv) headerAv.src = avatarUrl;
+    } else {
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=6366f1&color=fff`;
+        const headerAv = document.getElementById("headerProfileAvatar");
+        if (headerAv) headerAv.src = avatarUrl;
+    }
+
     // Sidebar Toggle
     const sidebar = document.getElementById("sidebar");
     const btnMenu = document.getElementById("btn-menu");
@@ -784,7 +797,22 @@ document.addEventListener("DOMContentLoaded", async () => {
             closePanel();
             const target = btn.getAttribute("data-target");
             const navLink = document.querySelector(`.nav-link[data-target="${target}"]`);
-            if(navLink) navLink.click();
+            
+            if(navLink) {
+                navLink.click();
+            } else {
+                // Support standalone sections like profile
+                navLinks.forEach(l => l.classList.remove("active"));
+                sections.forEach(sec => sec.classList.add("hidden"));
+                const targetEl = document.getElementById(target);
+                if(targetEl) targetEl.classList.remove("hidden");
+                
+                if (target === "profile-section") loadStandaloneProfile();
+                
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add("closed");
+                }
+            }
         });
     });
 
@@ -978,12 +1006,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             if (document.getElementById("profNameMain")) document.getElementById("profNameMain").value = user.name || "";
             if (document.getElementById("profEmailMain")) document.getElementById("profEmailMain").value = user.email || "";
-            if (document.getElementById("profPhoneMain")) document.getElementById("profPhoneMain").value = user.phone || "";
-            if (document.getElementById("profAddressMain")) document.getElementById("profAddressMain").value = user.address || "";
+            if (document.getElementById("profPhoneMain")) document.getElementById("profPhoneMain").value = user.contactNumber || "";
             
             let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||"Citizen")}&background=6366f1&color=fff`;
             if (user.profilePhoto) {
                 avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
+                sessionStorage.setItem("profilePhoto", user.profilePhoto);
             }
             if (document.getElementById("standaloneProfileImg")) document.getElementById("standaloneProfileImg").src = avatarUrl;
             
@@ -1025,7 +1053,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if(standaloneProfileForm) {
         standaloneProfileForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const submitBtn = standaloneProfileForm.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
 
             const name = document.getElementById("profNameMain").value;
@@ -1051,7 +1079,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     alert("Profile updated successfully!");
                     sessionStorage.setItem('userName', name);
                     if (userGreeting) userGreeting.textContent = `Welcome, ${name}`;
-                    if (data.user.profilePhoto) {
+                    if (data.user && data.user.profilePhoto) {
+                        sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                         const photoUrl = `${window.API_BASE_URL || "http://localhost:7000"}/uploads/${data.user.profilePhoto}`;
                         document.getElementById("standaloneProfileImg").src = photoUrl;
                         const headerAv = document.getElementById("headerProfileAvatar");
@@ -1112,13 +1141,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // Initialize with real user email if available
-    if (!sessionStorage.getItem("userEmail") && getToken()) {
+    // Initialize with fresh user data if needed
+    if (getToken()) {
         try {
             fetch(`${API}/auth/me`, { 
                 headers: { Authorization: "Bearer " + getToken() }
             }).then(r => r.json()).then(data => {
                 sessionStorage.setItem("userEmail", data.email);
+                sessionStorage.setItem("userName", data.name);
+                if (data.profilePhoto) {
+                    sessionStorage.setItem("profilePhoto", data.profilePhoto);
+                    // Update header avatar if it was already set to fallback
+                    const avatarUrl = `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${data.profilePhoto}`;
+                    const headerAv = document.getElementById("headerProfileAvatar");
+                    if (headerAv) headerAv.src = avatarUrl;
+                }
             });
         } catch(e) {}
     }
