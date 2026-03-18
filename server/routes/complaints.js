@@ -7,6 +7,7 @@ const upload = require('../middleware/upload');
 
 const Complaint = require('../models/Complaint');
 const Notification = require('../models/Notification');
+const Counter = require('../models/Counter');
 
 /*
 -------------------------------------------------------
@@ -57,9 +58,16 @@ async (req, res) => {
       location = "Unknown";
     }
 
-    // Generate random complaint ID: CMP-XXXXXX
-    const randomNum = Math.floor(100000000 + Math.random() * 900000000);
-    const complaintId = `CMP-${randomNum}`;
+    // Generate sequential complaint ID: CMP-000001
+    const counter = await Counter.findOneAndUpdate(
+      { id: 'complaintId' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    
+    // Format to 6 digits, e.g., 000001
+    const seqStr = String(counter.seq).padStart(6, '0');
+    const complaintId = `CMP-${seqStr}`;
 
     const complaint = new Complaint({
       complaintId,

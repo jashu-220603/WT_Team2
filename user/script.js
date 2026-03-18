@@ -558,25 +558,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                 else if (status === "Closed") displayBadge.style.background = "#d1fae5";
                 else displayBadge.style.background = "#ffedd5";
 
-                // Animate stepper
-                setTimeout(() => { activateStep('step-assigned'); }, 200);
+                // Animate stepper — cumulative activation
+                // Step 1: Submitted (always active once complaint exists)
+                setTimeout(() => { activateStep('step-submitted'); }, 200);
+
+                if (["Assigned", "In Progress", "Resolved", "Closed"].includes(status)) {
+                    setTimeout(() => {
+                        document.getElementById('conn-1').classList.add('active');
+                        activateStep('step-assigned');
+                    }, 600);
+                }
 
                 if (["In Progress", "Resolved", "Closed"].includes(status)) {
                     setTimeout(() => {
-                        document.getElementById('conn-1').classList.add('active');
+                        document.getElementById('conn-2').classList.add('active');
                         activateStep('step-inprogress');
-                    }, 800);
+                    }, 1000);
                 }
 
                 if (["Resolved", "Closed"].includes(status)) {
                     setTimeout(() => {
-                        document.getElementById('conn-2').classList.add('active');
+                        document.getElementById('conn-3').classList.add('active');
                         activateStep('step-pending');
                     }, 1400);
                     setTimeout(() => {
-                        document.getElementById('conn-3').classList.add('active');
+                        document.getElementById('conn-4').classList.add('active');
                         activateStep('step-resolved');
-                    }, 2000);
+                    }, 1800);
                 }
 
                 // Populate Officer Details
@@ -962,18 +970,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const id = c.complaintId || c._id.substring(0,8);
                 if(c.status === "Assigned") {
                     notifications.push({
+                        id: id,
                         text: `Complaint ${id} has been assigned to an officer.`,
                         time: new Date(c.updatedAt || c.createdAt),
                         type: 'info', icon: 'bx-user-pin'
                     });
                 } else if(c.status === "In Progress") {
                     notifications.push({
+                        id: id,
                         text: `Complaint ${id} is currently under review / in progress.`,
                         time: new Date(c.updatedAt || c.createdAt),
                         type: 'info', icon: 'bx-cog'
                     });
                 } else if(["Resolved", "Closed"].includes(c.status)) {
                     notifications.push({
+                        id: id,
                         text: `Complaint ${id} has been resolved!`,
                         time: new Date(c.updatedAt || c.createdAt),
                         type: 'success', icon: 'bx-check-shield'
@@ -988,7 +999,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             } else {
                 notifications.forEach(n => {
                     list.innerHTML += `
-                        <div class="notification-item">
+                        <div class="notification-item" onclick="window.viewComplaintDetails('${n.id}')" style="cursor: pointer;">
                             <div class="noti-icon ${n.type}"><i class='bx ${n.icon}'></i></div>
                             <div class="noti-content">
                                 <p>${n.text}</p>
@@ -1360,7 +1371,7 @@ async function handleNotificationClick(notifId, type, complaintId, concernId) {
         if (complaintId) {
             // Wait a bit for the UI to update if needed
             setTimeout(() => {
-                trackSpecificComplaint(complaintId);
+                window.viewComplaintDetails(complaintId);
             }, 100);
         } else if (type === 'general' || type === 'alert') {
             switchPage('notifications-section');
@@ -1684,5 +1695,132 @@ if (viewConcernsBtn) {
 
 document.getElementById('closeViewConcernsModal')?.addEventListener('click', () => {
     document.getElementById('viewConcernsModal').classList.add('hidden');
+});
+
+// =====================
+// DARK MODE & THEME SYNC
+// =====================
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtnUser = document.getElementById('themeToggleBtnUser');
+    const themeCheckbox = document.getElementById('themeToggleCheckbox');
+    
+    function updateThemeUI(isDark) {
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            if (themeBtnUser) {
+                const icon = themeBtnUser.querySelector('i');
+                if (icon) icon.className = 'bx bx-sun';
+            }
+            if (themeCheckbox) themeCheckbox.checked = true;
+        } else {
+            document.body.classList.remove('dark-mode');
+            if (themeBtnUser) {
+                const icon = themeBtnUser.querySelector('i');
+                if (icon) icon.className = 'bx bx-moon';
+            }
+            if (themeCheckbox) themeCheckbox.checked = false;
+        }
+    }
+
+    // Initial load
+    const savedTheme = localStorage.getItem('theme');
+    updateThemeUI(savedTheme === 'dark');
+
+    // Header Toggle
+    if (themeBtnUser) {
+        themeBtnUser.addEventListener('click', () => {
+            const isDarkNow = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+            updateThemeUI(isDarkNow);
+        });
+    }
+
+    // Settings Toggle
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', () => {
+            const isDarkNow = themeCheckbox.checked;
+            localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+            updateThemeUI(isDarkNow);
+        });
+    }
+
+    // =====================
+    // SETTINGS ACTIONS
+    // =====================
+    const pwdUpdateBtn = document.getElementById('pwdUpdateBtn');
+    if (pwdUpdateBtn) {
+        pwdUpdateBtn.addEventListener('click', () => {
+            const currentPwd = document.getElementById('currentPassword').value;
+            const newPwd = document.getElementById('newPassword').value;
+            
+            if (!currentPwd || !newPwd) {
+                alert('Please fill in both password fields.');
+                return;
+            }
+
+            // In a real app, this would be an API call
+            pwdUpdateBtn.disabled = true;
+            pwdUpdateBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Updating...';
+            
+            setTimeout(() => {
+                alert('Password updated successfully!');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                pwdUpdateBtn.disabled = false;
+                pwdUpdateBtn.textContent = 'Update Password';
+            }, 1500);
+        });
+    }
+
+    // =====================
+    // FEEDBACK INTERACTIONS
+    // =====================
+    const feedbackForm = document.getElementById('standaloneFeedbackForm');
+    const moodItems = document.querySelectorAll('.mood-item');
+    const tagChips = document.querySelectorAll('.tag-chip');
+    const feedbackFormCard = document.getElementById('feedbackFormCard');
+    const feedbackSuccessCard = document.getElementById('standaloneFeedbackSuccess');
+
+    // Mood Selection Logic
+    moodItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Remove active from all
+            moodItems.forEach(m => m.classList.remove('active'));
+            // Add to current
+            item.classList.add('active');
+            
+            // Sync with star rating
+            const ratingValue = item.getAttribute('data-rating');
+            const starInput = document.getElementById(`sr${ratingValue}`);
+            if (starInput) starInput.checked = true;
+        });
+    });
+
+    // Tag Chips Selection
+    tagChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('active');
+        });
+    });
+
+    // Feedback Submission
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const submitBtn = feedbackForm.querySelector('.feedback-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Submitting...';
+
+            // Simulate API call
+            setTimeout(() => {
+                feedbackFormCard.classList.add('hidden');
+                feedbackSuccessCard.classList.remove('hidden');
+                
+                // Optional: Scroll to top of section
+                document.getElementById('feedback-section').scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        });
+    }
 });
 

@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="chatbot.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <!-- Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -75,6 +76,10 @@
 
 
 <div class="right-header">
+
+<button class="header-btn theme-toggle-btn" id="themeToggleBtnHome" title="Toggle Dark Mode">
+    <i class='bx bx-moon'></i>
+</button>
 
 <button class="header-btn" onclick="toggleHelpline()">Helpline</button>
 
@@ -162,57 +167,42 @@
 
 <!-- HOW IT WORKS -->
 
-<div class="how">
-
-<!-- HOW IT WORKS -->
-
-<div class="how">
-
-<h2>How It Works</h2>
-
-<div class="steps">
-
-<div class="step">
-<div class="circle">1</div>
-<h4>Submit Complaint</h4>
-<p>Citizen registers complaint with details.</p>
-</div>
-
-<div class="step-arrow">➤</div>
-
-<div class="step">
-<div class="circle">2</div>
-<h4>Admin Review</h4>
-<p>Admin verifies the complaint.</p>
-</div>
-
-<div class="step-arrow">➤</div>
-
-<div class="step">
-<div class="circle">3</div>
-<h4>Assign Officer</h4>
-<p>Complaint assigned to department officer.</p>
-</div>
-
-<div class="step-arrow">➤</div>
-
-<div class="step">
-<div class="circle">4</div>
-<h4>Investigation</h4>
-<p>Officer investigates the issue.</p>
-</div>
-
-<div class="step-arrow">➤</div>
-
-<div class="step">
-<div class="circle">5</div>
-<h4>Resolution</h4>
-<p>Citizen gets notification after resolution.</p>
-</div>
-
-</div>
-
-</div>
+            <!-- HOW IT WORKS -->
+            <section id="how-it-works" class="how-section">
+                <div class="container text-center">
+                    <h2 class="section-title">How It Works</h2>
+                    <div class="workflow-wrapper">
+                        <div class="workflow-line"></div>
+                        <div class="workflow-steps">
+                            <div class="workflow-step">
+                                <div class="workflow-icon"><i class='bx bx-pencil'></i></div>
+                                <h4>Submit Case</h4>
+                                <p>Citizen registers complaint with full case details.</p>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon"><i class='bx bx-search-alt'></i></div>
+                                <h4>Verification</h4>
+                                <p>Initial review and verification by the Admin team.</p>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon"><i class='bx bx-user-plus'></i></div>
+                                <h4>Assignment</h4>
+                                <p>Forwarded to the relevant department officer.</p>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon"><i class='bx bx-analyse'></i></div>
+                                <h4>Investigation</h4>
+                                <p>Officer investigates and updates real-time progress.</p>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon"><i class='bx bx-badge-check'></i></div>
+                                <h4>Resolution</h4>
+                                <p>Citizen is notified upon successful case resolution.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
 
 <!-- ANNOUNCEMENTS & NEWS -->
@@ -231,87 +221,99 @@
 
 <!-- OVERVIEW SECTION -->
 <section id="overviewSection" class="overview-section">
-    <h1>Overview</h1>
-    <p class="overview-description">Our portal enables citizens to raise complaints regarding public services and infrastructure. It helps ensure that reported issues are tracked and resolved properly.</p>
-    
-    <h2>Complaint Statistics</h2>
-    <div class="overview-container">
-        <div class="overview-box total-complaints">
-            <div class="box-inner">
-                <span class="box-icon">📊</span>
-                <h3 id="dynamicTotal">0</h3>
-                <p>Total Complaints</p>
+    <div class="container">
+        <h1 class="section-main-title">Portal Overview</h1>
+        <p class="overview-description">
+            Transforming voices into positive change. We bridge the gap between people and progress, 
+            ensuring every concern is heard, tracked, and resolved with excellence.
+        </p>
+        
+        <h2 class="section-sub-title">Complaint Statistics</h2>
+        <div class="overview-container">
+            <div class="overview-box total-complaints">
+                <div class="box-glow"></div>
+                <div class="box-inner">
+                    <span class="box-icon"><i class='bx bx-bar-chart-alt-2'></i></span>
+                    <h3 id="dynamicTotal">0</h3>
+                    <p>Total Complaints</p>
+                </div>
             </div>
-        </div>
-        <div class="overview-box resolved-complaints">
-            <div class="box-inner">
-                <span class="box-icon">✅</span>
-                <h3 id="dynamicResolved">0</h3>
-                <p>Resolved Complaints</p>
+            <div class="overview-box resolved-complaints">
+                <div class="box-glow"></div>
+                <div class="box-inner">
+                    <span class="box-icon"><i class='bx bx-check-double'></i></span>
+                    <h3 id="dynamicResolved">0</h3>
+                    <p>Resolved Complaints</p>
+                </div>
             </div>
-        </div>
-        <div class="overview-box pending-complaints">
-            <div class="box-inner">
-                <span class="box-icon">⏳</span>
-                <h3 id="dynamicPending">0</h3>
-                <p>Pending Complaints</p>
+            <div class="overview-box pending-complaints">
+                <div class="box-glow"></div>
+                <div class="box-inner">
+                    <span class="box-icon"><i class='bx bx-timer'></i></span>
+                    <h3 id="dynamicPending">0</h3>
+                    <p>Pending Complaints</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- FEEDBACK FORM -->
 
-<section id="feedbackSection" class="feedback-section">
 
-<h2>Citizen Feedback</h2>
-
-<form class="feedback-form">
-
-<label>Name</label>
-<input type="text" placeholder="Enter your name">
-
-<label>Email</label>
-<input type="email" placeholder="Enter your email">
-
-<label>Your Feedback</label>
-<textarea placeholder="Write your feedback"></textarea>
-
-<button type="submit">Submit Feedback</button>
-
-</form>
-
-</section>
-
-<!-- POLICY LINKS SECTION -->
-
-<div class="policy-links">
-
-<a href="#">Copyright Policy</a> |
-<a href="#">Privacy Policy</a> |
-<a href="#">Terms and Conditions</a> |
-<a href="#">Disclaimer</a> |
-<a href="#">Hyperlink Policy</a> |
-<a href="#">Site Map</a>
-
-</div>
-
-<div class="policy-info">
-
-<p>Last update on October 2025</p>
-<p>The original text is in English. Translation into other languages is powered by the Bhashini service.</p>
-
-</div>
-
-<!-- FOOTER -->
-
-<div class="footer">
-
-<p>Contact: 1800-11-4000 </p>
-<p>Email: citizencomplaint@mha.gov.in</p>
-<p>Location:📍 Guntur, Andhra Pradesh, India</p>
-
-</div>
+<!-- MAIN FOOTER -->
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-column branding">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="Logo">
+                <span>Citizen Complaint Portal</span>
+            </div>
+            <p>Empowering citizens through transparent governance and efficient grievance redressal. Your voice, our responsibility.</p>
+        </div>
+        
+        <div class="footer-column">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="#">Copyright Policy</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms and Conditions</a></li>
+                <li><a href="#">Site Map</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-column">
+            <h4>Contact Support</h4>
+            <div class="contact-item">
+                <i class='bx bx-phone'></i>
+                <span>1800-11-4000 (Helpline)</span>
+            </div>
+            <div class="contact-item">
+                <i class='bx bx-envelope'></i>
+                <span>citizencomplaint@mha.gov.in</span>
+            </div>
+        </div>
+        
+        <div class="footer-column">
+            <h4>Location</h4>
+            <div class="contact-item">
+                <i class='bx bx-map'></i>
+                <span>Guntur, Andhra Pradesh, India</span>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class='bx bxl-facebook'></i></a>
+                <a href="#"><i class='bx bxl-twitter'></i></a>
+                <a href="#"><i class='bx bxl-linkedin'></i></a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <div class="container">
+            <p>&copy; 2025 Citizen Complaint Portal. All Rights Reserved.</p>
+            <p class="last-update">Last updated: October 2025 | Powered by Bhashini Service</p>
+        </div>
+    </div>
+</footer>
 
 </div>
 

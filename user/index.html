@@ -109,6 +109,9 @@
                     <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
                 </div>
                 <div class="header-right">
+                    <div class="theme-toggle-container header-icon-btn" id="themeToggleBtnUser" title="Toggle Dark Mode" style="cursor: pointer; font-size: 1.5rem; color: var(--secondary); margin-right: 1.5rem;">
+                        <i class='bx bx-moon'></i>
+                    </div>
                     <div class="notification-bell-container" id="notificationBellTrigger">
                         <i class='bx bx-bell'></i>
                         <span class="notification-badge hidden" id="notificationCount">0</span>
@@ -285,6 +288,15 @@
                             <!-- Progress Stepper -->
                             <div class="stepper-container">
                                 <div class="stepper">
+                                    <div class="step" id="step-submitted">
+                                        <div class="step-icon"><i class='bx bx-send'></i></div>
+                                        <div class="step-content">
+                                            <h4>Submitted</h4>
+                                            <p>Complaint filed</p>
+                                        </div>
+                                    </div>
+                                    <div class="connector" id="conn-1"></div>
+
                                     <div class="step" id="step-assigned">
                                         <div class="step-icon"><i class='bx bx-user-pin'></i></div>
                                         <div class="step-content">
@@ -292,7 +304,7 @@
                                             <p>Officer assigned</p>
                                         </div>
                                     </div>
-                                    <div class="connector" id="conn-1"></div>
+                                    <div class="connector" id="conn-2"></div>
                                     
                                     <div class="step" id="step-inprogress">
                                         <div class="step-icon"><i class='bx bx-cog'></i></div>
@@ -301,7 +313,7 @@
                                             <p>Action taken</p>
                                         </div>
                                     </div>
-                                    <div class="connector" id="conn-2"></div>
+                                    <div class="connector" id="conn-3"></div>
                                     
                                     <div class="step" id="step-pending">
                                         <div class="step-icon"><i class='bx bx-time'></i></div>
@@ -310,7 +322,7 @@
                                             <p>Awaiting verification</p>
                                         </div>
                                     </div>
-                                    <div class="connector" id="conn-3"></div>
+                                    <div class="connector" id="conn-4"></div>
                                     
                                     <div class="step" id="step-resolved">
                                         <div class="step-icon"><i class='bx bx-check-double'></i></div>
@@ -538,32 +550,88 @@
             <!-- FEEDBACK PAGE -->
             <section id="feedback-section" class="app-page hidden">
                 <div class="page-heading">
-                    <h2>Feedback / Rate Service</h2>
-                    <p>Provide feedback for resolved complaints.</p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="heading-icon-bg" style="background: var(--warning);"><i class='bx bx-star'></i></div>
+                        <div>
+                            <h2>Rate Our Service</h2>
+                            <p>Your feedback helps us improve the Citizen Portal experience.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card form-card">
-                    <form id="standaloneFeedbackForm">
-                        <div class="input-group mb-3">
-                            <label for="feedbackComplaintSelect">Select Resolved Complaint</label>
-                            <select id="feedbackComplaintSelect" class="form-input" required>
-                                <option value="" disabled selected>Loading resolved complaints...</option>
-                            </select>
+
+                <div class="feedback-container">
+                    <!-- MAIN FEEDBACK CARD -->
+                    <div id="feedbackFormCard" class="card feedback-main-card">
+                        <form id="standaloneFeedbackForm">
+                            <!-- STEP 1: SELECT COMPLAINT -->
+                            <div class="feedback-step mb-5">
+                                <label class="section-label">1. Select Resolved Complaint</label>
+                                <select id="feedbackComplaintSelect" class="form-input custom-select-lg" required>
+                                    <option value="" disabled selected>Loading resolved complaints...</option>
+                                </select>
+                            </div>
+
+                            <!-- STEP 2: MOOD SELECTOR -->
+                            <div class="feedback-step mb-5">
+                                <label class="section-label">2. How was your experience?</label>
+                                <div class="mood-selector">
+                                    <div class="mood-item" data-mood="sad" data-rating="2">
+                                        <div class="mood-emoji">😞</div>
+                                        <span>Poor</span>
+                                    </div>
+                                    <div class="mood-item" data-mood="neutral" data-rating="3">
+                                        <div class="mood-emoji">😐</div>
+                                        <span>Okay</span>
+                                    </div>
+                                    <div class="mood-item" data-mood="happy" data-rating="5">
+                                        <div class="mood-emoji">😊</div>
+                                        <span>Great</span>
+                                    </div>
+                                </div>
+                                <div class="rating-stars animate-stars mt-4">
+                                    <input type="radio" name="standaloneRating" value="5" id="sr5"><label for="sr5"><i class='bx bxs-star'></i></label>
+                                    <input type="radio" name="standaloneRating" value="4" id="sr4"><label for="sr4"><i class='bx bxs-star'></i></label>
+                                    <input type="radio" name="standaloneRating" value="3" id="sr3"><label for="sr3"><i class='bx bxs-star'></i></label>
+                                    <input type="radio" name="standaloneRating" value="2" id="sr2"><label for="sr2"><i class='bx bxs-star'></i></label>
+                                    <input type="radio" name="standaloneRating" value="1" id="sr1"><label for="sr1"><i class='bx bxs-star'></i></label>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: QUICK TAGS -->
+                            <div class="feedback-step mb-5">
+                                <label class="section-label">3. What did you like most?</label>
+                                <div class="quick-tags-container">
+                                    <span class="tag-chip">Quick Resolution</span>
+                                    <span class="tag-chip">Polite Officer</span>
+                                    <span class="tag-chip">Clear Process</span>
+                                    <span class="tag-chip">Easy to use</span>
+                                    <span class="tag-chip">Regular Updates</span>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: COMMENTS -->
+                            <div class="feedback-step mb-4">
+                                <label class="section-label">4. Additional Comments</label>
+                                <textarea id="standaloneFeedbackText" class="form-input feedback-textarea" rows="4" placeholder="Tell us more about your experience..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-primary feedback-submit-btn">
+                                <span>Submit Feedback</span>
+                                <i class='bx bx-right-arrow-alt'></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- SUCCESS STATE CARD -->
+                    <div id="standaloneFeedbackSuccess" class="card feedback-success-card hidden">
+                        <div class="success-animation">
+                            <i class='bx bx-check-double'></i>
                         </div>
-                        <div class="rating-stars mb-3 text-center">
-                            <input type="radio" name="standaloneRating" value="5" id="sr5"><label for="sr5"><i class='bx bxs-star'></i></label>
-                            <input type="radio" name="standaloneRating" value="4" id="sr4"><label for="sr4"><i class='bx bxs-star'></i></label>
-                            <input type="radio" name="standaloneRating" value="3" id="sr3"><label for="sr3"><i class='bx bxs-star'></i></label>
-                            <input type="radio" name="standaloneRating" value="2" id="sr2"><label for="sr2"><i class='bx bxs-star'></i></label>
-                            <input type="radio" name="standaloneRating" value="1" id="sr1"><label for="sr1"><i class='bx bxs-star'></i></label>
-                        </div>
-                        <div class="input-group">
-                            <label for="standaloneFeedbackText">Comments</label>
-                            <textarea id="standaloneFeedbackText" rows="4" placeholder="Share your experience..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary full-width mt-3">Submit Feedback</button>
-                    </form>
-                    <div id="standaloneFeedbackSuccess" class="hidden text-success text-center mt-3 fw-bold">
-                        <i class='bx bx-check-circle'></i> Thanks for your feedback!
+                        <h3>Thank You!</h3>
+                        <p>Your feedback has been successfully submitted. We appreciate your time and contribution to better public service.</p>
+                        <button type="button" class="btn-secondary" onclick="document.querySelector('[data-target=\'dashboard-section\']').click()">
+                            Back to Dashboard
+                        </button>
                     </div>
                 </div>
             </section>
@@ -571,38 +639,61 @@
             <!-- MY PROFILE PAGE -->
             <section id="profile-section" class="app-page hidden">
                 <div class="page-heading">
-                    <h2>My Profile</h2>
-                    <p>Manage your account settings.</p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="heading-icon-bg" style="background: var(--primary);"><i class='bx bx-user'></i></div>
+                        <div>
+                            <h2>My Profile</h2>
+                            <p>Manage your account settings and personal information.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card form-card">
-                    <form id="standaloneProfileForm">
-                        <div class="text-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" id="standaloneProfileImg" class="profile-avatar mb-3" style="width:100px; height:100px; object-fit: cover; border-radius: 50%;">
-                            <div class="input-group">
-                                <label class="btn-secondary" style="justify-content: center; cursor: pointer;">
-                                    <i class='bx bx-camera'></i> Change Photo
+
+                <div class="card profile-main-card">
+                    <!-- PROFILE HEADER / BANNER -->
+                    <div class="profile-header-banner">
+                        <div class="profile-banner-overlay"></div>
+                    </div>
+                    
+                    <div class="profile-content-wrapper">
+                        <!-- EDITABLE AVATAR -->
+                        <div class="profile-avatar-editable">
+                            <div class="avatar-container">
+                                <img src="https://ui-avatars.com/api/?name=User&background=1A56DB&color=fff" alt="Profile" id="standaloneProfileImg">
+                                <label for="profPhotoMain" class="edit-avatar-badge">
+                                    <i class='bx bx-camera'></i>
                                     <input type="file" id="profPhotoMain" accept="image/*" class="hidden">
                                 </label>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>Full Name</label>
-                                <input type="text" id="profNameMain" class="form-input" required>
+
+                        <form id="standaloneProfileForm" class="profile-form">
+                            <h4 class="form-section-title"><i class='bx bx-info-circle'></i> Personal Information</h4>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label><i class='bx bx-user'></i> Full Name</label>
+                                    <input type="text" id="profNameMain" class="form-input" placeholder="Enter your full name" required>
+                                </div>
+                                <div class="input-group">
+                                    <label><i class='bx bx-envelope'></i> Email Address</label>
+                                    <input type="email" id="profEmailMain" class="form-input" required readonly title="Email cannot be changed">
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label>Email Address</label>
-                                <input type="email" id="profEmailMain" class="form-input" required readonly>
+
+                            <h4 class="form-section-title mt-4"><i class='bx bx-phone'></i> Contact Details</h4>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label><i class='bx bx-mobile-alt'></i> Phone Number</label>
+                                    <input type="tel" id="profPhoneMain" class="form-input" placeholder="Enter phone number">
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>Phone Number</label>
-                                <input type="tel" id="profPhoneMain" class="form-input">
+                            
+                            <div class="form-actions mt-4">
+                                <button type="submit" class="btn-primary animate-btn">
+                                    <i class='bx bx-save'></i> Update Profile
+                                </button>
                             </div>
-                        </div>
-                        <button type="submit" class="btn-primary full-width mt-3">Update Profile</button>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </section>
 
@@ -644,17 +735,17 @@
                     <div class="col card p-4 text-center">
                         <i class='bx bx-phone text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
                         <h3>Helpline</h3>
-                        <p class="fs-4 fw-bold">+91 9876543210</p>
+                        <p class="fs-4 fw-bold">1800-11-4000</p>
                     </div>
                     <div class="col card p-4 text-center">
                         <i class='bx bx-envelope text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
                         <h3>Email Support</h3>
-                        <p class="fs-5 fw-bold">support@citizenportal.gov</p>
+                        <p class="fs-5 fw-bold">citizencomplaint@mha.gov.in</p>
                     </div>
                     <div class="col card p-4 text-center">
                         <i class='bx bx-map text-primary' style="font-size:3rem; margin-bottom:1rem;"></i>
                         <h3>Head Office</h3>
-                        <p>123 Secretariat Road, Capital City</p>
+                        <p>Guntur, Andhra Pradesh, India</p>
                     </div>
                 </div>
             </section>
@@ -662,42 +753,92 @@
             <!-- SETTINGS PAGE -->
             <section id="settings-section" class="app-page hidden">
                 <div class="page-heading">
-                    <h2>Settings</h2>
-                    <p>Configure app preferences.</p>
-                </div>
-                <div class="card form-card">
-                    <form id="standaloneSettingsForm">
-                        <div class="input-group mb-4 border-bottom pb-4">
-                            <h4 class="mb-3">Change Password</h4>
-                            <div class="form-row mb-4">
-                                <input type="password" id="currentPassword" placeholder="Current Password" class="form-input">
-                            </div>
-                            <div class="form-row mb-4">
-                                <input type="password" id="newPassword" placeholder="New Password" class="form-input">
-                            </div>
-                            <button type="button" id="pwdUpdateBtn" class="btn-primary mt-2">Update Password</button>
-                            <p class="mt-2"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="heading-icon-bg"><i class='bx bx-cog'></i></div>
+                        <div>
+                            <h2>Settings</h2>
+                            <p>Manage your account security and application preferences.</p>
                         </div>
-                        <div class="input-group mb-4 border-bottom pb-4">
-                            <h4 class="mb-3">App Preferences</h4>
-                            <div class="form-row align-items-center mb-4">
-                                <label style="flex:1;">Language</label>
-                                <select class="form-input" style="width:auto; flex:2;">
-                                    <option value="en">English</option>
-                                    <option value="te">Telugu</option>
-                                </select>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- ACCOUNT SECURITY GROUP -->
+                    <div class="settings-group-card">
+                        <div class="group-header">
+                            <i class='bx bx-lock-alt'></i>
+                            <h4>Account Security</h4>
+                        </div>
+                        <div class="group-body">
+                            <form id="standaloneSettingsForm">
+                                <div class="setting-item-row">
+                                    <div class="setting-info">
+                                        <label>Update Password</label>
+                                        <p class="text-muted small">Keep your account secure by rotating your password.</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <input type="password" id="currentPassword" placeholder="Current Password" class="form-input mb-2">
+                                        <input type="password" id="newPassword" placeholder="New Password" class="form-input">
+                                        <button type="button" id="pwdUpdateBtn" class="btn-primary mt-3 w-100">Update Password</button>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-end">
+                                    <span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- PREFERENCES GROUP -->
+                    <div class="settings-group-card">
+                        <div class="group-header">
+                            <i class='bx bx-customize'></i>
+                            <h4>App Preferences</h4>
+                        </div>
+                        <div class="group-body">
+                            <!-- LANGUAGE SETTING -->
+                            <div class="setting-item-row border-bottom pb-4 mb-4">
+                                <div class="setting-info">
+                                    <label><i class='bx bx-globe me-2'></i> Language</label>
+                                    <p class="text-muted small">Choose your preferred display language.</p>
+                                </div>
+                                <div class="setting-controls">
+                                    <select class="form-input" style="width:auto; min-width: 150px;">
+                                        <option value="en">English (Official)</option>
+                                        <option value="te">Telugu (తెలుగు)</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-row align-items-center">
-                                <label style="flex:1;">Dark Mode</label>
-                                <div class="switch-container" style="flex:2; display:flex; justify-content: flex-end;">
+
+                            <!-- APPEARANCE SETTING -->
+                            <div class="setting-item-row">
+                                <div class="setting-info">
+                                    <label><i class='bx bx-moon me-2'></i> Dark Mode</label>
+                                    <p class="text-muted small">Switch between light and dark themes.</p>
+                                </div>
+                                <div class="setting-controls">
                                     <label class="switch">
                                         <input type="checkbox" id="themeToggleCheckbox">
                                         <span class="slider round"></span>
                                     </label>
                                 </div>
                             </div>
+
+                            <!-- NOTIFICATIONS (STUB) -->
+                            <div class="setting-item-row border-top pt-4 mt-4">
+                                <div class="setting-info">
+                                    <label><i class='bx bx-bell me-2'></i> Email Alerts</label>
+                                    <p class="text-muted small">Receive updates about your complaints via email.</p>
+                                </div>
+                                <div class="setting-controls">
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </section>
         </main>

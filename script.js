@@ -691,9 +691,8 @@ async function openOverview() {
         const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
         if (resp.ok) {
             const data = await resp.json();
-            // Animate counting up (optional polish)
-            animateValue(totalEl, 0, data.total, 1000);
-            animateValue(resolvedEl, 0, data.resolved, 1000);
+            totalEl.textContent = data.total;
+            resolvedEl.textContent = data.resolved;
         } else {
             console.error('Failed to fetch public stats');
             totalEl.textContent = "Error";
@@ -710,22 +709,7 @@ function closeOverview() {
     document.getElementById("overviewModal").style.display = "none";
 }
 
-// Simple counter animation helper
-function animateValue(obj, start, end, duration) {
-    if (!obj) return;
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        obj.textContent = Math.floor(progress * (end - start) + start);
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        } else {
-            obj.textContent = end; // ensure exact final value
-        }
-    };
-    window.requestAnimationFrame(step);
-}
+
 
 // =====================
 // HOMEPAGE STATS FETCH
@@ -741,12 +725,11 @@ async function fetchHomepageStats() {
         const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
         if (resp.ok) {
             const data = await resp.json();
-            animateValue(totalEl, 0, data.total, 1500);
-            animateValue(resolvedEl, 0, data.resolved, 1500);
+            totalEl.textContent = data.total;
+            resolvedEl.textContent = data.resolved;
             // Calculate or fetch pending if not in API. 
-            // Most public stats APIs return total and resolved; pending = total - resolved.
             const pending = data.pending !== undefined ? data.pending : (data.total - data.resolved);
-            animateValue(pendingEl, 0, pending, 1500);
+            pendingEl.textContent = pending;
         }
     } catch (err) {
         console.error('Error fetching homepage stats:', err);
@@ -769,10 +752,20 @@ async function loadAnnouncements() {
             }
 
             container.innerHTML = announcements.map(a => `
-                <div class="announcement-card">
-                    <h4>${a.title}</h4>
-                    <p>${a.content}</p>
-                    <span>Posted: ${new Date(a.createdAt).toLocaleDateString()}</span>
+                <div class="announcement-card shadow-sm">
+                    <div class="announcement-badge">
+                        <i class='bx bx-calendar-event'></i>
+                        <span>${new Date(a.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <div class="announcement-content-wrap">
+                        <div class="announcement-icon-fixed">
+                            <i class='bx bx-news'></i>
+                        </div>
+                        <div class="announcement-text-area">
+                            <h4>${a.title}</h4>
+                            <p>${a.content}</p>
+                        </div>
+                    </div>
                 </div>
             `).join('');
         }
@@ -794,3 +787,38 @@ function scrollToOverview(){
     }
     closeSidebar();
 }
+
+// =====================
+// DARK MODE
+// =====================
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtnHome = document.getElementById('themeToggleBtnHome');
+    const themeBtnUser = document.getElementById('themeToggleBtnUser');
+    const themeBtn = themeBtnHome || themeBtnUser;
+    
+    // Check local storage for theme
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeBtn) {
+            const icon = themeBtn.querySelector('i');
+            if (icon) icon.className = 'bx bx-sun';
+        }
+    }
+    
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            const icon = themeBtn.querySelector('i');
+            if (icon) {
+                if (isDark) {
+                    icon.className = 'bx bx-sun';
+                } else {
+                    icon.className = 'bx bx-moon';
+                }
+            }
+        });
+    }
+});
