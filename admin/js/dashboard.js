@@ -1082,7 +1082,8 @@ function openViewDetailsModal(id) {
     }
 
     const content = document.getElementById("admin-view-details-content");
-    const imageUrl = complaint.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.image}` : null;
+    const imgVal = complaint.image;
+    const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
 
     content.innerHTML = `
         <div class="row g-4">
@@ -1126,7 +1127,11 @@ function openViewDetailsModal(id) {
                 <div class="col-md-6">
                     <h6 class="fw-bold text-muted small text-uppercase">Proof of Resolution</h6>
                     ${complaint.resolutionImage ? 
-                        `<img src="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.resolutionImage}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">` : 
+                        (() => {
+                            const resImg = complaint.resolutionImage;
+                            const resUrl = resImg.startsWith('http') ? resImg : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${resImg}`;
+                            return `<img src="${resUrl}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">`;
+                        })() : 
                         `<div class="p-3 bg-light text-muted rounded text-center">No image uploaded for resolution.</div>`
                     }
                 </div>

@@ -86,6 +86,8 @@ function switchTab(role){
         if(officerAdminFields) officerAdminFields.style.display = "block";
         const lbl = document.getElementById("loginEmailLabel2");
         if(lbl) lbl.textContent = "Officer ID / Email";
+        const inp = document.getElementById("loginEmail2");
+        if(inp) inp.placeholder = "Enter Staff ID or Email";
     }
     if(role==="admin") {
         if(tabs[2]) tabs[2].classList.add("active");
@@ -93,6 +95,8 @@ function switchTab(role){
         if(officerAdminFields) officerAdminFields.style.display = "block";
         const lbl = document.getElementById("loginEmailLabel2");
         if(lbl) lbl.textContent = "Admin ID / Email";
+        const inp = document.getElementById("loginEmail2");
+        if(inp) inp.placeholder = "Enter Admin ID or Email";
     }
 }
 
@@ -157,20 +161,30 @@ function setupLoginRedirect(){
     loginForm.addEventListener('submit', async function(e){
         e.preventDefault();
 
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value.trim();
+        // Determine active role from tabs
+        const tabs = document.querySelectorAll("#loginModal .tab");
+        let activeRole = 'citizen';
+        if (tabs[1] && tabs[1].classList.contains('active')) activeRole = 'officer';
+        if (tabs[2] && tabs[2].classList.contains('active')) activeRole = 'admin';
+
+        let email = "";
+        let password = "";
+
+        if (activeRole === 'citizen') {
+            email = document.getElementById("loginEmail").value.trim();
+            password = document.getElementById("loginPassword").value.trim();
+        } else {
+            email = document.getElementById("loginEmail2").value.trim();
+            password = document.getElementById("loginPassword2").value.trim();
+        }
 
         if(!email || !password){
-            alert("Enter email and password");
+            alert("Please enter " + (activeRole==='citizen' ? "email" : "ID/Email") + " and password");
             return;
         }
 
         try {
-            // Determine active role from tabs
-            const tabs = document.querySelectorAll("#loginModal .tab");
-            let role = 'user';
-            if (tabs[1] && tabs[1].classList.contains('active')) role = 'officer';
-            if (tabs[2] && tabs[2].classList.contains('active')) role = 'admin';
+            let role = activeRole === 'citizen' ? 'user' : activeRole;
 
             const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
                 method: 'POST',
@@ -302,6 +316,16 @@ async function handleOfficerAdminLogin() {
         alert('Login error. Check backend server.');
     }
 }
+
+// Global handle for officer/admin login button
+window.handleOfficerAdminLogin = function() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        const event = new Event('submit', { cancelable: true });
+        loginForm.dispatchEvent(event);
+    }
+}
+
 
 // Alias for Google Identity Services callback
 function handleGoogleLogin(response) {

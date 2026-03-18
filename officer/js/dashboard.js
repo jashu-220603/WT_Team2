@@ -845,6 +845,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     <p class="p-3 bg-light rounded"><i class="bi bi-geo-alt me-2"></i>${complaint.location || 'Not provided'}</p>
                 </div>
             </div>
+
+            ${complaint.status === 'Resolved' || complaint.status === 'Closed' ? `
+            <div class="mt-4 border-top pt-4">
+                <h6 class="fw-bold text-muted small text-uppercase mb-3">Resolution Proof</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        ${complaint.resolutionImage ? 
+                            (() => {
+                                const resImg = complaint.resolutionImage;
+                                const resUrl = resImg.startsWith('http') ? resImg : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${resImg}`;
+                                return `<img src="${resUrl}" class="img-fluid rounded border shadow-sm" style="max-height: 250px; object-fit: contain;">`;
+                            })() : 
+                            `<div class="p-3 bg-light text-muted rounded text-center small">No image uploaded for resolution.</div>`
+                        }
+                    </div>
+                    <div class="col-md-6">
+                         <p class="small text-muted mb-1"><strong>Remarks:</strong></p>
+                         <p class="p-2 bg-light rounded small">${complaint.remarks || 'No remarks provided.'}</p>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
 
         const modal = new bootstrap.Modal(modalEl);
