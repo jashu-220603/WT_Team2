@@ -186,10 +186,22 @@ function updateProfileInfo() {
     // Profile Image
     const headerImg = document.getElementById("header-profile-img");
     const adminProfImg = document.getElementById("admin-prof-img");
-    
+    const profileImgs = document.querySelectorAll("img[alt='Profile'], #admin-prof-img");
     let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=0d6efd&color=fff`;
     
-    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    // Use role-specific storage to avoid collision with other portals
+    let storedPhoto = sessionStorage.getItem("adminPhoto");
+    
+    // If adminPhoto doesn't exist, try to sync from common profilePhoto if it was just set
+    if (!storedPhoto) {
+        const commonPhoto = sessionStorage.getItem("profilePhoto");
+        const storedRole = sessionStorage.getItem("role");
+        if (commonPhoto && storedRole === "admin") {
+            storedPhoto = commonPhoto;
+            sessionStorage.setItem("adminPhoto", commonPhoto);
+        }
+    }
+
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
         if (storedPhoto.startsWith('http')) {
             avatarUrl = storedPhoto;
@@ -302,6 +314,7 @@ function setupNavigation() {
                     alert("Profile updated successfully");
                     sessionStorage.setItem("userName", data.user.name);
                     if (data.user.profilePhoto) {
+                        sessionStorage.setItem("adminPhoto", data.user.profilePhoto);
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                     }
                     updateProfileInfo();
@@ -1209,7 +1222,8 @@ function openViewDetailsModal(id) {
     }
 
     const content = document.getElementById("admin-view-details-content");
-    const imageUrl = complaint.image ? `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.image}` : null;
+    const imgVal = complaint.image;
+    const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
 
     content.innerHTML = `
         <div class="row g-4">
@@ -1253,7 +1267,11 @@ function openViewDetailsModal(id) {
                 <div class="col-md-6">
                     <h6 class="fw-bold text-muted small text-uppercase">Proof of Resolution</h6>
                     ${complaint.resolutionImage ? 
-                        `<img src="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${complaint.resolutionImage}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">` : 
+                        (() => {
+                            const resImg = complaint.resolutionImage;
+                            const resUrl = resImg.startsWith('http') ? resImg : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${resImg}`;
+                            return `<img src="${resUrl}" class="img-fluid rounded border w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">`;
+                        })() : 
                         `<div class="p-3 bg-light text-muted rounded text-center">No image uploaded for resolution.</div>`
                     }
                 </div>

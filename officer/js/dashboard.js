@@ -30,8 +30,19 @@ function updateProfileInfo() {
     const profileImgs = document.querySelectorAll("img[alt='Profile'], #off-prof-img");
     let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=198754&color=fff`;
     
-    // Check if user has a profile photo in session (added during login/update)
-    const storedPhoto = sessionStorage.getItem("profilePhoto");
+    // Check role-specific storage to avoid collision with other portals
+    let storedPhoto = sessionStorage.getItem("officerPhoto");
+    
+    // Sync from common profilePhoto if it was just set for this role
+    if (!storedPhoto) {
+        const commonPhoto = sessionStorage.getItem("profilePhoto");
+        const storedRole = sessionStorage.getItem("role");
+        if (commonPhoto && storedRole === "officer") {
+            storedPhoto = commonPhoto;
+            sessionStorage.setItem("officerPhoto", commonPhoto);
+        }
+    }
+
     if (storedPhoto && storedPhoto !== "undefined" && storedPhoto !== "") {
         if (storedPhoto.startsWith('http')) {
             avatarUrl = storedPhoto;
@@ -351,6 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     sessionStorage.setItem("userName", data.user.name);
                     sessionStorage.setItem("userEmail", data.user.email);
                     if (data.user.profilePhoto) {
+                        sessionStorage.setItem("officerPhoto", data.user.profilePhoto);
                         sessionStorage.setItem("profilePhoto", data.user.profilePhoto);
                     }
                     bootstrap.Modal.getInstance(document.getElementById("offProfileModal")).hide();
@@ -869,6 +881,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     <p class="p-3 bg-light rounded"><i class="bi bi-geo-alt me-2"></i>${complaint.location || 'Not provided'}</p>
                 </div>
             </div>
+
+            ${complaint.status === 'Resolved' || complaint.status === 'Closed' ? `
+            <div class="mt-4 border-top pt-4">
+                <h6 class="fw-bold text-muted small text-uppercase mb-3">Resolution Proof</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        ${complaint.resolutionImage ? 
+                            (() => {
+                                const resImg = complaint.resolutionImage;
+                                const resUrl = resImg.startsWith('http') ? resImg : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${resImg}`;
+                                return `<img src="${resUrl}" class="img-fluid rounded border shadow-sm" style="max-height: 250px; object-fit: contain;">`;
+                            })() : 
+                            `<div class="p-3 bg-light text-muted rounded text-center small">No image uploaded for resolution.</div>`
+                        }
+                    </div>
+                    <div class="col-md-6">
+                         <p class="small text-muted mb-1"><strong>Remarks:</strong></p>
+                         <p class="p-2 bg-light rounded small">${complaint.remarks || 'No remarks provided.'}</p>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
 
         const modal = new bootstrap.Modal(modalEl);
