@@ -684,24 +684,23 @@ async function openOverview() {
     const resolvedEl = document.getElementById("overviewResolved");
     
     // reset to loading state
-    totalEl.textContent = "...";
-    resolvedEl.textContent = "...";
+    if (totalEl) totalEl.textContent = "...";
+    if (resolvedEl) resolvedEl.textContent = "...";
     
     try {
         const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/complaints/public/stats`);
         if (resp.ok) {
             const data = await resp.json();
-            totalEl.textContent = data.total;
-            resolvedEl.textContent = data.resolved;
+            if (totalEl) totalEl.textContent = data.total;
+            if (resolvedEl) resolvedEl.textContent = data.resolved;
         } else {
-            console.error('Failed to fetch public stats');
-            totalEl.textContent = "Error";
-            resolvedEl.textContent = "Error";
+            if (totalEl) totalEl.textContent = "0";
+            if (resolvedEl) resolvedEl.textContent = "0";
         }
     } catch (err) {
         console.error('Error fetching public stats:', err);
-        totalEl.textContent = "Err";
-        resolvedEl.textContent = "Err";
+        if (totalEl) totalEl.textContent = "0";
+        if (resolvedEl) resolvedEl.textContent = "0";
     }
 }
 
@@ -727,9 +726,7 @@ async function fetchHomepageStats() {
             const data = await resp.json();
             totalEl.textContent = data.total;
             resolvedEl.textContent = data.resolved;
-            // Calculate or fetch pending if not in API. 
-            const pending = data.pending !== undefined ? data.pending : (data.total - data.resolved);
-            pendingEl.textContent = pending;
+            pendingEl.textContent = data.pending;
         }
     } catch (err) {
         console.error('Error fetching homepage stats:', err);

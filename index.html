@@ -137,9 +137,9 @@
 <p>Government Complaint Management System</p>
 
 
-<button class="file-btn" onclick="openLogin('citizen','file-complaint-section')">File Complaint</button>
+<button class="file-btn" onclick="openLogin('citizen','file-complaint-section')"><i class='bx bx-edit-alt'></i> File Complaint</button>
 
-<button class="track-btn" onclick="openLogin('citizen','track-complaint-section')">Track Complaint</button>
+<button class="track-btn" onclick="openLogin('citizen','track-complaint-section')"><i class='bx bx-search-alt-2'></i> Track Complaint</button>
 </div>
 
 
@@ -148,18 +148,21 @@
 <div class="role-section">
 
 <div class="role-card citizen" onclick="openLogin('citizen')">
-<h3>Citizen</h3>
-<p>Register and track your complaints</p>
+    <div class="role-icon"><i class='bx bx-user'></i></div>
+    <h3>Citizen</h3>
+    <p>Register and track your complaints</p>
 </div>
 
 <div class="role-card officer" onclick="openLogin('officer')">
-<h3>Officer</h3>
-<p>Manage and resolve assigned complaints</p>
+    <div class="role-icon"><i class='bx bx-shield-quarter'></i></div>
+    <h3>Officer</h3>
+    <p>Manage and resolve assigned complaints</p>
 </div>
 
 <div class="role-card admin" onclick="openLogin('admin')">
-<h3>Admin</h3>
-<p>Monitor system and assign complaints</p>
+    <div class="role-icon"><i class='bx bx-user-voice'></i></div>
+    <h3>Admin</h3>
+    <p>Monitor system and assign complaints</p>
 </div>
 
 </div>
