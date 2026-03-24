@@ -17,15 +17,18 @@ GET /api/complaints/public/stats
 */
 router.get('/public/stats', async (req, res) => {
   try {
-    const totalComplaints = await Complaint.countDocuments();
-    const resolvedComplaints = await Complaint.countDocuments({ status: { $in: ['Resolved', 'Closed'] } });
+    const total = await Complaint.countDocuments();
+    const resolved = await Complaint.countDocuments({ status: { $in: ['Resolved', 'Closed'] } });
+    const pending = total - resolved;
     
     res.json({
-      total: totalComplaints,
-      resolved: resolvedComplaints
+      total,
+      resolved,
+      pending,
+      lastUpdated: new Date()
     });
   } catch (err) {
-    console.error(err);
+    console.error('Public stats error:', err);
     res.status(500).json({ message: "Server error" });
   }
 });
