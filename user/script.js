@@ -219,29 +219,162 @@ document.addEventListener("DOMContentLoaded", async () => {
     const subcategorySelect = document.getElementById("subcategory");
 
     const subcategoriesData = {
-        "Cyber Crime": ["Online Fraud", "Hacking", "Identity Theft", "Phishing"],
-        "Water Issue": ["No Water Supply", "Contaminated Water", "Pipeline Leakage"],
-        "Electricity Issue": ["Power Cut", "Low Voltage", "Transformer Problem", "Streetlight not working"],
-        "Road Damage": ["Potholes", "Broken Payment", "Drainage Block"],
-        "Public Safety": ["Suspicious Activity", "Harassment", "Noise Pollution"],
-        "Garbage Issue": ["Waste Accumulation", "No Dustbin", "Irregular Collection"]
+        "Cyber Crime": ["Online Fraud", "Hacking", "Identity Theft", "Phishing", "Social Media Harassment"],
+        "Road Problems": ["Potholes", "Road Blockage", "Broken Street", "Poor Construction"],
+        "Water Issues": ["No Water Supply", "Low Pressure", "Contaminated Water", "Pipeline Leakage"],
+        "Electricity Issues": ["Frequent Power Cut", "Low Voltage", "Transformer Issue", "Sparking Wires"],
+        "Sanitation Problems": ["Open Manhole", "Sewage Overflow", "Stagnant Water", "Lack of Public Toilets"]
     };
 
-    if (categorySelect) {
-        categorySelect.addEventListener("change", function() {
-            const selected = this.value;
-            subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
-            if (subcategoriesData[selected]) {
-                subcategoriesData[selected].forEach(sub => {
-                    const opt = document.createElement("option");
-                    opt.value = sub;
-                    opt.textContent = sub;
-                    subcategorySelect.appendChild(opt);
-                });
-                subcategorySelect.disabled = false;
-            } else {
-                subcategorySelect.disabled = true;
+    // Category Grid Logic
+    const categoryGrid = document.getElementById("categoryGrid");
+    const complaintFormWrapper = document.getElementById("complaintFormWrapper");
+    const complaintFormOverlay = document.getElementById("complaintFormOverlay");
+    const backToCategories = document.getElementById("backToCategories");
+    const selectedCategoryTitle = document.getElementById("selectedCategoryTitle");
+
+    // Map categories to their icons
+    const categoryIcons = {
+        "Cyber Crime": "bx-fingerprint",
+        "Road Problems": "bx-traffic-cone",
+        "Water Issues": "bx-water",
+        "Electricity Issues": "bx-bolt",
+        "Sanitation Problems": "bx-leaf"
+    };
+
+    function openComplaintModal() {
+        if (complaintFormOverlay) {
+            complaintFormOverlay.classList.remove("hidden");
+            document.body.style.overflow = "hidden"; // Prevent background scroll
+        }
+    }
+
+    function closeComplaintModal() {
+        if (complaintFormOverlay) {
+            complaintFormOverlay.classList.add("hidden");
+            document.body.style.overflow = ""; // Restore scroll
+        }
+    }
+
+    function initCategoryGrid() {
+        if (!categoryGrid) return;
+        const cards = categoryGrid.querySelectorAll(".category-card");
+        cards.forEach(card => {
+            card.addEventListener("click", () => {
+                const category = card.getAttribute("data-category");
+                selectCategory(category);
+            });
+        });
+
+        if (backToCategories) {
+            backToCategories.addEventListener("click", () => {
+                closeComplaintModal();
+            });
+        }
+
+        // Close modal when clicking overlay backdrop (outside the dialog)
+        if (complaintFormOverlay) {
+            complaintFormOverlay.addEventListener("click", (e) => {
+                if (e.target === complaintFormOverlay) {
+                    closeComplaintModal();
+                }
+            });
+        }
+
+        // Close on Escape key
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && complaintFormOverlay && !complaintFormOverlay.classList.contains("hidden")) {
+                closeComplaintModal();
             }
+        });
+    }
+
+    async function selectCategory(category) {
+        if (!categorySelect || !complaintFormWrapper || !categoryGrid) return;
+
+        // Find the card to get its theme accent
+        const card = Array.from(categoryGrid.querySelectorAll(".category-card")).find(c => c.getAttribute("data-category") === category);
+        if (card) {
+            const accent = getComputedStyle(card).getPropertyValue('--accent');
+            complaintFormWrapper.style.setProperty('--accent', accent);
+        }
+
+        // Set category in hidden input
+        categorySelect.value = category;
+        selectedCategoryTitle.textContent = category;
+
+        // Update modal header icon
+        const modalIcon = complaintFormWrapper.querySelector(".modal-category-icon i");
+        if (modalIcon && categoryIcons[category]) {
+            modalIcon.className = "bx " + categoryIcons[category];
+        }
+        
+        // Populate subcategories immediately
+        populateSubcategories(category);
+
+        // Open the modal dialog
+        openComplaintModal();
+
+        // Auto-fill from profile when selecting category
+        await autoFillComplaintForm();
+    }
+
+    async function autoFillComplaintForm() {
+        const fullNameInput = document.getElementById("fullName");
+        const phoneInput = document.getElementById("phone");
+        
+        if (!fullNameInput || !phoneInput) return;
+
+        // Reset values to be empty so user has to type
+        fullNameInput.value = "";
+        phoneInput.value = "";
+
+        // Try from session storage first for placeholders
+        const sName = sessionStorage.getItem("userName");
+        const sPhone = sessionStorage.getItem("userPhone"); 
+
+        if (sName) fullNameInput.placeholder = sName;
+        if (sPhone) phoneInput.placeholder = sPhone;
+
+        // Fetch fresh if needed or always to be accurate
+        try {
+            const res = await fetch(`${API}/auth/me`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            if (res.ok) {
+                const user = await res.json();
+                if (user.name) fullNameInput.placeholder = user.name;
+                if (user.contactNumber) {
+                    phoneInput.placeholder = user.contactNumber;
+                    sessionStorage.setItem("userPhone", user.contactNumber);
+                }
+            }
+        } catch (err) {
+            console.error("Auto-placeholder error", err);
+        }
+    }
+
+    initCategoryGrid();
+
+    function populateSubcategories(category) {
+        if (!subcategorySelect) return;
+        subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+        if (subcategoriesData[category]) {
+            subcategoriesData[category].forEach(sub => {
+                const opt = document.createElement("option");
+                opt.value = sub;
+                opt.textContent = sub;
+                subcategorySelect.appendChild(opt);
+            });
+            subcategorySelect.disabled = false;
+        } else {
+            subcategorySelect.disabled = true;
+        }
+    }
+
+    if (categorySelect && categorySelect.tagName === 'SELECT') {
+        categorySelect.addEventListener("change", function() {
+            populateSubcategories(this.value);
         });
     }
 
@@ -374,11 +507,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Reset form
                 complaintForm.reset();
                 if (subcategorySelect) {
-                    subcategorySelect.innerHTML = '<option value="" disabled selected>Select category first</option>';
-                    subcategorySelect.disabled = true;
+                    subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
                 }
                 if (fileNameDisplay) fileNameDisplay.textContent = "";
-                if (locationInput) locationInput.setAttribute("readonly", true);
+                
+                // Return to categories
+                if (backToCategories) backToCategories.click();
 
             } catch (err) {
                 console.error("Submit complaint error:", err);
@@ -396,18 +530,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     const showConcernFormBtn = document.getElementById("showConcernFormBtn");
     const cancelConcernBtn = document.getElementById("cancelConcernBtn");
     const concernForm = document.getElementById("concernForm");
+    const concernModalOverlay = document.getElementById("concernModalOverlay");
+
+    function openConcernModal() {
+        if (concernModalOverlay) {
+            concernModalOverlay.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+        }
+    }
+
+    function closeConcernModal() {
+        if (concernModalOverlay) {
+            concernModalOverlay.classList.add("hidden");
+            document.body.style.overflow = "";
+            
+            // Reset form and success message on close
+            if (concernForm) concernForm.reset();
+            const successMsg = document.getElementById("concernSuccess");
+            if (successMsg) successMsg.classList.add("hidden");
+            const fileDisplay = document.getElementById("concernFileNameDisplay");
+            if (fileDisplay) fileDisplay.textContent = "";
+        }
+    }
 
     if (showConcernFormBtn) {
-        showConcernFormBtn.addEventListener("click", () => {
-            concernForm.classList.remove("hidden");
-            document.querySelector(".concern-content").classList.add("hidden");
-        });
+        showConcernFormBtn.addEventListener("click", openConcernModal);
     }
 
     if (cancelConcernBtn) {
-        cancelConcernBtn.addEventListener("click", () => {
-            concernForm.classList.add("hidden");
-            document.querySelector(".concern-content").classList.remove("hidden");
+        cancelConcernBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeConcernModal();
+        });
+    }
+
+    // Close concern modal on backdrop click
+    if (concernModalOverlay) {
+        concernModalOverlay.addEventListener("click", (e) => {
+            if (e.target === concernModalOverlay) {
+                closeConcernModal();
+            }
+        });
+    }
+
+    // File name display for concern evidence
+    const concernEvidence = document.getElementById("concernEvidence");
+    const concernFileNameDisplay = document.getElementById("concernFileNameDisplay");
+    if (concernEvidence && concernFileNameDisplay) {
+        concernEvidence.addEventListener("change", function() {
+            if (this.files && this.files.length > 0) {
+                concernFileNameDisplay.textContent = `Selected File: ${this.files[0].name}`;
+            } else {
+                concernFileNameDisplay.textContent = "";
+            }
         });
     }
 
@@ -418,6 +593,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             const compIDInput = document.getElementById("concernComplaintId");
             const description = document.getElementById("concernDescription").value;
             const evidence = document.getElementById("concernEvidence").files[0];
+            const successMsg = document.getElementById("concernSuccess");
+
+            // Reset success/error message
+            if (successMsg) successMsg.classList.add("hidden");
 
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -439,24 +618,47 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
 
                 if (res.ok) {
-                    document.getElementById("concernSuccess").classList.remove("hidden");
-                    this.reset();
+                    if (successMsg) {
+                        // Ensure it's styled as a success box if it passes
+                        successMsg.className = "text-success text-center mt-3 fw-bold p-3 rounded";
+                        successMsg.style.background = "#ecfdf5";
+                        successMsg.style.border = "1px solid #a7f3d0";
+                        successMsg.innerHTML = `<i class='bx bx-check-circle'></i> Concern submitted successfully!`;
+                        successMsg.classList.remove("hidden");
+                    }
+                    
                     setTimeout(() => {
-                        document.getElementById("concernSuccess").classList.add("hidden");
-                        concernForm.classList.add("hidden");
-                        document.querySelector(".concern-content").classList.remove("hidden");
-                    }, 4000);
+                        closeConcernModal();
+                    }, 3000);
+
                 } else {
                     const data = await res.json();
-                    alert(data.message || "Error raising concern");
+                    if (successMsg) {
+                        successMsg.className = "text-danger text-center mt-3 fw-bold p-3 rounded";
+                        successMsg.style.background = "#fef2f2";
+                        successMsg.style.border = "1px solid #fecaca";
+                        // The backend provides the exact "available in X working day(s)" message
+                        successMsg.innerHTML = `<i class='bx bx-error-circle'></i> ${data.message || "Error raising concern."}`;
+                        successMsg.classList.remove("hidden");
+                        
+                        setTimeout(() => {
+                            closeConcernModal();
+                        }, 5000);
+                    }
                 }
             } catch (err) {
                 console.error(err);
-                alert("Error submitting concern.");
+                if (successMsg) {
+                    successMsg.className = "text-danger text-center mt-3 fw-bold p-3 rounded";
+                    successMsg.style.background = "#fef2f2";
+                    successMsg.style.border = "1px solid #fecaca";
+                    successMsg.innerHTML = `<i class='bx bx-error-circle'></i> Failed to submit concern.`;
+                    successMsg.classList.remove("hidden");
+                }
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = "Submit Concern";
+                    submitBtn.innerHTML = `<span>Submit Concern</span>\n                                <i class='bx bx-send'></i>`;
                 }
             }
         });
@@ -537,6 +739,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (concernCompId) {
                     concernCompId.value = searchId;
                     concernCompId.setAttribute('data-real-id', complaint._id);
+                    if (complaint.createdAt) {
+                        concernCompId.setAttribute('data-created-at', complaint.createdAt);
+                    }
                     
                     // Add click event for the raise concern button to check eligibility
                     const rcBtn = document.getElementById("triggerRaiseConcernBtn");

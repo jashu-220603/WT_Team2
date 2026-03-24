@@ -188,75 +188,126 @@
             <section id="file-complaint-section" class="app-page hidden">
                 <div class="page-heading">
                     <h2>File a Complaint</h2>
-                    <p>Submit your grievance with necessary evidence and details.</p>
+                    <p>Select a category to quickly report your grievance.</p>
                 </div>
 
-                <div class="card form-card">
-                    <form id="complaintForm">
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label for="fullName">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" id="fullName" name="fullName" placeholder="Rahul Sharma" required>
+                <!-- THE HUB - CATEGORY SELECTION -->
+                <div class="hub-wrapper">
+                    <div id="categoryGrid" class="hub-grid">
+                        <!-- Top Row: 3 cards -->
+                        <div class="hub-row hub-row-top">
+                            <div class="category-card theme-cyber" data-category="Cyber Crime">
+                                <div class="card-icon"><i class='bx bx-fingerprint'></i></div>
+                                <div class="card-content">
+                                    <h4>Cyber Crime</h4>
+                                    <p class="card-desc">Safety & Security</p>
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label for="phone">Phone Number <span class="text-danger">*</span></label>
-                                <input type="tel" id="phone" name="phone" placeholder="+91 9876543210" required>
+                            <div class="category-card theme-roads" data-category="Road Problems">
+                                <div class="card-icon"><i class='bx bx-traffic-cone'></i></div>
+                                <div class="card-content">
+                                    <h4>Road Problems</h4>
+                                    <p class="card-desc">Infrastructure & Transit</p>
+                                </div>
                             </div>
-                        </div>
-
-
-
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label for="category">Complaint Category <span class="text-danger">*</span></label>
-                                <select id="category" name="category" required>
-                                    <option value="" disabled selected>Select Category</option>
-                                    <option value="Cyber Crime">Cyber Crime</option>
-                                    <option value="Water Issue">Water Issue</option>
-                                    <option value="Electricity Issue">Electricity Issue</option>
-                                    <option value="Road Damage">Road Damage</option>
-                                    <option value="Public Safety">Public Safety</option>
-                                    <option value="Garbage Issue">Garbage Issue</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label for="subcategory">Subcategory <span class="text-danger">*</span></label>
-                                <select id="subcategory" name="subcategory" required disabled>
-                                    <option value="" disabled selected>Select category first</option>
-                                </select>
+                            <div class="category-card theme-water" data-category="Water Issues">
+                                <div class="card-icon"><i class='bx bx-water'></i></div>
+                                <div class="card-content">
+                                    <h4>Water Issues</h4>
+                                    <p class="card-desc">No Supply, Leakage, Quality</p>
+                                </div>
                             </div>
                         </div>
+                        <!-- Bottom Row: 2 cards, centered -->
+                        <div class="hub-row hub-row-bottom">
+                            <div class="category-card theme-electricity" data-category="Electricity Issues">
+                                <div class="card-icon"><i class='bx bx-bolt'></i></div>
+                                <div class="card-content">
+                                    <h4>Electricity Issues</h4>
+                                    <p class="card-desc">Power Outage, Low Voltage</p>
+                                </div>
+                            </div>
+                            <div class="category-card theme-sanitation" data-category="Sanitation Problems">
+                                <div class="card-icon"><i class='bx bx-leaf'></i></div>
+                                <div class="card-content">
+                                    <h4>Sanitation</h4>
+                                    <p class="card-desc">Waste & Environment</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="input-group">
-                            <label for="location">Current Location <span class="text-danger">*</span></label>
-                            <div class="location-wrapper">
-                                <input type="text" id="location" name="location" placeholder="City, State (Fetching...)" readonly required>
-                                <button type="button" id="getLocationBtn" class="btn-secondary">
-                                    <i class='bx bx-target-lock'></i> Enable Location
+                <!-- COMPLAINT FORM MODAL DIALOG -->
+                <div id="complaintFormOverlay" class="complaint-modal-overlay hidden">
+                    <div id="complaintFormWrapper" class="complaint-modal-dialog">
+                        <div class="modal-dialog-header">
+                            <div class="modal-dialog-title">
+                                <div class="modal-category-icon"><i class='bx bx-edit'></i></div>
+                                <h3 id="selectedCategoryTitle">Cyber Crime</h3>
+                            </div>
+                            <button id="backToCategories" class="modal-close-btn" title="Close"><i class='bx bx-x'></i></button>
+                        </div>
+                        <form id="complaintForm" style="display: flex; flex-direction: column; overflow: hidden; flex: 1; min-height: 0;">
+                            <div class="modal-dialog-body">
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="fullName">Full Name <span class="text-danger">*</span></label>
+                                        <input type="text" id="fullName" name="fullName" placeholder="Rahul Sharma" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="phone">Phone Number <span class="text-danger">*</span></label>
+                                        <input type="tel" id="phone" name="phone" placeholder="+91 9876543210" required>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="category" name="category" value="">
+                                
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="subcategory">Subcategory <span class="text-danger">*</span></label>
+                                        <select id="subcategory" name="subcategory" required>
+                                            <option value="" disabled selected>Select Subcategory</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="location">Location of Issue <span class="text-danger">*</span></label>
+                                    <div class="location-wrapper">
+                                        <input type="text" id="location" name="location" placeholder="City, State (Detecting...)" required>
+                                        <button type="button" id="getLocationBtn" class="btn-secondary">
+                                            <i class='bx bx-target-lock'></i> Detect GPS
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="description">Detailed Description <span class="text-danger">*</span></label>
+                                    <textarea id="description" name="description" rows="3" placeholder="Describe the issue in detail..." required></textarea>
+                                </div>
+
+                                <div class="input-group file-upload">
+                                    <label for="evidence">Upload Evidence (Images/Docs) <span class="text-danger">*</span></label>
+                                    <div class="upload-area">
+                                        <i class='bx bx-cloud-upload'></i>
+                                        <span class="upload-text mb-2">Drag & drop or click to browse</span>
+                                        <div class="mt-2 text-center" style="position: relative; z-index: 10;">
+                                            <span class="btn-primary" style="padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; display: inline-block;">Browse Evidence</span>
+                                        </div>
+                                        <input type="file" id="evidence" name="image" accept="image/*,.pdf,.doc,.docx" class="hidden-input" required>
+                                    </div>
+                                    <div id="fileNameDisplay" class="file-name-display"></div>
+                                </div>
+                            </div>
+                            <div class="modal-dialog-footer">
+                                <button type="submit" class="btn-primary full-width animate-btn mt-0 mb-0">
+                                    <span>Submit Complaint</span>
+                                    <i class='bx bx-check-circle'></i>
                                 </button>
                             </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="description">Complaint Description <span class="text-danger">*</span></label>
-                            <textarea id="description" name="description" rows="4" placeholder="Briefly describe the issue..." required></textarea>
-                        </div>
-
-                        <div class="input-group file-upload">
-                            <label for="evidence">Upload Evidence (Images/Docs) <span class="text-danger">*</span></label>
-                            <div class="upload-area">
-                                <i class='bx bx-cloud-upload'></i>
-                                <span class="upload-text">Click to browse or drag and drop</span>
-                                <input type="file" id="evidence" name="image" accept="image/*,.pdf,.doc,.docx" class="hidden-input" required>
-                            </div>
-                            <div id="fileNameDisplay" class="file-name-display"></div>
-                        </div>
-
-                        <button type="submit" class="btn-primary full-width animate-btn mt-4">
-                            <span>Submit Complaint</span>
-                            <i class='bx bx-check-circle'></i>
-                        </button>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </section>
 
@@ -271,7 +322,6 @@
                     <div class="track-form-container">
                         <form id="trackForm" class="track-form">
                             <div class="input-wrapper">
-                                <i class='bx bx-search'></i>
                                 <input type="text" id="trackIdInput" placeholder="Enter Complaint ID (e.g. CMP849201)" required>
                             </div>
                             <button type="submit" class="btn-primary">Check Status</button>
@@ -398,33 +448,59 @@
                                     </div>
                                     <button id="showConcernFormBtn" class="btn-danger-outline">Raise a Concern</button>
                                 </div>
-                                
-                                <form id="concernForm" class="hidden mt-3 card p-3 shadow-none border">
-                                    <div class="input-group mb-3">
-                                        <label>Complaint ID</label>
-                                        <input type="text" id="concernComplaintId" class="form-input" readonly>
-                                    </div>
-                                    <div class="input-group mb-3">
-                                        <label>Reason for Concern <span class="text-danger">*</span></label>
-                                        <textarea id="concernDescription" class="form-input" rows="3" placeholder="Explain the issue clearly..." required></textarea>
-                                    </div>
-                                    <div class="input-group mb-3">
-                                        <label>Upload Evidence <span class="text-danger">*</span></label>
-                                        <input type="file" id="concernEvidence" class="form-input" accept="image/*" required>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" id="cancelConcernBtn" class="btn-secondary flex-1">Cancel</button>
-                                        <button type="submit" class="btn-primary flex-2">Submit Concern</button>
-                                    </div>
-                                </form>
-                                <div id="concernSuccess" class="hidden text-success text-center mt-3 fw-bold">
-                                    <i class='bx bx-check-circle'></i> Concern submitted successfully! Our team will review it.
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
+
+            <!-- RAISE CONCERN MODAL DIALOG -->
+            <div id="concernModalOverlay" class="complaint-modal-overlay hidden" style="z-index: 10000;">
+                <div class="complaint-modal-dialog">
+                    <div class="modal-dialog-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent);">
+                        <div class="modal-dialog-title">
+                            <div class="modal-category-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 6px 16px -4px rgba(239, 68, 68, 0.4);">
+                                <i class='bx bx-error-circle'></i>
+                            </div>
+                            <h3 style="background: linear-gradient(to right, #ef4444, #dc2626); -webkit-background-clip: text; background-clip: text;">Raise a Concern</h3>
+                        </div>
+                        <button id="cancelConcernBtn" class="modal-close-btn" title="Close"><i class='bx bx-x'></i></button>
+                    </div>
+                    <form id="concernForm" style="display: flex; flex-direction: column; overflow: hidden; flex: 1; min-height: 0;">
+                        <div class="modal-dialog-body">
+                            <div class="input-group mb-3">
+                                <label>Complaint ID</label>
+                                <input type="text" id="concernComplaintId" class="form-input" readonly style="background: var(--bg-card) !important; color: var(--text-muted); cursor: not-allowed;">
+                            </div>
+                            <div class="input-group mb-3">
+                                <label>Reason for Concern <span class="text-danger">*</span></label>
+                                <textarea id="concernDescription" class="form-input" rows="4" placeholder="Explain the issue clearly..." required></textarea>
+                            </div>
+                            <div class="input-group mb-4 file-upload">
+                                <label>Upload Evidence <span class="text-danger">*</span></label>
+                                <div class="upload-area" style="padding: 1.5rem;">
+                                    <i class='bx bx-cloud-upload'></i>
+                                    <span class="upload-text mb-2">Select Image/Document</span>
+                                    <div class="mt-2 text-center" style="position: relative; z-index: 10;">
+                                        <span class="btn-danger" style="padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; display: inline-block;">Upload File</span>
+                                    </div>
+                                    <input type="file" id="concernEvidence" class="hidden-input" accept="image/*,.pdf" required>
+                                </div>
+                                <div id="concernFileNameDisplay" class="file-name-display"></div>
+                            </div>
+                            <div id="concernSuccess" class="hidden text-success text-center mt-3 fw-bold p-3 rounded" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                                <i class='bx bx-check-circle'></i> Concern submitted successfully! Our team will review it.
+                            </div>
+                        </div>
+                        <div class="modal-dialog-footer">
+                            <button type="submit" class="btn-primary full-width animate-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); border-color: transparent; margin-top: 0 !important; margin-bottom: 0 !important;">
+                                <span>Submit Concern</span>
+                                <i class='bx bx-send'></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- DASHBOARD PAGE -->
             <section id="dashboard-section" class="app-page hidden">
