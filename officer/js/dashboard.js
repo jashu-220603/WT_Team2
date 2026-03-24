@@ -558,6 +558,11 @@ document.addEventListener("DOMContentLoaded", () => {
     async function handleNotificationClick(notifId, type, complaintId) {
         try {
             await markAsRead(notifId);
+
+            if (type === 'concern_raised') {
+                window.location.href = `citizen_concerns.html?complaintId=${complaintId || ''}`;
+                return;
+            }
             
             if (complaintId) {
                 // Find the full MongoDB ID
