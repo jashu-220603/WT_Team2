@@ -68,22 +68,16 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
             return res.status(400).json({ message: "Cannot raise a concern for a resolved or closed complaint." });
         }
 
-        // Rule: Officer must be assigned
-        if (!complaint.assignedOfficer) {
-            return res.status(400).json({ message: "You can only raise concerns once an officer is assigned to your case." });
-        }
+        // Rule: 7 calendar days must have passed since complaint submission
+        const submissionDate = complaint.createdAt || new Date();
+        const diffInMs = new Date() - new Date(submissionDate);
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-        // Rule: 7 working days must have passed since assignment
-        const assignmentEntry = (complaint.history || []).find(h => h.status === 'Assigned' || h.status === 'Reassigned');
-        const assignmentDate = assignmentEntry ? assignmentEntry.date : (complaint.createdAt || new Date());
-        
-        const workingDaysPassed = countWorkingDays(assignmentDate, new Date());
-        if (workingDaysPassed < 7) {
-            const remaining = 7 - workingDaysPassed;
+        if (diffInDays < 7) {
             return res.status(400).json({ 
-                message: `Raise Concern will be available in ${remaining} working day(s) from assignment. The assigned officer must have 7 working days to resolve the issue first.`,
-                workingDaysPassed,
-                remaining
+                message: "you can raise a concern after 7 days of submission only.",
+                daysPassed: diffInDays,
+                remaining: 7 - diffInDays
             });
         }
 
@@ -343,22 +337,18 @@ router.get('/eligible/:complaintId', protect, authorize('user'), async (req, res
             return res.json({ eligible: false, reason: "Complaint is already resolved or closed." });
         }
 
-        if (!complaint.assignedOfficer) {
-            return res.json({ eligible: false, reason: "An officer must be assigned before raising a concern." });
-        }
-
-        const assignmentEntry = (complaint.history || []).find(h => h.status === 'Assigned' || h.status === 'Reassigned');
-        const assignmentDate = assignmentEntry ? assignmentEntry.date : complaint.createdAt;
-        const workingDaysPassed = countWorkingDays(assignmentDate, new Date());
-        const remainingDays = Math.max(0, 7 - workingDaysPassed);
+        const submissionDate = complaint.createdAt || new Date();
+        const diffInMs = new Date() - new Date(submissionDate);
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        const remainingDays = Math.max(0, 7 - diffInDays);
         const alreadyToday = complaint.lastConcernDate && isSameDay(complaint.lastConcernDate, new Date());
         const concernCount = complaint.concernCount || 0;
 
-        if (workingDaysPassed < 7) {
+        if (diffInDays < 7) {
             return res.json({ 
                 eligible: false, 
-                reason: `Raise Concern available in ${remainingDays} working day(s) since assignment.`,
-                workingDaysPassed,
+                reason: "you can raise a concern after 7 days of submission only.",
+                daysPassed: diffInDays,
                 remainingDays,
                 concernCount
             });
@@ -372,7 +362,7 @@ router.get('/eligible/:complaintId', protect, authorize('user'), async (req, res
 
         return res.json({ 
             eligible: true, 
-            workingDaysPassed, 
+            daysPassed: diffInDays, 
             concernCount,
             nextEscalationLevel: getEscalationLevel(concernCount + 1)
         });

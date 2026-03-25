@@ -560,8 +560,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+
+    // --- CONCERN ESCALATION LOGIC ---
+    async function checkConcernEligibility(realId, displayId) {
+        try {
+            const res = await fetch(`${API}/concerns/eligible/${realId}`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+            const data = await res.json();
+            
+            if (data.eligible) {
+                // Fill IDs before opening (using premium modal IDs)
+                const inputField = document.getElementById("concernComplaintId");
+                if (inputField) {
+                    inputField.value = displayId;
+                    inputField.setAttribute('data-real-id', realId);
+                }
+                openConcernModal();
+            } else {
+                alert(data.reason || data.message || "Unable to check eligibility.");
+            }
+        } catch (err) {
+            console.error("Eligibility check error", err);
+            alert("Failed to check concern eligibility. Please try again later.");
+        }
+    }
+
     if (showConcernFormBtn) {
-        showConcernFormBtn.addEventListener("click", openConcernModal);
+        showConcernFormBtn.addEventListener("click", () => {
+            const inputField = document.getElementById("concernComplaintId");
+            const realId = inputField.getAttribute('data-real-id');
+            const displayId = inputField.value;
+            if (realId) {
+                checkConcernEligibility(realId, displayId);
+            } else {
+                alert("Please track a valid complaint first.");
+            }
+        });
     }
 
     if (cancelConcernBtn) {
@@ -1735,115 +1770,7 @@ function updateDashboardNotifSummary(notifs) {
     `).join('');
 }
 
-// --- CONCERN ESCALATION LOGIC ---
-
-async function checkConcernEligibility(realId, displayId) {
-    try {
-        const res = await fetch(`${API}/concerns/eligible/${realId}`, {
-            headers: { Authorization: "Bearer " + getToken() }
-        });
-        const data = await res.json();
-        
-        if (data.eligible) {
-            document.getElementById('rc-cid').value = realId;
-            document.getElementById('rc-complaint-id').textContent = displayId;
-            document.getElementById('rc-escalation').textContent = data.nextEscalationLevel + " (" + (data.concernCount + 1) + "/3)";
-            document.getElementById('raiseConcernModal').classList.remove('hidden');
-        } else {
-            alert("Concern Eligibility: " + data.reason);
-        }
-    } catch (err) {
-        console.error("Eligibility check error", err);
-        alert("Failed to check concern eligibility. Please try again later.");
-    }
-}
-
-const raiseConcernForm = document.getElementById('raise-concern-form');
-if (raiseConcernForm) {
-    raiseConcernForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const complaintId = document.getElementById('rc-cid').value;
-        const description = document.getElementById('rc-description').value;
-        const imageFile = document.getElementById('rc-image').files[0];
-        
-        const formData = new FormData();
-        formData.append('complaintId', complaintId);
-        formData.append('description', description);
-        if (imageFile) formData.append('image', imageFile);
-        
-        const submitBtn = raiseConcernForm.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
-        
-        try {
-            const res = await fetch(`${API}/concerns`, {
-                method: "POST",
-                headers: { Authorization: "Bearer " + getToken() },
-                body: formData
-            });
-            
-            const data = await res.json();
-            if (res.ok) {
-                alert(`Concern raised successfully! Escalation Level: ${data.escalationLevel}`);
-                document.getElementById('raiseConcernModal').classList.add('hidden');
-                raiseConcernForm.reset();
-            } else {
-                alert(data.message || "Failed to raise concern.");
-            }
-        } catch (err) {
-            console.error("Raise concern error", err);
-            alert("Failed to raise concern. Please check your connection.");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Concern';
-        }
-    });
-}
-
-document.getElementById('closeRaiseConcernModal')?.addEventListener('click', () => {
-    document.getElementById('raiseConcernModal').classList.add('hidden');
-});
-
-// Replace the existing handleRaiseConcern
-async function handleRaiseConcern(e) {
-    e.preventDefault();
-    const inputField = document.getElementById("concernComplaintId");
-    const realId = inputField.getAttribute('data-real-id');
-    const displayId = inputField.value;
-    
-    if (!realId) {
-        alert("Please track a valid complaint first.");
-        return;
-    }
-    
-    checkConcernEligibility(realId, displayId);
-}
-
-// Ensure the form uses the new handler
-const oldConcernForm = document.getElementById("concernForm");
-if (oldConcernForm) {
-    // Remove old listeners if any (by replacing the button or cloning form) - simplest is to just overwrite onsubmit
-    oldConcernForm.onsubmit = handleRaiseConcern;
-    // Remove the old addEventListener if it existed by replacing the element
-    const newForm = oldConcernForm.cloneNode(true);
-    oldConcernForm.parentNode.replaceChild(newForm, oldConcernForm);
-    newForm.addEventListener("submit", handleRaiseConcern);
-    
-    // Wire up the button for eligibility check directly
-    const triggerBtn = newForm.querySelector('button');
-    if (triggerBtn) {
-        triggerBtn.id = "triggerRaiseConcernBtn";
-        triggerBtn.type = "button"; // Change from submit to button so it doesn't trigger standard form submission
-        triggerBtn.addEventListener("click", () => {
-            const inputField = document.getElementById("concernComplaintId");
-            const realId = inputField.getAttribute('data-real-id');
-            const displayId = inputField.value;
-            if (realId) checkConcernEligibility(realId, displayId);
-            else alert("Please track a valid complaint first.");
-        });
-    }
-}
+// --- End Concern Handlers ---
 
 // --- VIEW CONCERNS LOGIC ---
 const viewConcernsBtn = document.getElementById("viewConcernsBtn");
