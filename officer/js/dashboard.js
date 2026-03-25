@@ -28,7 +28,7 @@ function updateProfileInfo() {
 
     // Update profile image
     const profileImgs = document.querySelectorAll("img[alt='Profile'], #off-prof-img");
-    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=198754&color=fff`;
+    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=5B9BD5&color=fff`;
     
     // Check role-specific storage to avoid collision with other portals
     let storedPhoto = sessionStorage.getItem("officerPhoto");
@@ -201,7 +201,7 @@ function showToast(title, message) {
     const toastId = "toast-" + Date.now();
     const toastHtml = `
         <div id="${toastId}" class="toast show border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header bg-success text-white border-0">
+            <div class="toast-header text-white border-0" style="background-color: #5B9BD5;">
                 <i class="bi bi-bell-fill me-2"></i>
                 <strong class="me-auto">${title}</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -302,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("off-password-input").value = "";
                 
                 // Update profile photo in modal
-                let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=198754&color=fff&size=100`;
+                let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5B9BD5&color=fff&size=100`;
                 if (user.profilePhoto) {
                     avatarUrl = user.profilePhoto.startsWith('http') ? user.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${user.profilePhoto}`;
                     sessionStorage.setItem("profilePhoto", user.profilePhoto);
