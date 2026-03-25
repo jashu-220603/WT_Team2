@@ -68,13 +68,20 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
             return res.status(400).json({ message: "Cannot raise a concern for a resolved or closed complaint." });
         }
 
-        // Rule: 7 working days must have passed
-        const complaintDate = complaint.createdAt || complaint.timestamps?.createdAt;
-        const workingDaysPassed = countWorkingDays(complaintDate, new Date());
+        // Rule: Officer must be assigned
+        if (!complaint.assignedOfficer) {
+            return res.status(400).json({ message: "You can only raise concerns once an officer is assigned to your case." });
+        }
+
+        // Rule: 7 working days must have passed since assignment
+        const assignmentEntry = (complaint.history || []).find(h => h.status === 'Assigned' || h.status === 'Reassigned');
+        const assignmentDate = assignmentEntry ? assignmentEntry.date : (complaint.createdAt || new Date());
+        
+        const workingDaysPassed = countWorkingDays(assignmentDate, new Date());
         if (workingDaysPassed < 7) {
             const remaining = 7 - workingDaysPassed;
             return res.status(400).json({ 
-                message: `Raise Concern will be available in ${remaining} working day(s). The complaint must be unresolved for 7 working days first.`,
+                message: `Raise Concern will be available in ${remaining} working day(s) from assignment. The assigned officer must have 7 working days to resolve the issue first.`,
                 workingDaysPassed,
                 remaining
             });
@@ -336,7 +343,13 @@ router.get('/eligible/:complaintId', protect, authorize('user'), async (req, res
             return res.json({ eligible: false, reason: "Complaint is already resolved or closed." });
         }
 
-        const workingDaysPassed = countWorkingDays(complaint.createdAt, new Date());
+        if (!complaint.assignedOfficer) {
+            return res.json({ eligible: false, reason: "An officer must be assigned before raising a concern." });
+        }
+
+        const assignmentEntry = (complaint.history || []).find(h => h.status === 'Assigned' || h.status === 'Reassigned');
+        const assignmentDate = assignmentEntry ? assignmentEntry.date : complaint.createdAt;
+        const workingDaysPassed = countWorkingDays(assignmentDate, new Date());
         const remainingDays = Math.max(0, 7 - workingDaysPassed);
         const alreadyToday = complaint.lastConcernDate && isSameDay(complaint.lastConcernDate, new Date());
         const concernCount = complaint.concernCount || 0;
@@ -344,7 +357,7 @@ router.get('/eligible/:complaintId', protect, authorize('user'), async (req, res
         if (workingDaysPassed < 7) {
             return res.json({ 
                 eligible: false, 
-                reason: `Raise Concern available in ${remainingDays} working day(s).`,
+                reason: `Raise Concern available in ${remainingDays} working day(s) since assignment.`,
                 workingDaysPassed,
                 remainingDays,
                 concernCount

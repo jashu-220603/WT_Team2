@@ -38,7 +38,10 @@ router.post('/submit', async (req, res) => {
 // @access  Admin only
 router.get('/all', protect, authorize('admin'), async (req, res) => {
     try {
-        const feedbacks = await Feedback.find().populate('complaint', 'complaintId title').sort({ createdAt: -1 });
+        const feedbacks = await Feedback.find()
+            .populate('complaint', 'complaintId title category status')
+            .populate('officer', 'name email department staffId')
+            .sort({ createdAt: -1 });
         res.status(200).json(feedbacks);
     } catch (err) {
         console.error("Get Feedbacks Error:", err);

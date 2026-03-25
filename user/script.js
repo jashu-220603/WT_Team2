@@ -441,6 +441,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 fileNameDisplay.textContent = "";
             }
         });
+
+        const uploadArea = evidenceInput.closest('.upload-area');
+        if (uploadArea) {
+            uploadArea.addEventListener('click', (e) => {
+                if (e.target !== evidenceInput) evidenceInput.click();
+            });
+        }
     }
 
     // Form Submission — POST to backend API
@@ -584,6 +591,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 concernFileNameDisplay.textContent = "";
             }
         });
+
+        const concernUploadArea = concernEvidence.closest('.upload-area');
+        if (concernUploadArea) {
+            concernUploadArea.addEventListener('click', (e) => {
+                if (e.target !== concernEvidence) concernEvidence.click();
+            });
+        }
     }
 
     if (concernForm) {

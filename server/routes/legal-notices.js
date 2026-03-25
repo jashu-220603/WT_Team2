@@ -146,4 +146,28 @@ router.put('/:id/read', protect, authorize('officer'), async (req, res) => {
     }
 });
 
+// @route   GET /api/legal-notices/:id
+// @desc    Get single legal notice detail
+// @access  Admin, Officer
+router.get('/:id', protect, async (req, res) => {
+    try {
+        const notice = await LegalNotice.findById(req.params.id)
+            .populate('officerId', 'name email department bio')
+            .populate('complaint', 'complaintId category status description')
+            .populate('complainantId', 'name email');
+        
+        if (!notice) return res.status(404).json({ message: "Legal notice not found." });
+        
+        // Authorization check
+        if (req.user.role !== 'admin' && notice.officerId._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Access denied." });
+        }
+        
+        res.json(notice);
+    } catch (err) {
+        console.error("Fetch Legal Notice Detail Error:", err);
+        res.status(500).json({ message: "Server error." });
+    }
+});
+
 module.exports = router;

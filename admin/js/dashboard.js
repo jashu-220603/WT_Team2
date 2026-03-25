@@ -513,7 +513,7 @@ function renderComplaints(filteredData = null) {
                 <td><small class="text-muted fw-bold">${c.complaintId || c._id.substring(0,8).toUpperCase()}</small></td>
                 <td><strong>${reporterName}</strong></td>
                 <td>
-                    <div class="fw-medium">${c.title}</div>
+                    <div class="fw-medium">${c.title || c.category}</div>
                     <div class="small text-muted text-truncate" style="max-width: 200px;">${c.description}</div>
                 </td>
                 <td><span class="badge bg-light text-dark border">${c.category || "-"}</span></td>
@@ -529,11 +529,16 @@ function renderComplaints(filteredData = null) {
                         <button class="btn btn-sm btn-outline-info" onclick="viewConcerns('${c._id}')" title="View Concerns">
                             <i class="bi bi-exclamation-octagon"></i>
                         </button>
-                        <button class="btn btn-sm btn-primary assign-btn" 
+                        ${c.assignedOfficer 
+                            ? `<button class="btn btn-sm btn-outline-warning" onclick="openReassignModal('${c._id}')" title="Reassign Officer">
+                                <i class="bi bi-person-gear"></i>
+                               </button>`
+                            : `<button class="btn btn-sm btn-primary assign-btn" 
                                 data-id="${c._id}" 
                                 data-dept="${c.category}" title="Assign Officer">
-                            <i class="bi bi-person-plus"></i>
-                        </button>
+                                <i class="bi bi-person-plus"></i>
+                               </button>`
+                        }
                     </div>
                 </td>
             </tr>
@@ -1197,7 +1202,90 @@ function openAssignModal(id, dept) {
     modal.show();
 }
 
-function openViewDetailsModal(id) {
+window.openReassignModal = function(id) {
+    const complaint = complaintsData.find(c => c._id === id);
+    if (!complaint) return;
+
+    document.getElementById("reassign-complaint-id").value = id;
+    document.getElementById("reassign-complaint-title").value = complaint.title;
+    document.getElementById("reassign-current-officer").value = complaint.assignedOfficer?.name || "None";
+    
+    // Populate new officer select
+    const select = document.getElementById("reassign-new-officer");
+    if (select) {
+        select.innerHTML = '<option value="">Select New Officer...</option>';
+        
+        // Sort officers by department
+        const dept = complaint.category;
+        const sortedOfficers = [...officersData]
+            .filter(o => o._id !== complaint.assignedOfficer?._id)
+            .sort((a, b) => {
+                if (a.department === dept && b.department !== dept) return -1;
+                if (a.department !== dept && b.department === dept) return 1;
+                return 0;
+            });
+
+        sortedOfficers.forEach(o => {
+            select.innerHTML += `<option value="${o._id}">${o.name} (${o.department || 'No Dept'})</option>`;
+        });
+    }
+
+    const modalEl = document.getElementById("reassignModal");
+    const modal = new bootstrap.Modal(modalEl);
+    
+    // Ensure it shows in front of other modals if open
+    modalEl.style.zIndex = "1060"; 
+    
+    modal.show();
+    
+    // Adjust backdrop z-index if needed (for nested modals)
+    setTimeout(() => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 1) {
+            backdrops[backdrops.length - 1].style.zIndex = "1055";
+        }
+    }, 100);
+};
+
+const reassignForm = document.getElementById("reassign-form");
+if (reassignForm) {
+    reassignForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const complaintId = document.getElementById("reassign-complaint-id").value;
+        const officerId = document.getElementById("reassign-new-officer").value;
+        const reason = document.getElementById("reassign-reason").value;
+
+        try {
+            const response = await fetch(`${API}/complaints/${complaintId}/assign`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token
+                },
+                body: JSON.stringify({ officerId, remarks: reason, status: "Reassigned" })
+            });
+
+            if (!response.ok) throw new Error("Reassignment failed");
+
+            bootstrap.Modal.getInstance(document.getElementById("reassignModal")).hide();
+            
+            // Try to hide detail modal if open
+            const detailModalEl = document.getElementById("viewDetailsAdminModal");
+            if (detailModalEl) {
+                const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                if (detailModal) detailModal.hide();
+            }
+            
+            alert("Officer reassigned successfully");
+            loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            alert("Reassignment failed");
+        }
+    });
+}
+
+async function openViewDetailsModal(id) {
     const complaint = complaintsData.find(c => c._id === id);
     if (!complaint) return;
 
@@ -1222,29 +1310,70 @@ function openViewDetailsModal(id) {
     }
 
     const content = document.getElementById("admin-view-details-content");
-    const imgVal = complaint.image;
+    const imgVal = complaint.image || complaint.evidence;
     const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
+
+    // Fetch concerns for this complaint to show in-modal
+    let concernsHtml = '';
+    try {
+        const res = await fetch(`${API}/concerns/complaint/${complaint._id}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+            const concerns = await res.json();
+            if (concerns.length > 0) {
+                concernsHtml = `
+                    <div class="mt-4 border-top pt-4">
+                        <h6 class="fw-bold mb-3 text-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>Escalated Concerns (${concerns.length})</h6>
+                        <div class="concerns-mini-list">
+                            ${concerns.map(c => `
+                                <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded mb-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="badge bg-danger">Concern #${c.concernNumber || '1'}</span>
+                                        <small class="text-muted">${new Date(c.createdAt).toLocaleDateString()}</small>
+                                    </div>
+                                    <p class="mb-0 small">${c.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    } catch (err) { console.error("Error fetching modal concerns:", err); }
 
     content.innerHTML = `
         <div class="row g-4">
             <div class="col-md-6">
-                <h6 class="fw-bold text-muted small text-uppercase">Reporter Details (Citizen)</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase mb-0">Reporter Details (Citizen)</h6>
+                    ${complaint.hasConcern ? '<span class="badge bg-danger rounded-pill"><i class="bi bi-exclamation-triangle me-1"></i>Has Concerns</span>' : ''}
+                </div>
                 <div class="p-3 bg-light rounded mb-4">
                     <p class="mb-1"><strong>Full Name:</strong> ${complaint.user?.name || 'Anonymous'}</p>
                     <p class="mb-1"><strong>Email:</strong> ${complaint.user?.email || 'N/A'}</p>
                     <p class="mb-0"><strong>Role:</strong> Citizen</p>
                 </div>
 
-                <h6 class="fw-bold text-muted small text-uppercase">Case Information</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase mb-0">Case Information</h6>
+                    ${complaint.assignedOfficer ? `
+                        <button class="btn btn-sm btn-outline-warning py-0" onclick="openReassignModal('${complaint._id}')">
+                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                        </button>
+                    ` : ''}
+                </div>
                 <div class="p-3 bg-light rounded">
                     <p class="mb-1"><strong>Complaint ID:</strong> ${complaint.complaintId || id}</p>
                     <p class="mb-1"><strong>Department:</strong> ${complaint.category}</p>
                     <p class="mb-1"><strong>Status:</strong> <span class="badge bg-primary">${complaint.status}</span></p>
                     <p class="mb-1"><strong>Assigned Officer:</strong> ${complaint.assignedOfficer?.name || 'Not yet assigned'}</p>
                     <hr>
-                    <p class="mb-1"><strong>Title:</strong> ${complaint.title}</p>
+                    <p class="mb-1"><strong>Title:</strong> ${complaint.title || complaint.category}</p>
                     <p class="mb-0"><strong>Full Description:</strong> ${complaint.description}</p>
                 </div>
+                
+                ${concernsHtml}
             </div>
             <div class="col-md-6">
                 <h6 class="fw-bold text-muted small text-uppercase">Evidence Image</h6>
@@ -1610,6 +1739,8 @@ async function loadFeedbacks() {
         if (!response.ok) throw new Error('Failed to load feedbacks');
 
         const feedbacks = await response.json();
+        window.feedbacksData = feedbacks; // Store for details view
+
         const container = document.getElementById('feedbacks-section');
         const contentArea = container.querySelector('.table-container');
         
@@ -1627,17 +1758,20 @@ async function loadFeedbacks() {
                 
                 cardsHtml += `
                 <div class="col-md-6 col-lg-4">
-                    <div class="card feedback-card h-100 border-0 shadow-sm">
+                    <div class="card feedback-card h-100 border-0 shadow-sm" style="cursor: pointer;" onclick="viewFeedback('${f._id}')">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <h6 class="fw-bold mb-0">${f.name}</h6>
                                     <small class="text-muted">${f.email}</small>
                                 </div>
-                                <span class="badge ${typeBadge}">${f.type || 'General'}</span>
+                                <div class="text-end">
+                                    <span class="badge ${typeBadge} d-block mb-1">${f.type || 'General'}</span>
+                                    ${f.rating ? `<div class="text-warning small">${'★'.repeat(f.rating)}${'☆'.repeat(5-f.rating)}</div>` : ''}
+                                </div>
                             </div>
-                            <p class="card-text text-secondary mb-3">${f.feedbackText || f.feedback}</p>
-                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                            <p class="card-text text-secondary mb-3 text-truncate-2">${f.feedbackText || f.feedback}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
                                 <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${dateStr}</small>
                                 ${f.complaint ? `<span class="badge bg-light text-dark border">ID: ${f.complaint.complaintId || 'REF'}</span>` : ''}
                             </div>
@@ -1653,6 +1787,65 @@ async function loadFeedbacks() {
         console.error(err);
         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load feedbacks.</td></tr>';
     }
+}
+
+window.viewFeedback = function(id) {
+    const f = (window.feedbacksData || []).find(fb => fb._id === id);
+    if (!f) return;
+
+    const content = document.getElementById('feedback-details-content');
+    if (!content) return;
+
+    const ratingHtml = f.rating ? `
+        <div class="text-center mb-4">
+            <h1 class="text-warning mb-0">${'★'.repeat(f.rating)}${'☆'.repeat(5-f.rating)}</h1>
+            <small class="text-muted">${f.rating} out of 5 stars</small>
+        </div>` : '';
+
+    const officerHtml = f.officer ? `
+        <div class="p-3 bg-light rounded mt-3">
+            <h6 class="fw-bold small text-muted text-uppercase mb-2">Related Officer</h6>
+            <div class="d-flex align-items-center">
+                <i class="bi bi-person-badge fs-3 me-3 text-primary"></i>
+                <div>
+                    <p class="mb-0 fw-bold">${f.officer.name}</p>
+                    <small class="text-muted">${f.officer.department || 'Officer'}</small>
+                </div>
+            </div>
+        </div>` : '';
+
+    const complaintHtml = f.complaint ? `
+        <div class="p-3 bg-light rounded mt-3">
+            <h6 class="fw-bold small text-muted text-uppercase mb-2">Related Complaint</h6>
+            <p class="mb-1"><strong>ID:</strong> ${f.complaint.complaintId || 'N/A'}</p>
+            <p class="mb-0"><strong>Title:</strong> ${f.complaint.title || f.complaint.category || 'N/A'}</p>
+        </div>` : '';
+
+    content.innerHTML = `
+        ${ratingHtml}
+        
+        <div class="p-4 bg-primary bg-opacity-10 border border-primary border-opacity-10 rounded mb-4">
+            <p class="card-text fs-5 mb-0" style="white-space: pre-wrap;">"${f.feedbackText || f.feedback}"</p>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6">
+                <h6 class="fw-bold small text-muted text-uppercase mb-1">Submitted By</h6>
+                <p class="mb-0 fw-bold">${f.name}</p>
+                <small class="text-muted">${f.email}</small>
+            </div>
+            <div class="col-6">
+                <h6 class="fw-bold small text-muted text-uppercase mb-1">Type & Date</h6>
+                <span class="badge bg-info">${f.type || 'General'}</span>
+                <p class="mb-0 small text-muted mt-1">${new Date(f.createdAt).toLocaleString()}</p>
+            </div>
+        </div>
+
+        ${officerHtml}
+        ${complaintHtml}
+    `;
+
+    new bootstrap.Modal(document.getElementById('feedbackDetailsModal')).show();
 }
 
 /* =========================
@@ -1903,10 +2096,74 @@ function renderLegalNotices() {
             <td><span class="badge ${statusBadge}">${ln.status}</span></td>
             <td>${responseText}</td>
             <td>${date}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-dark" onclick="viewLegalNotice('${ln._id}')">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
         </tr>`;
     });
     tbody.innerHTML = html;
 }
+
+window.viewLegalNotice = async function(id) {
+    try {
+        const res = await fetch(`${API}/legal-notices/${id}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const ln = await res.json();
+        
+        const content = document.getElementById("ln-details-content");
+        if (!content) return;
+        
+        const officerName = ln.officerId?.name || "Unknown Officer";
+        const complaintId = ln.complaint?.complaintId || ln.complaintId || "N/A";
+        const statusBadge = ln.status === 'Responded' ? 'bg-success' : 'bg-warning text-dark';
+        
+        content.innerHTML = `
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary mb-1">${ln.title}</h5>
+                <div class="d-flex justify-content-between">
+                    <span class="badge ${statusBadge}">${ln.status}</span>
+                    <small class="text-muted">${new Date(ln.createdAt).toLocaleString()}</small>
+                </div>
+            </div>
+            
+            <div class="p-3 bg-light rounded mb-4">
+                <p class="fw-bold small text-muted text-uppercase mb-2">Notice Content</p>
+                <p class="mb-0" style="white-space: pre-wrap;">${ln.content}</p>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-6">
+                    <p class="fw-bold small text-muted text-uppercase mb-1">Target Officer</p>
+                    <p class="mb-0 fw-bold">${officerName}</p>
+                    <small class="text-muted">${ln.officerId?.email || ''}</small>
+                </div>
+                <div class="col-6">
+                    <p class="fw-bold small text-muted text-uppercase mb-1">Related Case</p>
+                    <p class="mb-0 fw-bold">${complaintId}</p>
+                </div>
+            </div>
+            
+            ${ln.status === 'Responded' ? `
+            <div class="mt-4 pt-4 border-top">
+                <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded shadow-sm">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="fw-bold text-success mb-0"><i class="bi bi-reply-fill me-1"></i>Officer's Response</h6>
+                        <small class="text-muted">${new Date(ln.updatedAt || ln.createdAt).toLocaleString()}</small>
+                    </div>
+                    <p class="mb-0" style="white-space: pre-wrap;">${ln.officerResponse || "Detailed response provided."}</p>
+                </div>
+            </div>` : ''}
+        `;
+        
+        new bootstrap.Modal(document.getElementById("viewLegalNoticeModal")).show();
+    } catch (err) {
+        console.error("View legal notice error:", err);
+        alert("Failed to load notice details.");
+    }
+};
 
 function populateLNOfficers() {
     const select = document.getElementById("ln-officer-id");

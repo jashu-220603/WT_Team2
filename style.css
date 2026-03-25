@@ -232,17 +232,16 @@ letter-spacing: 0.5px;
 }
 
 .file-btn{
-background:#002f5b;
-color:white;
+background:white;
+color:#002f5b;
 border: 2px solid #002f5b;
 }
 
 .file-btn:hover {
-    background: #ffb347;
-    border-color: #ffb347;
-    color: #002f5b;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255,179,71,0.3);
+    background: #002f5b;
+    color: white;
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,47,91,0.2);
 }
 
 .track-btn{

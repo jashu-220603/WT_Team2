@@ -36,6 +36,14 @@ router.post('/register', async (req, res) => {
         return res.status(500).json({ message: 'Server configuration error' });
     }
 
+    // Enforce Admin ID format
+    if (role === 'admin') {
+      if (!finalStaffId || !finalStaffId.startsWith('adm-')) {
+        // Find latest admin ID or just provide an error
+        return res.status(400).json({ message: 'Admin ID must follow pattern "adm-001"' });
+      }
+    }
+
     user = new User({
       name,
       email,

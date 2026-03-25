@@ -359,7 +359,7 @@ router.put('/:id/assign', protect, authorize('admin'), async (req, res) => {
       });
     }
 
-    const { officerId } = req.body;
+    const { officerId, status, remarks } = req.body;
 
     if (!officerId) {
       return res.status(400).json({
@@ -368,10 +368,11 @@ router.put('/:id/assign', protect, authorize('admin'), async (req, res) => {
     }
 
     complaint.assignedOfficer = officerId;
-    complaint.status = "Assigned";
+    complaint.status = status || "Assigned";
 
     complaint.history.push({
-      status: "Assigned",
+      status: status || "Assigned",
+      remarks: remarks || "Assigned by Admin",
       changedBy: req.user._id,
       date: new Date()
     });
@@ -383,7 +384,7 @@ router.put('/:id/assign', protect, authorize('admin'), async (req, res) => {
       user: complaint.user,
       type: 'assignment',
       title: 'Complaint Assigned',
-      message: `Your complaint ${complaint.complaintId} has been assigned to an officer.`,
+      message: `Your complaint ${complaint.complaintId} has been ${status === 'Reassigned' ? 'reassigned' : 'assigned'} to an officer.`,
       relatedComplaint: complaint._id
     });
 
