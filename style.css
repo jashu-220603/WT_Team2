@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 *{
 margin:0;
 padding:0;
@@ -148,17 +150,19 @@ color:#002f5b;
 
 .sidebar{
 position:fixed;
-left:-260px;
+left:-280px;
 top:0;
-width:260px;
-height:100vh;           /* full screen height */
-background:#1e2a38;
+width:280px;
+height:100vh;
+background:#0f172a;    /* Deep Navy - Matches User Portal Sidebar */
 color:white;
-transition:0.3s;
+transition:all 0.3s ease;
 z-index:2000;
-
-overflow-y:auto;        /* enables vertical scrolling */
+overflow-y:auto;
 overflow-x:hidden;
+box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+border-right: 1px solid rgba(255,255,255,0.05);
+font-family: 'Inter', sans-serif;
 }
 
 .sidebar.active{
@@ -166,9 +170,16 @@ left:0;
 }
 
 .sidebar h2{
-text-align:center;
-padding:15px;
-border-bottom:1px solid gray;
+text-align:left;
+padding:25px 20px;
+font-size: 20px;
+font-weight: 700;
+color: white;
+border-bottom: 1px solid rgba(255,255,255,0.1);
+margin: 0;
+display: flex;
+align-items: center;
+letter-spacing: 0.5px;
 }
 
 .sidebar ul{
@@ -178,22 +189,52 @@ margin:0;
 }
 
 .menu-title{
-padding:12px 20px;
-font-size:18px;
-font-weight:bold;
-color:#ffb347;
-background:#141b24;
+padding:15px 20px 8px;
+font-size:11px;
+font-weight:700;
+color:#94a3b8; /* Dark White / Slate 400 - Better visibility */
+text-transform: uppercase;
+letter-spacing: 1.5px;
+background: transparent; /* Cleaner look to match image */
 }
 
 .sidebar li{
-padding:10px 30px;
-border-bottom:1px solid #333;
+padding:12px 20px;
 cursor:pointer;
-font-size:14px;
+font-size:15px;
+color:rgba(255,255,255,0.8);
+transition: all 0.2s ease;
+display: flex;
+align-items: center;
+gap: 12px;
 }
 
 .sidebar li:hover{
-background:#2f4057;
+background:rgba(255,255,255,0.1);
+color: white;
+padding-left: 25px;
+}
+
+.sidebar-close {
+    position: absolute;
+    right: 20px;
+    top: 25px;
+    font-size: 24px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    transition: color 0.2s;
+    z-index: 2001;
+}
+
+.sidebar-close:hover {
+    color: #ffb347; /* Accent color from original theme for a nice touch */
+}
+
+.sidebar li::before {
+    content: '\eb7e'; /* Default Boxicon arrow or bullet if needed, or leave for icons in HTML */
+    font-family: 'boxicons';
+    font-size: 18px;
+    opacity: 0.6;
 }
 
 .main{
