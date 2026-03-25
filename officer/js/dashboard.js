@@ -1081,9 +1081,24 @@ window.viewConcerns = async function(complaintId) {
                     </div>
                     <p class="mb-3">${c.description}</p>
                     ${imageUrl ? `<img src="${imageUrl}" class="img-fluid rounded mb-3" style="max-height: 200px;">` : ''}
-                    <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded small">
+                    <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded small mb-3">
                         <span><strong>Status:</strong> ${c.status}</span>
                         ${c.adminResponse ? `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Admin Responded</span>` : ''}
+                    </div>
+                    
+                    ${c.adminResponse ? `
+                    <div class="mt-2 border-top pt-2">
+                        <label class="form-label small fw-bold text-success"><i class="bi bi-shield-check"></i> Admin Response</label>
+                        <div class="p-2 border border-success rounded bg-white text-success small">${c.adminResponse}</div>
+                    </div>` : ''}
+                    
+                    <div class="mt-3 border-top pt-2">
+                        <label class="form-label small fw-bold text-primary"><i class="bi bi-person-badge"></i> Your Response</label>
+                        ${c.officerResponse ? 
+                            `<div class="p-2 border border-primary rounded bg-white text-primary small mb-2">${c.officerResponse}</div>` : 
+                            `<textarea class="form-control form-control-sm mb-2" id="officer-resp-${c._id}" rows="2" placeholder="Write your response to the concern..."></textarea>
+                             <button class="btn btn-sm btn-primary" onclick="submitOfficerResponse('${c._id}', '${complaintId}')">Submit Response</button>`
+                        }
                     </div>
                 </div>
             </div>
@@ -1093,6 +1108,29 @@ window.viewConcerns = async function(complaintId) {
     } catch (err) {
         console.error(err);
         container.innerHTML = '<div class="text-center py-4 text-danger">Failed to load concerns.</div>';
+    }
+};
+
+window.submitOfficerResponse = async function(concernId, complaintId) {
+    const resp = document.getElementById(`officer-resp-${concernId}`).value.trim();
+    if (!resp) return alert('Response cannot be empty');
+    
+    try {
+        const res = await fetch(`${API}/concerns/${concernId}/respond`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ officerResponse: resp, status: 'Reviewed' })
+        });
+        if (res.ok) {
+            alert('Response submitted successfully');
+            viewConcerns(complaintId); // Refresh modal
+        } else {
+            const data = await res.json();
+            alert(data.message || 'Failed to submit response');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('An error occurred');
     }
 };
 

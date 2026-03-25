@@ -8,6 +8,7 @@ const upload = require('../middleware/upload');
 const Complaint = require('../models/Complaint');
 const Notification = require('../models/Notification');
 const Counter = require('../models/Counter');
+const User = require('../models/User');
 
 /*
 -------------------------------------------------------
@@ -48,7 +49,7 @@ async (req, res) => {
 
   try {
 
-    let { title, description, category, subcategory, location } = req.body;
+    let { title, description, category, subcategory, location, priority } = req.body;
 
     if (!description) {
       return res.status(400).json({
@@ -81,8 +82,32 @@ async (req, res) => {
       subcategory,
       location,
       user: req.user._id,
+      priority: priority || 'Medium',
       image: req.file ? (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename) : null
     });
+
+    let assignedOfficer = null;
+
+    // Auto-assign logic for low priority complaints
+    if (complaint.priority === 'Low') {
+      const groundOfficer = await User.findOne({
+        role: 'officer',
+        department: category,
+        officerLevel: 'Ground'
+      });
+
+      if (groundOfficer) {
+        complaint.assignedOfficer = groundOfficer._id;
+        complaint.status = 'Assigned';
+        complaint.history.push({
+          status: 'Assigned',
+          remarks: 'Auto-assigned to Ground Level Officer due to Low Priority',
+          changedBy: req.user._id,
+          date: new Date()
+        });
+        assignedOfficer = groundOfficer;
+      }
+    }
 
     await complaint.save();
     
@@ -91,9 +116,20 @@ async (req, res) => {
       user: req.user._id,
       type: 'complaint_status',
       title: 'Complaint Received',
-      message: `Your complaint ${complaintId} has been successfully submitted.`,
+      message: `Your complaint ${complaintId} has been successfully submitted.` + (assignedOfficer ? ' It has been auto-assigned to an officer.' : ''),
       relatedComplaint: complaint._id
     });
+
+    // Notify Officer if auto-assigned
+    if (assignedOfficer) {
+      await Notification.create({
+        user: assignedOfficer._id,
+        type: 'assignment',
+        title: 'New Complaint Auto-Assigned',
+        message: `A Low Priority complaint (${complaintId}) has been auto-assigned to you.`,
+        relatedComplaint: complaint._id
+      });
+    }
 
     res.status(201).json({
       message: "Complaint submitted successfully",

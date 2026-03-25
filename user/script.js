@@ -468,6 +468,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             const description = document.getElementById("description").value.trim();
             const category = document.getElementById("category").value;
             const subcategory = document.getElementById("subcategory").value;
+            const priorityElement = document.getElementById("priority");
+            const priority = priorityElement ? priorityElement.value : "Medium";
             const location = document.getElementById("location").value.trim();
             const evidenceFile = evidenceInput ? evidenceInput.files[0] : null;
 
@@ -475,6 +477,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             formData.append("description", description);
             formData.append("category", category);
             if (subcategory) formData.append("subcategory", subcategory);
+            formData.append("priority", priority);
             formData.append("location", location || "Unknown");
             if (evidenceFile) formData.append("image", evidenceFile);
 
@@ -768,6 +771,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const raiseConcernSection = document.getElementById("raiseConcernSection");
                 if (raiseConcernSection) raiseConcernSection.classList.remove("hidden");
 
+                // Fetch and display existing concerns
+                fetchAndDisplayConcerns(complaint._id);
+
 
                 // Badge color
                 if (status === "Submitted") displayBadge.style.background = "#e0e7ff";
@@ -864,6 +870,73 @@ document.addEventListener("DOMContentLoaded", async () => {
                 displayBadge.style.background = "#fee2e2";
             }
         });
+    }
+
+    async function fetchAndDisplayConcerns(complaintId) {
+        const concernsSection = document.getElementById("existingConcernsSection");
+        const container = document.getElementById("existingConcernsContainer");
+        if (!concernsSection || !container) return;
+
+        container.innerHTML = "<p class='text-muted small'>Loading concerns...</p>";
+        concernsSection.classList.remove("hidden");
+
+        try {
+            const res = await fetch(`${API}/concerns/complaint/${complaintId}`, {
+                headers: { Authorization: "Bearer " + getToken() }
+            });
+
+            if (!res.ok) {
+                container.innerHTML = "<p class='text-danger small'>Failed to load concerns.</p>";
+                return;
+            }
+
+            const concerns = await res.json();
+            
+            if (!concerns || concerns.length === 0) {
+                concernsSection.classList.add("hidden");
+                return;
+            }
+
+            let html = "";
+            concerns.forEach((c, idx) => {
+                const date = new Date(c.createdAt).toLocaleDateString();
+                const time = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                let responsesHtml = "";
+                if (c.adminResponse) {
+                    responsesHtml += `<div class="mt-3 p-3 rounded" style="background: #f0fdf4; border-left: 4px solid #22c55e;">
+                                        <div class="fw-bold text-success mb-1" style="font-size: 0.85rem;"><i class='bx bx-check-shield'></i> Admin Response</div>
+                                        <p class="mb-0 small">${c.adminResponse}</p>
+                                      </div>`;
+                }
+                if (c.officerResponse) {
+                    responsesHtml += `<div class="mt-3 p-3 rounded" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+                                        <div class="fw-bold text-primary mb-1" style="font-size: 0.85rem;"><i class='bx bx-user-pin'></i> Officer Response</div>
+                                        <p class="mb-0 small">${c.officerResponse}</p>
+                                      </div>`;
+                }
+                if (!c.adminResponse && !c.officerResponse) {
+                    responsesHtml = `<div class="mt-2 text-warning small"><i class='bx bx-time'></i> Awaiting response...</div>`;
+                }
+
+                html += `
+                    <div class="card mb-3 border border-1 border-light shadow-sm pl-4 pr-4 pt-3 pb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge ${c.escalationLevel === 'Critical' ? 'bg-danger' : 'bg-warning text-dark'}">Concern #${c.concernNumber} - ${c.escalationLevel}</span>
+                            <small class="text-muted"><i class='bx bx-calendar'></i> ${date} ${time}</small>
+                        </div>
+                        <p class="mb-2 text-dark">${c.description}</p>
+                        ${c.image ? `<a href="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}" target="_blank" class="small text-decoration-none"><i class='bx bx-image'></i> View Attached Evidence</a>` : ''}
+                        ${responsesHtml}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        } catch (err) {
+            console.error("Error fetching concerns:", err);
+            container.innerHTML = "<p class='text-danger small'>Error loading concerns.</p>";
+        }
     }
 
     const ratingForm = document.getElementById("ratingForm");

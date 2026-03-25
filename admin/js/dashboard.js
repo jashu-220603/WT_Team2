@@ -594,6 +594,7 @@ function renderOfficers(data = officersData) {
             </td>
             <td><span class="badge bg-success">Active</span></td>
             <td>${o.department || "-"}</td>
+            <td><span class="badge bg-secondary">${o.officerLevel || "Senior"}</span></td>
             <td>
                 <div class="btn-group">
                     <button class="btn btn-sm btn-outline-warning" onclick="openLegalNoticeModal('${o._id}', '${o.name}')" title="Send Legal Notice">
@@ -1580,6 +1581,7 @@ if (addOfficerForm) {
             email: document.getElementById("off-email").value,
             staffId: document.getElementById("off-staffId").value,
             department: document.getElementById("off-dept").value,
+            officerLevel: document.getElementById("off-level") ? document.getElementById("off-level").value : "Ground",
             password: document.getElementById("off-password").value,
             role: "officer"
         };
@@ -1968,9 +1970,24 @@ window.viewConcerns = async function(complaintId) {
                     </div>
                     <p class="mb-3">${c.description}</p>
                     ${imageUrl ? `<img src="${imageUrl}" class="img-fluid rounded mb-3" style="max-height: 200px;">` : ''}
-                    <div class="p-2 bg-light rounded small">
+                    <div class="p-2 bg-light rounded small mb-3">
                         <strong>Status:</strong> ${c.status}
                     </div>
+                    
+                    <div class="mt-2 border-top pt-2">
+                        <label class="form-label small fw-bold text-success"><i class="bi bi-shield-check"></i> Admin Response</label>
+                        ${c.adminResponse ? 
+                            `<div class="p-2 border border-success rounded bg-white text-success small mb-2">${c.adminResponse}</div>` : 
+                            `<textarea class="form-control form-control-sm mb-2" id="admin-resp-${c._id}" rows="2" placeholder="Write an official response to the citizen..."></textarea>
+                             <button class="btn btn-sm btn-success" onclick="submitAdminResponse('${c._id}', '${complaintId}')">Submit Response</button>`
+                        }
+                    </div>
+                    
+                    ${c.officerResponse ? `
+                    <div class="mt-3 border-top pt-2">
+                        <label class="form-label small fw-bold text-primary"><i class="bi bi-person-badge"></i> Officer Response</label>
+                        <div class="p-2 border border-primary rounded bg-white text-primary small">${c.officerResponse}</div>
+                    </div>` : ''}
                 </div>
             </div>
             `;
@@ -1979,6 +1996,29 @@ window.viewConcerns = async function(complaintId) {
     } catch (err) {
         console.error(err);
         container.innerHTML = '<div class="text-center py-4 text-danger">Failed to load concerns.</div>';
+    }
+};
+
+window.submitAdminResponse = async function(concernId, complaintId) {
+    const resp = document.getElementById(`admin-resp-${concernId}`).value.trim();
+    if (!resp) return alert('Response cannot be empty');
+    
+    try {
+        const res = await fetch(`${API}/concerns/${concernId}/respond`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ adminResponse: resp, status: 'Reviewed' })
+        });
+        if (res.ok) {
+            alert('Response submitted successfully');
+            viewConcerns(complaintId); // Refresh modal
+        } else {
+            const data = await res.json();
+            alert(data.message || 'Failed to submit response');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('An error occurred');
     }
 };
 

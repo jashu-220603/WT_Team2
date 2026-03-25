@@ -286,17 +286,19 @@ router.get('/all', protect, authorize('admin'), async (req, res) => {
 // @access  Admin/Officer
 router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, res) => {
     try {
-        const { response, status } = req.body;
+        const { response, adminResponse, officerResponse, status } = req.body;
         const concern = await Concern.findById(req.params.id).populate('complaint');
 
         if (!concern) {
             return res.status(404).json({ message: "Concern not found." });
         }
 
+        const msg = response || adminResponse || officerResponse;
+
         if (req.user.role === 'admin') {
-            concern.adminResponse = response;
+            concern.adminResponse = msg;
         } else {
-            concern.officerResponse = response;
+            concern.officerResponse = msg;
         }
 
         if (status) concern.status = status;
@@ -307,7 +309,7 @@ router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, r
             concern.complaint.history.push({
                 status: concern.complaint.status,
                 changedBy: req.user._id,
-                remarks: `[Concern Response by ${req.user.role}] ${response}`
+                remarks: `[Concern Response by ${req.user.role}] ${msg}`
             });
             await concern.complaint.save();
         }
@@ -317,7 +319,7 @@ router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, r
             user: concern.user,
             type: 'concern_responded',
             title: 'Response to your Concern',
-            message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} (${req.user.name}) responded to your concern for Complaint: ${concern.complaint?.complaintId || ''}\nResponse: ${response}`,
+            message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} (${req.user.name}) responded to your concern for Complaint: ${concern.complaint?.complaintId || ''}\nResponse: ${msg}`,
             relatedComplaint: concern.complaint?._id,
             relatedConcern: concern._id
         });

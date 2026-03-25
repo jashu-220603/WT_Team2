@@ -270,6 +270,15 @@
                                             <option value="" disabled selected>Select Subcategory</option>
                                         </select>
                                     </div>
+                                    <div class="input-group">
+                                        <label for="priority">Priority <span class="text-danger">*</span></label>
+                                        <select id="priority" name="priority" required>
+                                            <option value="" disabled selected>Select Priority</option>
+                                            <option value="Low">Low (Minor issue)</option>
+                                            <option value="Medium">Medium (Standard)</option>
+                                            <option value="High">High (Urgent)</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div class="input-group">
@@ -447,6 +456,14 @@
                                         <p>If the work is delayed or unsatisfactory, you can raise a formal concern.</p>
                                     </div>
                                     <button id="showConcernFormBtn" class="btn-danger-outline">Raise a Concern</button>
+                                </div>
+                            </div>
+
+                            <!-- EXISTING CONCERNS SECTION -->
+                            <div id="existingConcernsSection" class="mt-4 hidden">
+                                <h4 class="mb-3"><i class='bx bx-message-error text-danger'></i> Raised Concerns</h4>
+                                <div id="existingConcernsContainer">
+                                    <!-- Concerns injected here -->
                                 </div>
                             </div>
                         </div>

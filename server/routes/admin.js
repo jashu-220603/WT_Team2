@@ -76,7 +76,7 @@ router.post('/officers', protect, authorize('admin'), async (req, res) => {
 
   try {
 
-    const { name, email, password, department } = req.body;
+    const { name, email, password, department, officerLevel } = req.body;
 
     if (!name || !email || !password || !department) {
       return res.status(400).json({
@@ -97,7 +97,8 @@ router.post('/officers', protect, authorize('admin'), async (req, res) => {
       email,
       password,
       role: 'officer',
-      department
+      department,
+      officerLevel: officerLevel || 'Ground'
     });
 
     await officer.save();

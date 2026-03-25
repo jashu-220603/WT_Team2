@@ -40,6 +40,12 @@ const UserSchema = new mongoose.Schema({
     default: ''
   },
 
+  officerLevel: {
+    type: String,
+    enum: ['Ground', 'Senior'],
+    default: 'Ground'
+  },
+
   staffId: {
     type: String,
     unique: true,
