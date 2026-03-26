@@ -1,13 +1,15 @@
 // API Configuration
 // This file detects if the app is running locally or on a deployed server
 
-if (typeof window.isLocalhost === 'undefined') {
-    window.isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+(function() {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // CHANGE THIS URL AFTER DEPLOYING YOUR BACKEND TO RENDER
+    // BACKEND URL ON RENDER
     const RENDER_BACKEND_URL = 'https://wt-team2.onrender.com'; 
     
-    window.API_BASE_URL = window.isLocalhost ? 'http://localhost:7000' : RENDER_BACKEND_URL;
+    // Set global API base URL without trailing slash
+    window.API_BASE_URL = isLocal ? 'http://localhost:7000' : RENDER_BACKEND_URL.replace(/\/$/, "");
+    window.isLocalhost = isLocal;
     
-    console.log('API Base URL:', window.API_BASE_URL);
-}
+    console.log('API Base URL initialized:', window.API_BASE_URL);
+})();

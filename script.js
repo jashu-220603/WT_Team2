@@ -176,7 +176,7 @@ function setupLoginRedirect(){
         }
 
         if(!email || !password){
-            alert("Please enter " + (activeRole==='citizen' ? "email" : "ID/Email") + " and password");
+            alert("Please enter " + (loginRole==='user' ? "email" : "ID/Email") + " and password");
             return;
         }
 
@@ -256,7 +256,7 @@ function setupLoginRedirect(){
 
         } catch(err){
             console.error('Login error', err);
-            alert('Login error. Check backend server.');
+            alert('Login error: ' + (err.message || 'Check backend server.') + '. Trace: ' + err.stack.split('\n')[0]);
         }
     });
 }
@@ -310,7 +310,7 @@ async function handleOfficerAdminLogin() {
         window.location.href = currentDir + targetUrl;
     } catch(err){
         console.error('Login error', err);
-        alert('Login error. Check backend server.');
+        alert('Login error: ' + (err.message || 'Check backend server.') + '. Trace: ' + err.stack.split('\n')[0]);
     }
 }
 

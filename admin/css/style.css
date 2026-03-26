@@ -28,6 +28,48 @@
     --bs-nav-tabs-link-active-color: #fff;
     --bs-modal-bg: #1e1e1e;
     --bs-tertiary-bg: #2b2b2b;
+    --bs-body-color: #e0e0e0;
+}
+
+[data-theme="dark"] body {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .text-dark {
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .stat-card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #2b2b2b;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: #333;
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+[data-theme="dark"] .input-group-text {
+    background-color: #333 !important;
+    border-color: #444 !important;
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: #1e1e1e !important;
+}
+
+[data-theme="dark"] .bg-light {
+    background-color: #2b2b2b !important;
 }
 
 [data-theme="dark"] .navbar .text-dark,

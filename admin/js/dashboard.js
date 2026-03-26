@@ -223,7 +223,7 @@ function setupNavigation() {
             e.preventDefault();
             const section = link.getAttribute("data-section");
             if (section === "settings") {
-                document.getElementById("adminSettingsBtn").click();
+                switchSection('settings');
                 return;
             }
             switchSection(section);
@@ -1440,16 +1440,17 @@ function setupFilters() {
     const officerFilter = document.getElementById("officer-filter");
 
     const runFilters = () => {
-        const search = searchBox ? searchBox.value.toLowerCase() : "";
+        const search = searchBox ? searchBox.value.toLowerCase().trim() : "";
         const status = statusFilter ? statusFilter.value : "All";
         const priority = priorityFilter ? priorityFilter.value : "All";
         const officerName = officerFilter ? officerFilter.value : "All";
 
         const filtered = complaintsData.filter(c => {
+            const readableId = (c.complaintId || c._id.substring(0,8)).toLowerCase();
             const matchesSearch = !search || 
                                  (c.title && c.title.toLowerCase().includes(search)) || 
                                  (c.description && c.description.toLowerCase().includes(search)) ||
-                                 (c.complaintId && c.complaintId.toLowerCase().includes(search));
+                                 readableId.includes(search);
                                  
             const matchesStatus = status === "All" || c.status === status;
             
@@ -1459,7 +1460,7 @@ function setupFilters() {
             
             let matchesOfficer = true;
             if (officerName !== "All") {
-                matchesOfficer = c.assignedOfficer && c.assignedOfficer.name === officerName;
+                matchesOfficer = c.assignedOfficer && (c.assignedOfficer.name === officerName || c.assignedOfficer._id === officerName);
             }
             
             return matchesSearch && matchesStatus && matchesPriority && matchesOfficer;
