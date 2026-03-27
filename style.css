@@ -1414,10 +1414,21 @@ box-shadow: 0 5px 15px rgba(0,47,91,0.2);
 @media (max-width: 768px) {
     .header {
         padding: 0 15px;
+        height: 65px;
     }
 
     .portal-name {
+        display: block;
         font-size: 16px;
+    }
+
+    .header-btn {
+        display: none;
+    }
+
+    .login-btn {
+        padding: 6px 12px;
+        font-size: 13px;
     }
 
     .main h1 {
@@ -1836,7 +1847,12 @@ body.dark-mode .pending-complaints:hover {
 
 @media (max-width: 480px) {
     .portal-name {
-        display: none; /* Hide portal name on tiny screens to save space */
+        display: block;
+        font-size: 14px;
+    }
+
+    .logo {
+        width: 35px;
     }
     
     .header-btn {

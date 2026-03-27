@@ -858,7 +858,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     document.getElementById("officerBioDisplay").textContent = off.bio || "";
                     
                     const avatar = document.getElementById("officerAvatarSmall");
-                    avatar.innerHTML = `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(off.name)}&background=random&color=fff" alt="${off.name}">`;
+                    let photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(off.name)}&background=random&color=fff`;
+                    if (off.profilePhoto) {
+                        photoUrl = off.profilePhoto.startsWith('http') ? off.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${off.profilePhoto}`;
+                    }
+                    avatar.innerHTML = `<img src="${photoUrl}" alt="${off.name}">`;
                     
                     officerDetails.classList.remove("hidden");
                 } else {

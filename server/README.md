@@ -1,6 +1,6 @@
-# Citizen Complaint Portal Backend
+# NivaranSetu Backend
 
-This folder contains a simple Node.js/Express backend with MongoDB (via Mongoose) for the Citizen Complaint Portal frontend.
+This folder contains a simple Node.js/Express backend with MongoDB (via Mongoose) for the NivaranSetu frontend.
 
 ## Features
 

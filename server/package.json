@@ -1,7 +1,7 @@
 {
   "name": "citizen-complaint-backend",
   "version": "1.0.0",
-  "description": "Node.js + Express backend for Citizen Complaint Portal",
+  "description": "Node.js + Express backend for NivaranSetu",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -171,7 +171,7 @@ router.get('/', protect, async (req, res) => {
 
     const complaints = await Complaint.find(filter)
       .populate('user', 'name email')
-      .populate('assignedOfficer', 'name email department contactNumber bio')
+      .populate('assignedOfficer', 'name email department contactNumber bio profilePhoto')
       .sort({ createdAt: -1 });
 
     // For officers, check which complaints have concerns
@@ -211,11 +211,11 @@ router.get('/:id', protect, async (req, res) => {
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
       complaint = await Complaint.findById(req.params.id)
         .populate('user', 'name email')
-        .populate('assignedOfficer', 'name email department contactNumber bio');
+        .populate('assignedOfficer', 'name email department contactNumber bio profilePhoto');
     } else {
       complaint = await Complaint.findOne({ complaintId: req.params.id })
         .populate('user', 'name email')
-        .populate('assignedOfficer', 'name email department contactNumber bio');
+        .populate('assignedOfficer', 'name email department contactNumber bio profilePhoto');
     }
 
     if (!complaint) {

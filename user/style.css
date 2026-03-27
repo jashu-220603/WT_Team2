@@ -2860,7 +2860,112 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 30px 60px -10px var(--glow) !important;
 }
 
-/* Subcategory Field Expansion (Since category is hidden) */
 #subcategory {
     width: 100%;
 }
+
+/* Officer Details Card Styles for Track Complaint Section */
+.officer-details-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    margin-top: 1.5rem;
+    display: block;
+}
+
+.officer-details-card.hidden {
+    display: none !important;
+}
+
+.officer-avatar-sm {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.officer-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.d-flex { display: flex; }
+.align-items-center { align-items: center; }
+.gap-3 { gap: 1rem; }
+.row { display: flex; flex-wrap: wrap; margin-left: -0.5rem; margin-right: -0.5rem; }
+.row.g-2 { margin-left: -0.25rem; margin-right: -0.25rem; }
+.row.g-2 > [class*="col-"] { padding-left: 0.25rem; padding-right: 0.25rem; margin-bottom: 0.5rem; }
+.col-6 { flex: 0 0 50%; max-width: 50%; box-sizing: border-box; }
+.mb-0 { margin-bottom: 0 !important; }
+.text-muted { color: var(--text-muted); }
+.small { font-size: 0.875rem; }
+.fw-bold { font-weight: 700; }
+.mt-2 { margin-top: 0.5rem; }
+.officer-details-card hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+}
+
+/* --- MOBILE HEADER STYLES --- */
+.mobile-header {
+    height: 70px;
+    background: var(--bg-sidebar); /* Match sidebar background */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-header i#mobile-btn-menu {
+    font-size: 1.75rem;
+    color: var(--white);
+    cursor: pointer;
+}
+
+.mobile-logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255,255,255,0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-logo-wrapper i {
+    font-size: 1.4rem;
+    color: var(--primary);
+}
+
+.mobile-logo-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.01em;
+}
+
+/* Ensure Home Section doesn't overlap on mobile */
+@media (max-width: 768px) {
+    .home-section {
+        margin-left: 0 !important;
+        padding-top: 80px; /* Space for mobile header */
+    }
+    
+    .top-header {
+        display: none !important; /* Hide desktop top-header on mobile */
+    }
+}
+
+

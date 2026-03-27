@@ -1,5 +1,5 @@
 /**
- * Chatbot Integration for Citizen Complaint Portal
+ * Chatbot Integration for NivaranSetu
  */
 
 function toggleChat() {

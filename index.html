@@ -4,7 +4,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Citizen Complaint Portal</title>
+<title>NivaranSetu</title>
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="chatbot.css">
@@ -24,7 +24,7 @@
 
 <span class="sidebar-close" onclick="closeSidebar()">✖</span>
 
-<h2>Citizen Complaint Portal</h2>
+<h2>NivaranSetu</h2>
 
 <ul>
 
@@ -54,9 +54,10 @@
 <li onclick="openLogin('admin')">Manage Departments</li>
 <li onclick="openLogin('admin')">View All Complaints</li>
 <li onclick="openLogin('admin')">Assign Complaints to Officers</li>
-<li onclick="openLogin('admin')">Complaint Analytics</li>
-
-
+<li onclick="openLogin('admin')">Complaint Analytics</li><div class="menu-title">Support</div>
+<li onclick="toggleHelpline()">Helpline</li>
+<li onclick="openFAQ()">FAQs</li>
+<li id="themeToggleSidebar" onclick="toggleTheme()">Appearance: Light/Dark</li>
 </ul>
 </div>
 
@@ -70,7 +71,7 @@
 
 <img src="images/logo.png" class="logo">
 
-<div class="portal-name">Citizen Complaint Portal</div>
+<div class="portal-name">NivaranSetu</div>
 
 </div>
 
@@ -269,7 +270,7 @@
         <div class="footer-column branding">
             <div class="footer-logo">
                 <img src="images/logo.png" alt="Logo">
-                <span>Citizen Complaint Portal</span>
+                <span>NivaranSetu</span>
             </div>
             <p>Empowering citizens through transparent governance and efficient grievance redressal. Your voice, our responsibility.</p>
         </div>
@@ -312,7 +313,7 @@
     
     <div class="footer-bottom">
         <div class="container">
-            <p>&copy; 2025 Citizen Complaint Portal. All Rights Reserved.</p>
+            <p>&copy; 2025 NivaranSetu. All Rights Reserved.</p>
             <p class="last-update">Last updated: October 2025 | Powered by Bhashini Service</p>
         </div>
     </div>
@@ -479,7 +480,7 @@
 
 <div id="chatbox" class="chatbox">
     <div class="chat-header">
-        <span>CMS Assistant</span>
+        <span>sahayAi</span>
         <span onclick="toggleChat()">&times;</span>
     </div>
     <div class="chat-body" id="chatBody">
