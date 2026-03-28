@@ -18,14 +18,7 @@
     <!-- MAIN APP WRAPPER (Hidden initially) -->
     <div id="app-wrapper" class="hidden">
         
-        <!-- MOBILE HEADER -->
-        <div class="mobile-header d-md-none">
-            <i class='bx bx-menu' id="mobile-btn-menu"></i>
-            <div class="mobile-logo-wrapper">
-                <i class='bx bx-shield-quarter'></i>
-                <span class="mobile-logo-name">NivaranSetu</span>
-            </div>
-        </div>
+
 
         <!-- SIDEBAR -->
         <nav class="sidebar" id="sidebar">
@@ -106,39 +99,40 @@
         <!-- MAIN CONTENT AREA -->
         <main class="home-section">
             
-            <!-- HEADER -->
-            <header class="top-header">
-                <div class="header-left">
-                    <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
+        <!-- TOP HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <i class='bx bx-menu' id="btn-menu-toggle" style="font-size: 1.75rem; cursor: pointer; margin-right: 1rem; color: var(--secondary); display: none;"></i>
+                <span class="user-greeting" id="userGreeting">Welcome Citizen</span>
+            </div>
+            <div class="header-right">
+                <div class="theme-toggle-container header-icon-btn" id="themeToggleBtnUser" title="Toggle Dark Mode" style="cursor: pointer; font-size: 1.5rem; color: var(--secondary); margin-right: 1.5rem;">
+                    <i class='bx bx-moon'></i>
                 </div>
-                <div class="header-right">
-                    <div class="theme-toggle-container header-icon-btn" id="themeToggleBtnUser" title="Toggle Dark Mode" style="cursor: pointer; font-size: 1.5rem; color: var(--secondary); margin-right: 1.5rem;">
-                        <i class='bx bx-moon'></i>
-                    </div>
-                    <div class="notification-bell-container" id="notificationBellTrigger">
-                        <i class='bx bx-bell'></i>
-                        <span class="notification-badge hidden" id="notificationCount">0</span>
-                        
-                        <!-- NOTIFICATION DROPDOWN -->
-                        <div class="notification-dropdown hidden" id="notificationDropdown">
-                            <div class="notif-header">
-                                <h4>Notifications</h4>
-                                <button id="markAllReadBtn">Mark all as read</button>
-                            </div>
-                            <div class="notif-list" id="notifDropdownList">
-                                <!-- Notifications injected here -->
-                                <div class="notif-placeholder">No new notifications</div>
-                            </div>
-                            <div class="notif-footer">
-                                <a href="#" class="nav-trigger" data-target="notifications-section">See all notifications</a>
-                            </div>
+                <div class="notification-bell-container" id="notificationBellTrigger">
+                    <i class='bx bx-bell'></i>
+                    <span class="notification-badge hidden" id="notificationCount">0</span>
+                    
+                    <!-- NOTIFICATION DROPDOWN -->
+                    <div class="notification-dropdown hidden" id="notificationDropdown">
+                        <div class="notif-header">
+                            <h4>Notifications</h4>
+                            <button id="markAllReadBtn">Mark all as read</button>
+                        </div>
+                        <div class="notif-list" id="notifDropdownList">
+                            <!-- Items dynamically populated -->
+                            <div class="notif-placeholder">No new notifications</div>
+                        </div>
+                        <div class="notif-footer">
+                            <a href="#" class="nav-link" data-target="notifications-section">See all notifications</a>
                         </div>
                     </div>
-                    <div class="profile-icon-container" id="profileIconTrigger">
-                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" class="profile-avatar" id="headerProfileAvatar">
-                    </div>
                 </div>
-            </header>
+                <div class="profile-icon-container" id="profileIconTrigger">
+                    <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile" class="profile-avatar" id="headerProfileAvatar">
+                </div>
+            </div>
+        </header>
 
             <!-- PROFILE SLIDE PANEL -->
             <div id="profileSlidePanel" class="profile-slide-panel">

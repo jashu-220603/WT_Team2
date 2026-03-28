@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Sidebar Toggle
     const sidebar = document.getElementById("sidebar");
     const btnMenu = document.getElementById("btn-menu");
-    const mobileBtnMenu = document.getElementById("mobile-btn-menu");
+    const btnMenuToggle = document.getElementById("btn-menu-toggle");
 
     if (btnMenu) {
         btnMenu.addEventListener("click", () => {
@@ -65,8 +65,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    if (mobileBtnMenu) {
-        mobileBtnMenu.addEventListener("click", () => {
+    if (btnMenuToggle) {
+        btnMenuToggle.addEventListener("click", () => {
             sidebar.classList.toggle("show");
         });
     }
