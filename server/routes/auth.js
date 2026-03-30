@@ -15,14 +15,13 @@ POST /api/auth/register
 */
 router.post('/register', async (req, res) => {
   const { name, email, password, role, department, staffId } = req.body;
-
   try {
-    // Convert empty staffId to undefined so Mongoose sparse index ignores it
+    const identifier = email.toLowerCase().trim();
     const finalStaffId = (staffId && staffId.trim() !== '') ? staffId.trim() : undefined;
 
     let user = await User.findOne({ 
       $or: [
-        { email }, 
+        { email: identifier }, 
         { staffId: finalStaffId || '___NON_EXISTENT_ID___' }
       ] 
     });
@@ -89,8 +88,10 @@ router.post('/login', async (req, res) => {
     const { email, password, role, department } = req.body; // email field carries staffId/email
 
     try {
+        // Lowercase identifiers as emails are stored in lowercase in the DB
+        const identifier = email.toLowerCase().trim();
         const user = await User.findOne({ 
-            $or: [{ email: email }, { staffId: email }] 
+            $or: [{ email: identifier }, { staffId: email }] 
         }).select('+password');
 
         if (!user) {
@@ -279,6 +280,43 @@ router.put('/profile', protect, upload.single('profilePhoto'), async (req, res) 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+
+/*
+-------------------------------------------------
+RESET PASSWORD (FROM FORGOT PASSWORD)
+POST /api/auth/reset-password
+-------------------------------------------------
+*/
+router.post('/reset-password', async (req, res) => {
+  const { identifier, newPassword } = req.body;
+
+  if (!identifier || !newPassword) {
+    return res.status(400).json({ message: 'Identifier and new password are required' });
+  }
+
+  try {
+    const emailLower = identifier.toLowerCase().trim();
+    // Find user by email or staffId
+    const user = await User.findOne({
+      $or: [{ email: emailLower }, { staffId: identifier }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found with this Email / ID' });
+    }
+
+    // Update password (pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Reset Password Error:', err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 

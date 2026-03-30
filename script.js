@@ -258,6 +258,7 @@ function setupLoginRedirect(){
                 // Set role-specific photo
                 if (data.role === 'admin') sessionStorage.setItem('adminPhoto', data.profilePhoto);
                 else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', data.profilePhoto);
+                else if (data.role === 'dept-head') sessionStorage.setItem('deptHeadPhoto', data.profilePhoto);
                 else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', data.profilePhoto);
             }
 
@@ -275,6 +276,7 @@ function setupLoginRedirect(){
                         // Set role-specific photo
                         if (data.role === 'admin') sessionStorage.setItem('adminPhoto', me.profilePhoto);
                         else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', me.profilePhoto);
+                        else if (data.role === 'dept-head') sessionStorage.setItem('deptHeadPhoto', me.profilePhoto);
                         else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', me.profilePhoto);
                     }
                 }
@@ -289,6 +291,8 @@ function setupLoginRedirect(){
             let targetUrl = '';
             if (data.role === 'admin') {
                 targetUrl = 'admin/index.html';
+            } else if (data.role === 'officer') {
+                targetUrl = 'officer/index.html';
             } else if (data.role === 'dept-head') {
                 targetUrl = 'dept-head/index.html';
             } else {
@@ -380,7 +384,7 @@ async function handleOfficerAdminLogin() {
     }
 }
 
-// Global handle for officer/admin login button
+// Dispatch login form submission
 window.handleOfficerAdminLogin = function() {
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -724,19 +728,34 @@ function verifyOTP() {
 }
 
 async function resetPassword() {
-    const newPwd = document.getElementById("newPassword").value.trim();
+    const identifier = document.getElementById("forgotIdentifier").value.trim();
+    const newPassword = document.getElementById("newPassword").value.trim();
     const confirmPwd = document.getElementById("confirmNewPassword").value.trim();
     
-    if (!newPwd || newPwd !== confirmPwd) {
+    if (!newPassword || newPassword !== confirmPwd) {
         alert("Passwords do not match or are empty");
         return;
     }
-    
-    // Simulate/Implement actual reset if backend exists
-    // For now, consistent with UI request
-    alert("Password reset successfully! Please login with your new password.");
-    closeForgotPassword();
-    openLogin('citizen');
+
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier, newPassword })
+        });
+
+        if (resp.ok) {
+            alert("Password reset successfully! Please login with your new password.");
+            closeForgotPassword();
+            openLogin('citizen');
+        } else {
+            const data = await resp.json();
+            alert('Reset failed: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Reset error', err);
+        alert('Reset error. Check backend server.');
+    }
 }
 
 // =====================
