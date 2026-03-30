@@ -2002,6 +2002,18 @@ window.submitAdminResponse = async function(concernId, complaintId) {
    CONCERNS TRACKING TABLE
 ========================= */
 
+function populateLNOfficers() {
+    const lnSel = document.getElementById("ln-officer-select");
+    if (!lnSel) return;
+    lnSel.innerHTML = '<option value="" disabled selected>Select Officer...</option>';
+    officersData.forEach(o => {
+        const option = document.createElement('option');
+        option.value = o._id;
+        option.textContent = `${o.name} - ${o.department}`;
+        lnSel.appendChild(option);
+    });
+}
+
 async function loadConcerns() {
     try {
         const res = await fetch(`${API}/concerns/all`, {

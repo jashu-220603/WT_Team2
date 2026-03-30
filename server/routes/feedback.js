@@ -35,8 +35,8 @@ router.post('/submit', async (req, res) => {
 
 // @route   GET /api/feedback/all
 // @desc    Get all feedbacks
-// @access  Admin only
-router.get('/all', protect, authorize('admin'), async (req, res) => {
+// @access  Admin, Dept-Head
+router.get('/all', protect, authorize('admin', 'dept-head'), async (req, res) => {
     try {
         const feedbacks = await Feedback.find()
             .populate('complaint', 'complaintId title category status')

@@ -132,8 +132,8 @@ async function loadDashboardData() {
         const [compRes, offRes, conRes, feedRes] = await Promise.all([
             fetch(`${API}/complaints`, { headers: { Authorization: "Bearer " + token } }),
             fetch(`${API}/admin/officers`, { headers: { Authorization: "Bearer " + token } }),
-            fetch(`${API}/concerns/all`, { headers: { Authorization: "Bearer " + token } }),
-            fetch(`${API}/feedback`, { headers: { Authorization: "Bearer " + token } })
+            fetch(`${API}/concerns/dept`, { headers: { Authorization: "Bearer " + token } }),
+            fetch(`${API}/feedback/all`, { headers: { Authorization: "Bearer " + token } })
         ]);
 
         const compJson = await compRes.json();
@@ -141,11 +141,24 @@ async function loadDashboardData() {
         const conJson = await conRes.json();
         const feedJson = await feedRes.json();
 
+        // Fuzzy match helper for category vs department (e.g. "Road Problems" vs "Road Damage")
+        const fuzzyMatch = (cat, dept) => {
+            if (!cat || !dept) return false;
+            return cat.split(' ')[0].toLowerCase() === dept.split(' ')[0].toLowerCase();
+        };
+
         // FILTER EVERYTHING BY DEPARTMENT
-        complaintsData = (compJson.complaints || compJson).filter(c => c.category === myDept);
-        officersData = (offJson.officers || offJson).filter(o => o.department === myDept);
-        concernsData = conJson.filter(con => con.complaint && con.complaint.category === myDept);
-        feedbacksData = feedJson.filter(f => f.type === 'General' || (f.complaint && complaintsData.some(c => c._id === f.complaint)));
+        const allComplaints = Array.isArray(compJson) ? compJson : (compJson.complaints || []);
+        complaintsData = allComplaints.filter(c => fuzzyMatch(c.category, myDept));
+
+        const allOfficers = Array.isArray(offJson) ? offJson : (offJson.officers || []);
+        officersData = allOfficers.filter(o => fuzzyMatch(o.department, myDept));
+
+        // Concerns are already server-side filtered by dept
+        concernsData = Array.isArray(conJson) ? conJson : [];
+
+        const allFeedback = Array.isArray(feedJson) ? feedJson : [];
+        feedbacksData = allFeedback.filter(f => f.type === 'General' || (f.complaint && complaintsData.some(c => c._id === f.complaint || c._id === f.complaint._id)));
 
         updateStats();
         renderRecentActivity();
@@ -155,6 +168,7 @@ async function loadDashboardData() {
         console.error("Dashboard Load Error:", err);
     }
 }
+
 
 function updateStats() {
     const total = complaintsData.length;

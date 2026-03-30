@@ -896,67 +896,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function fetchAndDisplayConcerns(complaintId) {
         const concernsSection = document.getElementById("existingConcernsSection");
         const container = document.getElementById("existingConcernsContainer");
+        const raiseConcernSection = document.getElementById("raiseConcernSection");
         if (!concernsSection || !container) return;
 
-        container.innerHTML = "<p class='text-muted small'>Loading concerns...</p>";
-        concernsSection.classList.remove("hidden");
+        concernsSection.classList.add("hidden");
 
         try {
             const res = await fetch(`${API}/concerns/complaint/${complaintId}`, {
                 headers: { Authorization: "Bearer " + getToken() }
             });
 
-            if (!res.ok) {
-                container.innerHTML = "<p class='text-danger small'>Failed to load concerns.</p>";
-                return;
-            }
+            if (!res.ok) return;
 
             const concerns = await res.json();
             
             if (!concerns || concerns.length === 0) {
+                // No concerns yet — keep the "Raise a Concern" button visible
                 concernsSection.classList.add("hidden");
                 return;
             }
 
-            let html = "";
-            concerns.forEach((c, idx) => {
-                const date = new Date(c.createdAt).toLocaleDateString();
-                const time = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
-                let responsesHtml = "";
-                if (c.adminResponse) {
-                    responsesHtml += `<div class="mt-3 p-3 rounded" style="background: #f0fdf4; border-left: 4px solid #22c55e;">
-                                        <div class="fw-bold text-success mb-1" style="font-size: 0.85rem;"><i class='bx bx-check-shield'></i> Admin Response</div>
-                                        <p class="mb-0 small">${c.adminResponse}</p>
-                                      </div>`;
-                }
-                if (c.officerResponse) {
-                    responsesHtml += `<div class="mt-3 p-3 rounded" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
-                                        <div class="fw-bold text-primary mb-1" style="font-size: 0.85rem;"><i class='bx bx-user-pin'></i> Officer Response</div>
-                                        <p class="mb-0 small">${c.officerResponse}</p>
-                                      </div>`;
-                }
-                if (!c.adminResponse && !c.officerResponse) {
-                    responsesHtml = `<div class="mt-2 text-warning small"><i class='bx bx-time'></i> Awaiting response...</div>`;
-                }
+            // User already raised a concern — hide the "Raise a Concern" button
+            if (raiseConcernSection) raiseConcernSection.classList.add("hidden");
 
-                html += `
-                    <div class="card mb-3 border border-1 border-light shadow-sm pl-4 pr-4 pt-3 pb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge ${c.escalationLevel === 'Critical' ? 'bg-danger' : 'bg-warning text-dark'}">Concern #${c.concernNumber} - ${c.escalationLevel}</span>
-                            <small class="text-muted"><i class='bx bx-calendar'></i> ${date} ${time}</small>
-                        </div>
-                        <p class="mb-2 text-dark">${c.description}</p>
-                        ${c.image ? `<a href="${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${c.image}" target="_blank" class="small text-decoration-none"><i class='bx bx-image'></i> View Attached Evidence</a>` : ''}
-                        ${responsesHtml}
+            // Show a simple status message instead of listing all concerns
+            concernsSection.classList.remove("hidden");
+            container.innerHTML = `
+                <div class="d-flex align-items-center gap-3 p-3 rounded" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b;">
+                    <i class='bx bx-info-circle' style="font-size: 1.5rem; color: #d97706;"></i>
+                    <div>
+                        <strong style="color: #92400e;">You already raised a concern</strong>
+                        <p class="mb-0 small" style="color: #78350f;">Your concern has been submitted and is being reviewed by the department. You will be notified once there is a response.</p>
                     </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+                </div>
+            `;
         } catch (err) {
             console.error("Error fetching concerns:", err);
-            container.innerHTML = "<p class='text-danger small'>Error loading concerns.</p>";
         }
    
     }

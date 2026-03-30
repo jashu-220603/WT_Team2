@@ -8,7 +8,7 @@ const User = require('../models/User');
 // @route   POST /api/legal-notices
 // @desc    Admin manually sends a legal notice
 // @access  Admin
-router.post('/', protect, authorize('admin'), async (req, res) => {
+router.post('/', protect, authorize('admin', 'dept-head'), async (req, res) => {
     try {
         const { officerId, title, content, complaintId } = req.body;
 
@@ -19,6 +19,17 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
         const officer = await User.findById(officerId);
         if (!officer || officer.role !== 'officer') {
             return res.status(404).json({ message: "Officer not found." });
+        }
+
+        // Dept Head can only send notices to officers in THEIR department
+        if (req.user.role === 'dept-head') {
+            const fuzzyMatch = (d1, d2) => {
+                if (!d1 || !d2) return false;
+                return d1.split(' ')[0].toLowerCase() === d2.split(' ')[0].toLowerCase();
+            };
+            if (!fuzzyMatch(officer.department, req.user.department)) {
+                return res.status(403).json({ message: "You can only send legal notices to officers in your own department." });
+            }
         }
 
         const legalNotice = new LegalNotice({

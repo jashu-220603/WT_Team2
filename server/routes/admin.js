@@ -183,10 +183,10 @@ router.delete('/users/:id', protect, authorize('admin', 'dept-head'), async (req
 
     // If caller is Admin
     if (req.user.role === 'admin') {
-      // Admin can delete regular users but NOT officers anymore (as per request)
-      if (targetUser.role === 'officer' || targetUser.role === 'dept-head') {
+      // Admin cannot terminate officers directly (restricted to Dept Heads as per new policy)
+      if (targetUser.role === 'officer') {
         return res.status(403).json({ 
-          message: 'Admin no longer has permission to terminate officers. This action is restricted to Department Heads.' 
+          message: 'Admin cannot terminate officers directly. This action must be performed by their respective Department Head.' 
         });
       }
       

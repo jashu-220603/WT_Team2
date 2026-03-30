@@ -126,26 +126,33 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
         const notificationTitle = `Concern #${newConcernNumber} Raised — ${escalationLevel}`;
         const notificationText = `Complaint ID: ${complaint.complaintId}\nEscalation: ${escalationLevel}\nDescription: ${description}\nEvidence: ${evidenceAttached}`;
 
-        // Notify Admin ONLY (not user themselves, not officer — officers get notified separately below)
-        const admins = await User.find({ role: 'admin' });
-        const notifications = admins.map(admin => ({
-            user: admin._id,
-            type: 'concern_raised',
-            title: notificationTitle,
-            message: notificationText,
-            relatedComplaint: complaint._id,
-            relatedConcern: newConcern._id
-        }));
-
-        if (complaint.assignedOfficer) {
+        // Notify Department Head ONLY (and not the officers)
+        let deptHead = await User.findOne({ role: 'dept-head', department: complaint.category });
+        
+        // Fallback for UI mismatches (e.g. "Road Problems" vs "Road Damage")
+        if (!deptHead && complaint.category) {
+            const firstWord = complaint.category.split(' ')[0];
+            deptHead = await User.findOne({ 
+                role: 'dept-head', 
+                department: { $regex: new RegExp(`^${firstWord}`, 'i') } 
+            });
+        }
+        
+        const notifications = [];
+        if (deptHead) {
             notifications.push({
-                user: complaint.assignedOfficer,
+                user: deptHead._id,
                 type: 'concern_raised',
                 title: notificationTitle,
                 message: notificationText,
                 relatedComplaint: complaint._id,
                 relatedConcern: newConcern._id
             });
+        } else {
+            console.warn(`No Department Head found for category: ${complaint.category}`);
+            // Fallback to Admin if no Dept Head exists? User said "only to dept head only", 
+            // but for system robustness we might notify admin if no dept head is assigned.
+            // I'll stick to the strict rule but log a warning.
         }
 
         await Notification.insertMany(notifications);
@@ -259,10 +266,41 @@ router.get('/complaint/:complaintId', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/concerns/dept
+// @desc    Get concerns for the dept-head's own department (server-side filtered)
+// @access  Dept-Head
+router.get('/dept', protect, authorize('dept-head'), async (req, res) => {
+    try {
+        const deptHeadDept = req.user.department;
+        if (!deptHeadDept) return res.json([]);
+
+        // Get the first word of the dept head's department for fuzzy match
+        const deptFirstWord = deptHeadDept.split(' ')[0].toLowerCase();
+
+        // Find all complaints whose category starts with the same word
+        const allComplaints = await Complaint.find({}, '_id category');
+        const matchingComplaintIds = allComplaints
+            .filter(c => c.category && c.category.split(' ')[0].toLowerCase() === deptFirstWord)
+            .map(c => c._id);
+
+        if (matchingComplaintIds.length === 0) return res.json([]);
+
+        const concerns = await Concern.find({ complaint: { $in: matchingComplaintIds } })
+            .populate('complaint', 'complaintId category status')
+            .populate('user', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json(concerns);
+    } catch (err) {
+        console.error("Get Dept Concerns Error:", err);
+        res.status(500).json({ message: "Server error." });
+    }
+});
+
 // @route   GET /api/concerns/all
 // @desc    Get all concerns with complaint & user details (Admin view)
-// @access  Admin
-router.get('/all', protect, authorize('admin'), async (req, res) => {
+// @access  Admin, Dept-Head
+router.get('/all', protect, authorize('admin', 'dept-head'), async (req, res) => {
     try {
         const concerns = await Concern.find()
             .populate('complaint', 'complaintId category status concernCount')
