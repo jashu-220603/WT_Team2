@@ -783,7 +783,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 const complaint = await resp.json();
                 const status = complaint.status;
+                const readableId = complaint.complaintId || complaint._id;
 
+                displayTrackId.textContent = readableId;
+                trackIdInput.value = readableId;
                 displayBadge.textContent = status;
                 
                 // Set ID for concern form
@@ -847,26 +850,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }, 1800);
                 }
 
-                // Populate Officer Details
+                // Populate Officer Details (Public Info Only)
                 const officerDetails = document.getElementById("officerDetails");
                 if (complaint.assignedOfficer) {
                     const off = complaint.assignedOfficer;
-                    document.getElementById("officerNameDisplay").textContent = off.name;
-                    document.getElementById("officerDeptDisplay").textContent = `Department: ${off.department || 'General'}`;
-                    document.getElementById("officerPhoneDisplay").textContent = off.contactNumber || "Contact Not Provided";
-                    document.getElementById("officerEmailDisplay").textContent = off.email;
-                    document.getElementById("officerBioDisplay").textContent = off.bio || "";
+                    const emailDisplay = document.getElementById("officerEmailDisplay");
+                    if (emailDisplay) emailDisplay.textContent = off.email;
                     
-                    const avatar = document.getElementById("officerAvatarSmall");
-                    let photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(off.name)}&background=random&color=fff`;
-                    if (off.profilePhoto) {
-                        photoUrl = off.profilePhoto.startsWith('http') ? off.profilePhoto : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${off.profilePhoto}`;
-                    }
-                    avatar.innerHTML = `<img src="${photoUrl}" alt="${off.name}">`;
-                    
-                    officerDetails.classList.remove("hidden");
+                    if (officerDetails) officerDetails.classList.remove("hidden");
                 } else {
-                    officerDetails.classList.add("hidden");
+                    if (officerDetails) officerDetails.classList.add("hidden");
                 }
 
                 // Populate Resolution Proof
@@ -890,18 +883,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     resProof.classList.add("hidden");
                 }
 
-                // Rating Logic
-                const ratingSection = document.getElementById("ratingSection");
-                if (["Resolved", "Closed"].includes(status)) {
-                    if (complaint.rating) {
-                        ratingSection.classList.add("hidden"); // Already rated
-                    } else {
-                        ratingSection.classList.remove("hidden");
-                        ratingSection.dataset.complaintId = complaint._id;
-                    }
-                } else {
-                    ratingSection.classList.add("hidden");
-                }
+
 
             } catch (err) {
                 console.error("Track error:", err);
@@ -976,69 +958,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.error("Error fetching concerns:", err);
             container.innerHTML = "<p class='text-danger small'>Error loading concerns.</p>";
         }
-    }
-
-    const ratingForm = document.getElementById("ratingForm");
-    if (ratingForm) {
-        ratingForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const complaintId = document.getElementById("ratingSection").dataset.complaintId;
-            const ratingInput = ratingForm.querySelector('input[name="rating"]:checked');
-            const feedback = document.getElementById("feedback-text").value;
-
-            if (!ratingInput) {
-                alert("Please select a star rating.");
-                return;
-            }
-
-            try {
-                // 1. Update rating on the complaint document itself
-                const compRes = await fetch(`${API}/complaints/${complaintId}/rate`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
-                    body: JSON.stringify({ rating: ratingInput.value, feedback })
-                });
-
-                // 2. Also submit to centralized feedback system with officer link
-                const storedName = sessionStorage.getItem('userName') || "Citizen";
-                const storedEmail = sessionStorage.getItem('userEmail') || "citizen@portal.com";
-                
-                // Fetch complaint to get assignedOfficer
-                let officerId = null;
-                try {
-                    const cResp = await fetch(`${API}/complaints/${complaintId}`, {
-                        headers: { Authorization: "Bearer " + getToken() }
-                    });
-                    if (cResp.ok) {
-                        const cData = await cResp.json();
-                        officerId = cData.assignedOfficer?._id || cData.assignedOfficer || null;
-                    }
-                } catch(e) {}
-                
-                await fetch(`${API}/feedback/submit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-                    body: JSON.stringify({ 
-                        name: storedName, 
-                        email: storedEmail, 
-                        feedbackText: `Rating: ${ratingInput.value}/5. ${feedback}`,
-                        type: 'Complaint',
-                        complaintId: complaintId,
-                        officerId: officerId,
-                        rating: parseInt(ratingInput.value)
-                    })
-                });
-
-                if (compRes.ok) {
-                    document.getElementById("ratingForm").classList.add("hidden");
-                    document.getElementById("ratingSuccess").classList.remove("hidden");
-                } else {
-                    alert("Failed to submit feedback.");
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        });
+   
     }
 
     function resetStepper() {
@@ -1251,14 +1171,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                 complaints.forEach(c => {
                     const tr = document.createElement("tr");
                     const dateStr = new Date(c.createdAt).toLocaleDateString();
+                    
+                    let statusClass = "";
+                    const isResolved = (c.status === "Resolved" || c.status === "Closed");
+                    
+                    if (c.status === "Submitted") statusClass = "status-pending";
+                    else if (c.status === "Assigned") statusClass = "status-assigned";
+                    else if (c.status === "In Progress") statusClass = "status-inprogress";
+                    else if (isResolved) {
+                        statusClass = "status-resolved";
+                        tr.classList.add("resolved-row-highlight");
+                    }
+
                     tr.innerHTML = `
                         <td><strong>${c.complaintId || c._id.substring(0,8)}</strong></td>
                         <td>${c.category}</td>
                         <td>${dateStr}</td>
-                        <td><span class="badge" style="background:var(--light);color:var(--dark);">${c.status}</span></td>
+                        <td><span class="status-badge ${statusClass}">${c.status}</span></td>
                         <td>
-                            <button class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="viewComplaintDetails('${c.complaintId || c._id}')">
-                                View
+                            <button class="btn-secondary animate-btn" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="viewComplaintDetails('${c.complaintId || c._id}')">
+                                <i class='bx bx-show me-1'></i> View
                             </button>
                         </td>
                     `;
@@ -1297,40 +1229,44 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Generate synthetic notifications based on status
             const notifications = [];
             
-            complaints.forEach(c => {
-                const id = c.complaintId || c._id.substring(0,8);
-                if(c.status === "Assigned") {
-                    notifications.push({
-                        id: id,
-                        text: `Complaint ${id} has been assigned to an officer.`,
-                        time: new Date(c.updatedAt || c.createdAt),
-                        type: 'info', icon: 'bx-user-pin'
-                    });
-                } else if(c.status === "In Progress") {
-                    notifications.push({
-                        id: id,
-                        text: `Complaint ${id} is currently under review / in progress.`,
-                        time: new Date(c.updatedAt || c.createdAt),
-                        type: 'info', icon: 'bx-cog'
-                    });
-                } else if(["Resolved", "Closed"].includes(c.status)) {
-                    notifications.push({
-                        id: id,
-                        text: `Complaint ${id} has been resolved!`,
-                        time: new Date(c.updatedAt || c.createdAt),
-                        type: 'success', icon: 'bx-check-shield'
-                    });
-                }
-            });
-            
-            notifications.sort((a,b) => b.time - a.time);
-            
-            if(notifications.length === 0) {
-                list.innerHTML = "<div class='no-data'><i class='bx bx-bell'></i><p>No new notifications</p></div>";
-            } else {
-                notifications.forEach(n => {
-                    list.innerHTML += `
-                        <div class="notification-item" onclick="window.viewComplaintDetails('${n.id}')" style="cursor: pointer;">
+                complaints.forEach(c => {
+                    const dispId = c.complaintId || c._id.substring(0,8);
+                    const fullId = c.complaintId || c._id;
+                    if(c.status === "Assigned") {
+                        notifications.push({
+                            id: dispId,
+                            actualId: fullId,
+                            text: `Complaint ${dispId} has been assigned to an officer.`,
+                            time: new Date(c.updatedAt || c.createdAt),
+                            type: 'info', icon: 'bx-user-pin'
+                        });
+                    } else if(c.status === "In Progress") {
+                        notifications.push({
+                            id: dispId,
+                            actualId: fullId,
+                            text: `Complaint ${dispId} is currently under review / in progress.`,
+                            time: new Date(c.updatedAt || c.createdAt),
+                            type: 'info', icon: 'bx-cog'
+                        });
+                    } else if(["Resolved", "Closed"].includes(c.status)) {
+                        notifications.push({
+                            id: dispId,
+                            actualId: fullId,
+                            text: `Complaint ${dispId} has been resolved!`,
+                            time: new Date(c.updatedAt || c.createdAt),
+                            type: 'success', icon: 'bx-check-shield'
+                        });
+                    }
+                });
+                
+                notifications.sort((a,b) => b.time - a.time);
+                
+                if(notifications.length === 0) {
+                    list.innerHTML = "<div class='no-data'><i class='bx bx-bell'></i><p>No new notifications</p></div>";
+                } else {
+                    notifications.forEach(n => {
+                        list.innerHTML += `
+                            <div class="notification-item" onclick="window.viewComplaintDetails('${n.actualId}')" style="cursor: pointer;">
                             <div class="noti-icon ${n.type}"><i class='bx ${n.icon}'></i></div>
                             <div class="noti-content">
                                 <p>${n.text}</p>
@@ -1346,7 +1282,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // --- FEEDBACK REDIRECT LOGIC ---
+    const feedbackRedirectBtn = document.getElementById("giveFeedbackRedirectBtn");
+    if (feedbackRedirectBtn) {
+        feedbackRedirectBtn.addEventListener("click", async () => {
+            const complaintId = document.getElementById("trackIdInput").value;
+            const feedbackNavLink = document.querySelector('.nav-link[data-target="feedback-section"]');
+            
+            if (feedbackNavLink) {
+                feedbackNavLink.click();
+                
+                // Wait for dropdown to load
+                setTimeout(() => {
+                    const select = document.getElementById("feedbackComplaintSelect");
+                    if (select) {
+                        // Find the option by text (complaintId) or value
+                        const targetOption = Array.from(select.options).find(opt => 
+                            opt.text.includes(complaintId) || opt.value === complaintId
+                        );
+                        if (targetOption) {
+                            select.value = targetOption.value;
+                            select.dispatchEvent(new Event('change'));
+                        }
+                    }
+                }, 800);
+            }
+        });
+    }
+
     // --- PAGE: Feedback ---
+
     let feedbackComplaintsCache = [];
 
     async function loadFeedbackDropdown() {
@@ -1584,12 +1549,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    // --- PAGE: Settings (Change Password) ---
     const pwdUpdateBtn = document.getElementById("pwdUpdateBtn");
     if(pwdUpdateBtn) {
         pwdUpdateBtn.addEventListener("click", async() => {
+            const currentp = document.getElementById("currentPassword").value;
             const newp = document.getElementById("newPassword").value;
-            if(!newp) return alert("Enter new password");
+            const confirmp = document.getElementById("confirmNewPasswordSettings").value;
+            
+            if(!currentp || !newp) return alert("Please fill in both password fields.");
+            if(newp !== confirmp) return alert("New passwords do not match.");
+            if(newp.length < 6) return alert("Password must be at least 6 characters.");
+
+            const originalText = pwdUpdateBtn.innerHTML;
+            pwdUpdateBtn.disabled = true;
+            pwdUpdateBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Updating...';
             
             try {
                 const res = await fetch(`${API}/auth/profile`, {
@@ -1601,13 +1574,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                     body: JSON.stringify({ password: newp })
                 });
                 if(res.ok) {
-                    alert("Password updated");
+                    alert("Password updated successfully!");
+                    document.getElementById("currentPassword").value = "";
                     document.getElementById("newPassword").value = "";
+                    document.getElementById("confirmNewPasswordSettings").value = "";
                 } else {
-                    alert("Failed to update password");
+                    const err = await res.json();
+                    alert("Failed to update password: " + (err.message || "Unknown error"));
                 }
             } catch(e) {
                 console.error(e);
+                alert("Error connecting to server.");
+            } finally {
+                pwdUpdateBtn.disabled = false;
+                pwdUpdateBtn.innerHTML = originalText;
             }
         });
     }
@@ -1967,33 +1947,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =====================
-    // SETTINGS ACTIONS
-    // =====================
-    const pwdUpdateBtn = document.getElementById('pwdUpdateBtn');
-    if (pwdUpdateBtn) {
-        pwdUpdateBtn.addEventListener('click', () => {
-            const currentPwd = document.getElementById('currentPassword').value;
-            const newPwd = document.getElementById('newPassword').value;
-            
-            if (!currentPwd || !newPwd) {
-                alert('Please fill in both password fields.');
-                return;
-            }
+    // Settings actions already handled in the main initialization block above.
 
-            // In a real app, this would be an API call
-            pwdUpdateBtn.disabled = true;
-            pwdUpdateBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Updating...';
-            
-            setTimeout(() => {
-                alert('Password updated successfully!');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                pwdUpdateBtn.disabled = false;
-                pwdUpdateBtn.textContent = 'Update Password';
-            }, 1500);
-        });
-    }
 
     // =====================
     // FEEDBACK INTERACTIONS

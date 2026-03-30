@@ -391,28 +391,20 @@
                             </div>
 
                             <!-- Officer Details -->
-                            <div id="officerDetails" class="officer-details-card hidden mt-4">
+                            <div id="officerDetails" class="officer-details-card hidden mt-4" style="border-left: 4px solid var(--primary);">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div id="officerAvatarSmall" class="officer-avatar-sm"></div>
+                                    <div class="modal-category-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                                        <i class='bx bx-user-pin'></i>
+                                    </div>
                                     <div>
-                                        <h4 id="officerNameDisplay" class="mb-0">Officer Name</h4>
-                                        <p id="officerDeptDisplay" class="text-muted small mb-0">Department</p>
+                                        <h4 class="mb-0">Assigned Officer</h4>
+                                        <p class="text-muted small mb-0">Contact for updates regarding your complaint.</p>
                                     </div>
                                 </div>
                                 <hr>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <p class="small text-muted mb-0"><i class='bx bx-phone'></i> Contact</p>
-                                        <h6 id="officerPhoneDisplay" class="fw-bold"></h6>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="small text-muted mb-0"><i class='bx bx-envelope'></i> Email</p>
-                                        <h6 id="officerEmailDisplay" class="fw-bold"></h6>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <p class="small text-muted mb-0"><i class='bx bx-info-circle'></i> Bio</p>
-                                    <p id="officerBioDisplay" class="small"></p>
+                                <div class="input-group">
+                                    <label class="small text-muted mb-1"><i class='bx bx-envelope'></i> Official Email Address</label>
+                                    <p id="officerEmailDisplay" class="fw-bold" style="font-size: 1.1rem; color: var(--primary);"></p>
                                 </div>
                             </div>
 
@@ -422,28 +414,18 @@
                                 <div id="resolutionContent" class="mt-2 text-center">
                                     <p id="resolutionRemarks" class="mb-3 fw-bold"></p>
                                     <img id="resolutionImageDisplay" src="" alt="Resolution Proof" class="img-fluid rounded shadow-sm" style="max-height: 300px; display: none;">
+                                    
+                                    <!-- GIVE FEEDBACK REDIRECT -->
+                                    <div class="mt-4 p-3 rounded bg-light border border-dashed text-center">
+                                        <p class="small text-muted mb-2">How was your experience with our resolution?</p>
+                                        <button id="giveFeedbackRedirectBtn" class="btn-primary animate-btn">
+                                            <i class='bx bx-star'></i> Give Feedback
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Citizen Rating Section -->
-                            <div id="ratingSection" class="officer-details-card hidden mt-3">
-                                <h4><i class='bx bx-star'></i> Rate our Service</h4>
-                                <p class="small text-muted mb-3">Please rate the resolution of your complaint.</p>
-                                <form id="ratingForm">
-                                    <div class="rating-stars mb-3">
-                                        <input type="radio" name="rating" value="5" id="r5"><label for="r5"><i class='bx bxs-star'></i></label>
-                                        <input type="radio" name="rating" value="4" id="r4"><label for="r4"><i class='bx bxs-star'></i></label>
-                                        <input type="radio" name="rating" value="3" id="r3"><label for="r3"><i class='bx bxs-star'></i></label>
-                                        <input type="radio" name="rating" value="2" id="r2"><label for="r2"><i class='bx bxs-star'></i></label>
-                                        <input type="radio" name="rating" value="1" id="r1"><label for="r1"><i class='bx bxs-star'></i></label>
-                                    </div>
-                                    <textarea id="feedback-text" class="form-input mb-2" placeholder="Tell us more about your experience..."></textarea>
-                                    <button type="submit" class="btn-primary full-width">Submit Feedback</button>
-                                </form>
-                                <div id="ratingSuccess" class="hidden text-success text-center mt-2">
-                                    <i class='bx bx-check-circle'></i> Thank you for your feedback!
-                                </div>
-                            </div>
+
 
                             <!-- RAISE A CONCERN SECTION -->
                             <div id="raiseConcernSection" class="concern-banner mt-4 hidden">
@@ -861,19 +843,29 @@
                         </div>
                         <div class="group-body">
                             <form id="standaloneSettingsForm">
-                                <div class="setting-item-row">
+                                <div class="setting-item-row no-border mb-4">
                                     <div class="setting-info">
                                         <label>Update Password</label>
                                         <p class="text-muted small">Keep your account secure by rotating your password.</p>
                                     </div>
                                     <div class="setting-controls">
-                                        <input type="password" id="currentPassword" placeholder="Current Password" class="form-input mb-2">
-                                        <input type="password" id="newPassword" placeholder="New Password" class="form-input">
-                                        <button type="button" id="pwdUpdateBtn" class="btn-primary mt-3 w-100">Update Password</button>
+                                        <div class="input-group mb-3">
+                                            <label class="small text-muted mb-1">Current Password</label>
+                                            <input type="password" id="currentPassword" placeholder="••••••••" class="form-input">
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <label class="small text-muted mb-1">New Password</label>
+                                            <input type="password" id="newPassword" placeholder="••••••••" class="form-input">
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <label class="small text-muted mb-1">Confirm New Password</label>
+                                            <input type="password" id="confirmNewPasswordSettings" placeholder="••••••••" class="form-input">
+                                        </div>
+                                        <button type="button" id="pwdUpdateBtn" class="btn-primary mt-2 w-100 animate-btn">
+                                            <span>Update Password</span>
+                                            <i class='bx bx-check-double ms-2'></i>
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="mt-2 text-end">
-                                    <span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span>
                                 </div>
                             </form>
                         </div>
@@ -886,19 +878,7 @@
                             <h4>App Preferences</h4>
                         </div>
                         <div class="group-body">
-                            <!-- LANGUAGE SETTING -->
-                            <div class="setting-item-row border-bottom pb-4 mb-4">
-                                <div class="setting-info">
-                                    <label><i class='bx bx-globe me-2'></i> Language</label>
-                                    <p class="text-muted small">Choose your preferred display language.</p>
-                                </div>
-                                <div class="setting-controls">
-                                    <select class="form-input" style="width:auto; min-width: 150px;">
-                                        <option value="en">English (Official)</option>
-                                        <option value="te">Telugu (తెలుగు)</option>
-                                    </select>
-                                </div>
-                            </div>
+
 
                             <!-- APPEARANCE SETTING -->
                             <div class="setting-item-row">
@@ -914,19 +894,7 @@
                                 </div>
                             </div>
 
-                            <!-- NOTIFICATIONS (STUB) -->
-                            <div class="setting-item-row border-top pt-4 mt-4">
-                                <div class="setting-info">
-                                    <label><i class='bx bx-bell me-2'></i> Email Alerts</label>
-                                    <p class="text-muted small">Receive updates about your complaints via email.</p>
-                                </div>
-                                <div class="setting-controls">
-                                    <label class="switch">
-                                        <input type="checkbox" checked>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -987,8 +955,7 @@
                             <input type="password" id="prof-password-input" class="form-input" placeholder="Leave blank to keep current">
                         </div>
                         <div class="info-item mt-3">
-                            <button type="submit" class="btn-primary full-width">Save Changes</button>
-                            <p class="mt-2 text-center"><span class="forgot-link" onclick="openForgotPassword()">Forgot Password?</span></p>
+                            <button type="submit" class="btn-primary full-width animate-btn">Save Changes</button>
                         </div>
                     </div>
                 </form>
