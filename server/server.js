@@ -1,10 +1,17 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, '.env') });
 const cors = require("cors");
 const express = require("express");
 const connectDB = require("./config/db");
-const path = require("path");
 
 // connect database
+console.log("Attempting to connect to MongoDB...");
+if (process.env.MONGO_URI) {
+  const redactedUri = process.env.MONGO_URI.replace(/:([^@]+)@/, ":****@");
+  console.log(`Connecting to: ${redactedUri.substring(0, 50)}...`);
+} else {
+  console.error("MONGO_URI not found in environment variables");
+}
 connectDB();
 
 const app = express();

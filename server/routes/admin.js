@@ -43,7 +43,7 @@ Get All Officers
 GET /api/admin/officers
 -------------------------------------------------
 */
-router.get('/officers', protect, authorize('admin'), async (req, res) => {
+router.get('/officers', protect, authorize('admin', 'dept-head'), async (req, res) => {
 
   try {
 
@@ -72,7 +72,7 @@ Create Officer
 POST /api/admin/officers
 -------------------------------------------------
 */
-router.post('/officers', protect, authorize('admin'), async (req, res) => {
+router.post('/officers', protect, authorize('admin', 'dept-head'), async (req, res) => {
 
   try {
 
@@ -92,12 +92,18 @@ router.post('/officers', protect, authorize('admin'), async (req, res) => {
       });
     }
 
+    // If caller is Dept Head, overwrite department to their own
+    let finalDept = department;
+    if (req.user.role === 'dept-head') {
+      finalDept = req.user.department;
+    }
+
     const officer = new User({
       name,
       email,
       password,
       role: 'officer',
-      department,
+      department: finalDept,
       officerLevel: officerLevel || 'Ground'
     });
 
@@ -123,54 +129,97 @@ router.post('/officers', protect, authorize('admin'), async (req, res) => {
 
 /*
 -------------------------------------------------
+Promote Officer to Department Head
+PUT /api/admin/users/:id/promote
+-------------------------------------------------
+*/
+router.put('/users/:id/promote', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const officer = await User.findById(id);
+    if (!officer || officer.role !== 'officer') {
+      return res.status(404).json({ message: 'Officer not found' });
+    }
+
+    // Optional: Demote existing dept-head for this department
+    await User.updateMany(
+      { department: officer.department, role: 'dept-head' },
+      { role: 'officer' }
+    );
+
+    officer.role = 'dept-head';
+    await officer.save();
+
+    res.json({
+      message: `${officer.name} has been promoted to Department Head for ${officer.department}`,
+      user: officer
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+/*
+-------------------------------------------------
 Delete User / Officer
 DELETE /api/admin/users/:id
 -------------------------------------------------
 */
-router.delete('/users/:id', protect, authorize('admin'), async (req, res) => {
-
+router.delete('/users/:id', protect, authorize('admin', 'dept-head'), async (req, res) => {
   try {
-
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        message: 'Invalid user ID'
-      });
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
 
-    if (req.user._id.toString() === id) {
-      return res.status(400).json({
-        message: 'Admin cannot delete their own account'
-      });
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    const user = await User.findById(id);
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found'
-      });
+    // If caller is Admin
+    if (req.user.role === 'admin') {
+      // Admin can delete regular users but NOT officers anymore (as per request)
+      if (targetUser.role === 'officer' || targetUser.role === 'dept-head') {
+        return res.status(403).json({ 
+          message: 'Admin no longer has permission to terminate officers. This action is restricted to Department Heads.' 
+        });
+      }
+      
+      // Admin cannot delete self
+      if (req.user._id.toString() === id) {
+        return res.status(400).json({ message: 'Admin cannot delete their own account' });
+      }
     }
 
-    await user.deleteOne();
+    // If caller is Dept Head
+    if (req.user.role === 'dept-head') {
+      // Dept Head can ONLY delete officers in THEIR department
+      if (targetUser.role !== 'officer') {
+        return res.status(403).json({ message: 'Department Head can only terminate officers.' });
+      }
+      if (targetUser.department !== req.user.department) {
+        return res.status(403).json({ message: 'You can only terminate officers in your own department.' });
+      }
+    }
+
+    await targetUser.deleteOne();
 
     let message = 'User deleted successfully';
-    if (user.role === 'officer') {
-      message = `Officer ${user.name} has been terminated. A legal notice regarding the submission of the resignation letter has been sent to ${user.email}.`;
+    if (targetUser.role === 'officer') {
+      message = `Officer ${targetUser.name} has been terminated. A legal notice has been sent to ${targetUser.email}.`;
     }
 
-    res.json({
-      message
-    });
+    res.json({ message });
 
   } catch (err) {
-
     console.error(err);
     res.status(500).json({ message: 'Server error' });
-
   }
-
 });
 
 

@@ -334,6 +334,7 @@
             <button class="tab active" onclick="switchTab('citizen')">Citizen</button>
             <button class="tab" onclick="switchTab('officer')">Officer</button>
             <button class="tab" onclick="switchTab('admin')">Admin</button>
+            <button class="tab" onclick="switchTab('dept-head')">Department Head</button>
         </div>
         <form id="loginForm">
             <div id="citizenLoginFields">
@@ -367,6 +368,17 @@
                 </div>
             </div>
             <div id="officerAdminLoginFields" style="display:none;">
+                <div class="input-group" id="deptLoginGroup" style="display:none;">
+                    <label>Department</label>
+                    <select id="loginDept">
+                        <option value="">Select Department</option>
+                        <option value="Police">Police</option>
+                        <option value="Municipality">Municipality</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Water">Water</option>
+                        <option value="Transport">Transport</option>
+                    </select>
+                </div>
                 <div class="input-group">
                     <label id="loginEmailLabel2">Email / Staff ID</label>
                     <input type="text" id="loginEmail2" placeholder="your@email.com">
@@ -394,6 +406,7 @@
             <button class="signup-tab active" onclick="switchSignupTab('citizen')">Citizen</button>
             <button class="signup-tab" onclick="switchSignupTab('officer')">Officer</button>
             <button class="signup-tab" onclick="switchSignupTab('admin')">Admin</button>
+            <button class="signup-tab" onclick="switchSignupTab('dept-head')">Department Head</button>
         </div>
         <form id="signupForm" class="signup-form">
             <div class="input-group">

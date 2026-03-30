@@ -1,7 +1,9 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const mongoose = require('mongoose');
 const Department = require('./models/Department');
 
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/cms_portal';
+const MONGODB_URI = process.env.MONGO_URI; 
 
 const defaults = [
     { name: "Police", icon: "bi-shield-shaded", description: "Public safety and law enforcement." },

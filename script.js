@@ -58,10 +58,11 @@ function openSignup(){
     let activeRole = 'citizen';
     if (loginTabs[1] && loginTabs[1].classList.contains('active')) activeRole = 'officer';
     if (loginTabs[2] && loginTabs[2].classList.contains('active')) activeRole = 'admin';
+    if (loginTabs[3] && loginTabs[3].classList.contains('active')) activeRole = 'dept-head';
     
     document.getElementById("signupModal").style.display="flex";
     switchSignupTab(activeRole);
-    if (activeRole === 'officer') populateSignupDepartments();
+    if (activeRole === 'officer' || activeRole === 'dept-head') populateSignupDepartments();
 }
 
 function closeSignup(){
@@ -93,10 +94,43 @@ function switchTab(role){
         if(tabs[2]) tabs[2].classList.add("active");
         if(citizenFields) citizenFields.style.display = "none";
         if(officerAdminFields) officerAdminFields.style.display = "block";
+        const dL = document.getElementById("deptLoginGroup");
+        if(dL) dL.style.display = "none";
         const lbl = document.getElementById("loginEmailLabel2");
         if(lbl) lbl.textContent = "Admin ID / Email";
         const inp = document.getElementById("loginEmail2");
         if(inp) inp.placeholder = "Enter Admin ID or Email";
+    }
+    if(role==="dept-head") {
+        if(tabs[3]) tabs[3].classList.add("active");
+        if(citizenFields) citizenFields.style.display = "none";
+        if(officerAdminFields) officerAdminFields.style.display = "block";
+        const dL = document.getElementById("deptLoginGroup");
+        if(dL) dL.style.display = "block";
+        populateLoginDepartments();
+        const lbl = document.getElementById("loginEmailLabel2");
+        if(lbl) lbl.textContent = "Head ID / Email";
+        const inp = document.getElementById("loginEmail2");
+        if(inp) inp.placeholder = "Enter Head ID or Email";
+    }
+}
+
+async function populateLoginDepartments() {
+    const deptSelect = document.getElementById("loginDept");
+    if (!deptSelect) return;
+    try {
+        const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/departments`);
+        if (resp.ok) {
+            const depts = await resp.json();
+            let html = '<option value="">Select Department</option>';
+            depts.forEach(d => {
+                const name = d.name || d;
+                html += `<option value="${name}">${name}</option>`;
+            });
+            deptSelect.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Error fetching departments:', err);
     }
 }
 
@@ -129,6 +163,14 @@ function switchSignupTab(role) {
         deptGroup.style.display = "none";
         staffIdLabel.textContent = "Admin ID";
         staffIdInput.placeholder = "e.g. adm-001";
+    } else if (role === 'dept-head') {
+        if (tabs[3]) tabs[3].classList.add("active");
+        staffIdGroup.style.display = "block";
+        deptGroup.style.display = "block";
+        staffIdLabel.textContent = "Head ID";
+        staffIdInput.placeholder = "e.g. head-001";
+        staffIdInput.required = true;
+        populateSignupDepartments();
     }
 }
 
@@ -165,14 +207,23 @@ function setupLoginRedirect(){
         let loginRole = 'user';
         if (tabs[1] && tabs[1].classList.contains('active')) loginRole = 'officer';
         if (tabs[2] && tabs[2].classList.contains('active')) loginRole = 'admin';
+        if (tabs[3] && tabs[3].classList.contains('active')) loginRole = 'dept-head';
 
-        let email, password;
+        let email, password, department;
         if (loginRole === 'user') {
             email = document.getElementById("loginEmail").value.trim();
             password = document.getElementById("loginPassword").value.trim();
         } else {
             email = document.getElementById("loginEmail2").value.trim();
             password = document.getElementById("loginPassword2").value.trim();
+        }
+
+        if(loginRole === 'dept-head') {
+            department = document.getElementById("loginDept").value;
+            if(!department) {
+                alert("Please select a department");
+                return;
+            }
         }
 
         if(!email || !password){
@@ -186,7 +237,7 @@ function setupLoginRedirect(){
             const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({email, password, role})
+                body: JSON.stringify({email, password, role, department})
             });
 
             if(!resp.ok){
@@ -238,8 +289,8 @@ function setupLoginRedirect(){
             let targetUrl = '';
             if (data.role === 'admin') {
                 targetUrl = 'admin/index.html';
-            } else if (data.role === 'officer') {
-                targetUrl = 'officer/index.html';
+            } else if (data.role === 'dept-head') {
+                targetUrl = 'dept-head/index.html';
             } else {
                 targetUrl = 'user/index.html';
             }
@@ -275,12 +326,22 @@ async function handleOfficerAdminLogin() {
     let role = 'user';
     if (tabs[1] && tabs[1].classList.contains('active')) role = 'officer';
     if (tabs[2] && tabs[2].classList.contains('active')) role = 'admin';
+    if (tabs[3] && tabs[3].classList.contains('active')) role = 'dept-head';
+
+    let department;
+    if (role === 'dept-head') {
+        department = document.getElementById("loginDept").value;
+        if (!department) {
+            alert("Please select a department");
+            return;
+        }
+    }
 
     try {
         const resp = await fetch(`${window.API_BASE_URL || 'http://localhost:7000'}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({email, password, role})
+            body: JSON.stringify({email, password, role, department})
         });
 
         if(!resp.ok){
@@ -298,13 +359,18 @@ async function handleOfficerAdminLogin() {
             sessionStorage.setItem('profilePhoto', data.profilePhoto);
             if (data.role === 'admin') sessionStorage.setItem('adminPhoto', data.profilePhoto);
             else if (data.role === 'officer') sessionStorage.setItem('officerPhoto', data.profilePhoto);
+            else if (data.role === 'dept-head') sessionStorage.setItem('deptHeadPhoto', data.profilePhoto);
             else if (data.role === 'user') sessionStorage.setItem('citizenPhoto', data.profilePhoto);
         }
 
         const authRole = data.role === 'user' ? 'citizen' : data.role;
         sessionStorage.setItem('authenticated', authRole);
 
-        let targetUrl = data.role === 'admin' ? 'admin/index.html' : (data.role === 'officer' ? 'officer/index.html' : 'user/index.html');
+        let targetUrl = 'user/index.html'; // Default
+        if (data.role === 'admin') targetUrl = 'admin/index.html';
+        else if (data.role === 'officer') targetUrl = 'officer/index.html';
+        else if (data.role === 'dept-head') targetUrl = 'dept-head/index.html';
+
         if(pendingSection) { targetUrl += '#' + pendingSection; pendingSection = ''; }
         const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         window.location.href = currentDir + targetUrl;
@@ -534,7 +600,7 @@ function setupSignup() {
             password, 
             role: currentSignupRole,
             staffId: (currentSignupRole !== 'user') ? staffId : undefined,
-            department: (currentSignupRole === 'officer') ? department : undefined
+            department: (currentSignupRole === 'officer' || currentSignupRole === 'dept-head') ? department : undefined
         };
 
         try {

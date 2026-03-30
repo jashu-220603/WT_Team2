@@ -600,8 +600,8 @@ function renderOfficers(data = officersData) {
                     <button class="btn btn-sm btn-outline-warning" onclick="openLegalNoticeModal('${o._id}', '${o.name}')" title="Send Legal Notice">
                         <i class="bi bi-envelope-paper"></i> Notice
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="terminateOfficer('${o._id}', '${o.name}')" title="Terminate Officer">
-                        <i class="bi bi-person-x-fill"></i> Terminate
+                    <button class="btn btn-sm btn-primary" onclick="promoteOfficer('${o._id}', '${o.name}')" title="Promote to Dept Head">
+                        <i class="bi bi-arrow-up-circle"></i> Promote to Head
                     </button>
                 </div>
             </td>
@@ -1610,47 +1610,22 @@ if (addOfficerForm) {
     });
 }
 
-window.terminateOfficer = function(id, name) {
-    document.getElementById("terminate-off-name").textContent = name;
-    document.getElementById("res-target-name").textContent = name;
-    document.getElementById("confirm-termination").checked = false;
-    document.getElementById("confirm-terminate-btn").classList.add("disabled");
-    
-    // Store officer info for the legal notice button inside the modal
-    const noticeIdEl = document.getElementById("notice-officer-id");
-    if (noticeIdEl) noticeIdEl.value = id;
-    const sendNoticeBtn = document.getElementById("send-legal-notice-btn");
-    if (sendNoticeBtn) sendNoticeBtn.classList.add("disabled");
+window.promoteOfficer = async function(id, name) {
+    if (!confirm(`Are you sure you want to promote ${name} to Department Head? This will demote any existing head for their department.`)) return;
 
-    const modal = new bootstrap.Modal(document.getElementById("terminationModal"));
-    modal.show();
-
-    document.getElementById("confirm-termination").onchange = function() {
-        if(this.checked) {
-            document.getElementById("confirm-terminate-btn").classList.remove("disabled");
-            document.getElementById("send-legal-notice-btn").classList.remove("disabled");
-        } else {
-            document.getElementById("confirm-terminate-btn").classList.add("disabled");
-            document.getElementById("send-legal-notice-btn").classList.add("disabled");
-        }
-    };
-
-    document.getElementById("confirm-terminate-btn").onclick = async function() {
-        try {
-            const res = await fetch(`${API}/admin/users/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: "Bearer " + token }
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Termination failed");
-            
-            alert(`Notice Sent! Officer ${name} has been terminated.`);
-            modal.hide();
-            loadDashboardData();
-        } catch (err) {
-            alert(err.message || "Termination failed");
-        }
-    };
+    try {
+        const res = await fetch(`${API}/admin/users/${id}/promote`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Promotion failed");
+        
+        alert(`${name} is now the Department Head!`);
+        loadDashboardData();
+    } catch (err) {
+        alert(err.message || "Promotion failed");
+    }
 };
 
 window.logout = function() {

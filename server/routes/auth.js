@@ -86,27 +86,26 @@ POST /api/auth/login
 */
 router.post('/login', async (req, res) => {
 
-  const { email, password, role } = req.body; // email field will carry email or staffId from frontend
+    const { email, password, role, department } = req.body; // email field carries staffId/email
 
-  try {
+    try {
+        const user = await User.findOne({ 
+            $or: [{ email: email }, { staffId: email }] 
+        }).select('+password');
 
-    const user = await User
-      .findOne({ 
-        $or: [
-          { email: email }, 
-          { staffId: email }
-        ] 
-      })
-      .select('+password'); // important fix
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
+        // Role validation
+        if (role && user.role !== role) {
+            return res.status(403).json({ message: `Access denied. You are not registered as a ${role}.` });
+        }
 
-    // Role validation fix
-    if (role && user.role !== role) {
-        return res.status(403).json({ message: `Access denied. You are not registered as a ${role}.` });
-    }
+        // Special check for Dept Head
+        if (role === 'dept-head' && department && user.department !== department) {
+            return res.status(403).json({ message: `Access denied. You are not the head of the ${department} department.` });
+        }
 
     const isMatch = await user.matchPassword(password);
 
