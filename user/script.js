@@ -919,17 +919,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             // User already raised a concern — hide the "Raise a Concern" button
             if (raiseConcernSection) raiseConcernSection.classList.add("hidden");
 
-            // Show a simple status message instead of listing all concerns
-            concernsSection.classList.remove("hidden");
-            container.innerHTML = `
-                <div class="d-flex align-items-center gap-3 p-3 rounded" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b;">
-                    <i class='bx bx-info-circle' style="font-size: 1.5rem; color: #d97706;"></i>
-                    <div>
-                        <strong style="color: #92400e;">You already raised a concern</strong>
-                        <p class="mb-0 small" style="color: #78350f;">Your concern has been submitted and is being reviewed by the department. You will be notified once there is a response.</p>
+// Render each concern
+            container.innerHTML = "";
+            concerns.forEach(con => {
+                const responseHtml = con.adminResponse || con.officerResponse 
+                    ? `<div class="mt-3 p-3 bg-white rounded border">
+                           <strong class="text-primary"><i class='bx bx-check-shield'></i> Department Response:</strong>
+                           <p class="mb-0 mt-1">${con.adminResponse || con.officerResponse}</p>
+                       </div>` 
+                    : `<div class="mt-3 p-2 bg-light rounded text-muted small"><i class='bx bx-time'></i> Awaiting response from department...</div>`;
+
+                container.innerHTML += `
+                    <div class="concern-item p-3 mb-3 rounded border" style="background: var(--bg-card);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge ${con.escalationLevel === 'Critical' ? 'bg-danger' : 'bg-warning'}">${con.escalationLevel} Level Concern</span>
+                            <small class="text-muted">${new Date(con.createdAt).toLocaleDateString()}</small>
+                        </div>
+                        <p class="mb-1 fw-bold">Citizen Query:</p>
+                        <p class="mb-2">${con.description}</p>
+                        ${responseHtml}
                     </div>
-                </div>
-            `;
+                `;
+            });
         } catch (err) {
             console.error("Error fetching concerns:", err);
         }

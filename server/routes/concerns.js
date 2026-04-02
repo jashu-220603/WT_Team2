@@ -314,9 +314,9 @@ router.get('/all', protect, authorize('admin', 'dept-head'), async (req, res) =>
 });
 
 // @route   PUT /api/concerns/:id/respond
-// @desc    Respond to a concern (Admin or Officer)
-// @access  Admin/Officer
-router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, res) => {
+// @desc    Respond to a concern (Admin or Officer or Dept-Head)
+// @access  Admin/Officer/Dept-Head
+router.put('/:id/respond', protect, authorize('admin', 'officer', 'dept-head'), async (req, res) => {
     try {
         const { response, adminResponse, officerResponse, status } = req.body;
         const concern = await Concern.findById(req.params.id).populate('complaint');
@@ -327,7 +327,7 @@ router.put('/:id/respond', protect, authorize('admin', 'officer'), async (req, r
 
         const msg = response || adminResponse || officerResponse;
 
-        if (req.user.role === 'admin') {
+        if (req.user.role === 'admin' || req.user.role === 'dept-head') {
             concern.adminResponse = msg;
         } else {
             concern.officerResponse = msg;

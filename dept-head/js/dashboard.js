@@ -341,7 +341,12 @@ function renderConcernsTable() {
             <td><span class="badge bg-${con.escalationLevel === 'Critical' ? 'danger' : (con.escalationLevel === 'Warning' ? 'warning' : 'info')}">${con.escalationLevel}</span></td>
             <td>${con.complaint?.complaintId || 'N/A'}</td>
             <td>${con.description}</td>
-            <td><span class="badge bg-light text-dark border">${con.status || 'Pending'}</span></td>
+            <td>
+                ${con.status === 'Open' || !con.adminResponse ? 
+                `<button class="btn btn-sm btn-warning" onclick="openConcernResponseModal('${con._id}')"><i class="bi bi-reply-fill"></i> Respond</button>` : 
+                `<span class="badge bg-light text-dark border">${con.status || 'Pending'}</span>`
+                }
+            </td>
             <td><small>${new Date(con.createdAt).toLocaleDateString()}</small></td>
         </tr>
     `).join('');
@@ -558,6 +563,30 @@ function setupForms() {
         } catch (err) { console.error(err); }
     });
 
+    // Concern Response Form
+    document.getElementById("concern-response-form")?.addEventListener("submit", async e => {
+        e.preventDefault();
+        const concernId = document.getElementById("respond-concern-id").value;
+        const response = document.getElementById("respond-concern-message").value;
+        const status = document.getElementById("respond-concern-status").value;
+
+        try {
+            const res = await fetch(`${API}/concerns/${concernId}/respond`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+                body: JSON.stringify({ response, status })
+            });
+
+            if (res.ok) {
+                alert("Response submitted successfully! It has been sent to the user.");
+                bootstrap.Modal.getInstance(document.getElementById("concernResponseModal")).hide();
+                loadDashboardData(); // Refresh UI
+            } else {
+                alert("Failed to submit response.");
+            }
+        } catch (err) { console.error(err); }
+    });
+
     // Legal Notice Form
     document.getElementById("legal-notice-form")?.addEventListener("submit", async e => {
         e.preventDefault();
@@ -578,6 +607,18 @@ function setupForms() {
         } catch (err) { console.error(err); }
     });
 }
+
+window.openConcernResponseModal = function(id) {
+    const con = concernsData.find(c => c._id === id);
+    if (!con) return;
+
+    document.getElementById("respond-concern-id").value = id;
+    document.getElementById("respond-concern-text").textContent = con.description;
+    document.getElementById("respond-concern-message").value = con.adminResponse || con.officerResponse || "";
+    document.getElementById("respond-concern-status").value = con.status || "Open";
+    
+    new bootstrap.Modal(document.getElementById("concernResponseModal")).show();
+};
 
 window.openLegalNoticeModal = function(id, name) {
     document.getElementById("notice-officer-id").value = id;
