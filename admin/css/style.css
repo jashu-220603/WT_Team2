@@ -1,13 +1,13 @@
 /* Custom Styles for Citizen Complaint Management System */
 
 :root {
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 70px;
-    --primary-color: #0d6efd;
-    --secondary-color: #6c757d;
-    --bg-light: #f8f9fa;
-    --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    --transition-speed: 0.3s;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 80px;
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --bg-light: #f1f5f9;
+    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    --transition-speed: 0.4s;
 }
 
 /* Dark Mode Variables */
@@ -107,12 +107,12 @@ body {
     top: 0;
     left: 0;
     z-index: 1000;
-    background-color: #002d62; /* Government Blue */
+    background-color: #0f172a; /* Premium Deep Navy */
     color: white;
-    transition: all var(--transition-speed);
+    transition: all var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
     overflow-y: auto;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
 }
 
 #sidebar.collapsed {
@@ -144,7 +144,8 @@ body {
 #sidebar .nav-link:hover,
 #sidebar .nav-link.active {
     color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateX(5px);
 }
 
 #sidebar .nav-link.active {
@@ -191,9 +192,11 @@ body {
 
 /* Navbar Styling */
 .navbar {
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
     padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 [data-theme="dark"] .navbar {

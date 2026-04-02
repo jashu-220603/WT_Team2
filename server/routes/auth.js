@@ -35,10 +35,15 @@ router.post('/register', async (req, res) => {
         return res.status(500).json({ message: 'Server configuration error' });
     }
 
-    // Enforce ID formats
     if (role === 'admin') {
       if (!finalStaffId || !finalStaffId.startsWith('adm-')) {
         return res.status(400).json({ message: 'Admin ID must follow pattern "adm-001"' });
+      }
+    }
+
+    if (role === 'officer') {
+      if (!finalStaffId || !finalStaffId.startsWith('off-')) {
+        return res.status(400).json({ message: 'Officer ID must follow pattern "off-001"' });
       }
     }
 

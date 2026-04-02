@@ -1983,7 +1983,7 @@ window.submitAdminResponse = async function(concernId, complaintId) {
         const res = await fetch(`${API}/concerns/${concernId}/respond`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-            body: JSON.stringify({ adminResponse: resp, status: 'Reviewed' })
+            body: JSON.stringify({ adminResponse: resp, status: 'Addressed' })
         });
         if (res.ok) {
             alert('Response submitted successfully');

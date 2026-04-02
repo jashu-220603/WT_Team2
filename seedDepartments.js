@@ -4,7 +4,7 @@ const Department = require('./server/models/Department');
 const User = require('./server/models/User'); 
 require('dotenv').config({ path: path.join(__dirname, 'server', '.env') });
 
-const MONGODB_URI = process.env.MONGO_URI; 
+const MONGODB_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/cms"; 
 
 const defaults = [
     { name: "Police", icon: "bi-shield-shaded", description: "Public safety and law enforcement." },
