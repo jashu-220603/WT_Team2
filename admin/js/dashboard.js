@@ -1629,7 +1629,7 @@ window.promoteOfficer = async function(id, name) {
 };
 
 window.logout = function() {
-    sessionStorage.removeItem("userName");
+    sessionStorage.clear();
     window.location.href = "../index.html";
 };
 

@@ -203,10 +203,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            sessionStorage.removeItem('authenticated');
-            sessionStorage.removeItem('jwt');
-            sessionStorage.removeItem('role');
-            sessionStorage.removeItem('userName');
+            sessionStorage.clear();
             window.location.href = "../index.html";
         });
     }

@@ -1135,10 +1135,7 @@ window.submitOfficerResponse = async function(concernId, complaintId) {
 };
 
 window.logout = function () {
-    sessionStorage.removeItem("jwt");
-    sessionStorage.removeItem("role");
-    sessionStorage.removeItem("userName");
-    sessionStorage.removeItem("department");
+    sessionStorage.clear();
     window.location.href = "../index.html";
 };
 

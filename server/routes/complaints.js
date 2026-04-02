@@ -83,7 +83,7 @@ async (req, res) => {
       location,
       user: req.user._id,
       priority: priority || 'Medium',
-      image: req.file ? (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename) : null
+      image: req.file ? (req.file.secure_url || req.file.url || (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename)) : null
     });
 
     let assignedOfficer = null;
@@ -296,7 +296,7 @@ router.put('/:id/status', protect, authorize('officer','admin'), upload.single('
     
     if (req.file) {
       // If using Cloudinary, path is the secure URL. If local, use only filename.
-      complaint.resolutionImage = req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename;
+      complaint.resolutionImage = req.file.secure_url || req.file.url || (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename);
     }
 
     complaint.history.push({

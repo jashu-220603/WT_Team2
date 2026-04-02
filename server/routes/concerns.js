@@ -99,7 +99,7 @@ router.post('/', protect, authorize('user'), upload.single('image'), async (req,
             complaint: complaintId,
             user: req.user._id,
             description,
-            image: req.file ? (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename) : null,
+            image: req.file ? (req.file.secure_url || req.file.url || (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename)) : null,
             escalationLevel,
             concernNumber: newConcernNumber
         });

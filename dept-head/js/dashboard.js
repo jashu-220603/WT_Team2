@@ -434,11 +434,14 @@ window.viewComplaintDetails = function(id) {
     if (!c) return;
 
     const content = document.getElementById("complaint-details-content");
+    const imgVal = c.image || c.evidence || c.complaintPhoto;
+    const imageUrl = imgVal ? (imgVal.startsWith('http') ? imgVal : `${window.API_BASE_URL || 'http://localhost:7000'}/uploads/${imgVal}`) : null;
+
     content.innerHTML = `
         <div class="row g-4">
             <div class="col-md-6">
                 <h6 class="text-uppercase small fw-bold text-muted mb-2">Basic Info</h6>
-                <p class="mb-1"><strong>ID:</strong> ${c.complaintId || c._id}</p>
+                <p class="mb-1"><strong>ID:</strong> ${c.complaintId || c._id.substring(0,8).toUpperCase()}</p>
                 <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${getStatusColor(c.status)}">${c.status}</span></p>
                 <p class="mb-1"><strong>Priority:</strong> <span class="badge bg-light text-dark border">${c.priority || 'Medium'}</span></p>
                 <p class="mb-1"><strong>Date:</strong> ${new Date(c.createdAt).toLocaleString()}</p>
@@ -449,13 +452,17 @@ window.viewComplaintDetails = function(id) {
                 <p class="mb-1"><strong>Location:</strong> ${c.location || 'N/A'}</p>
             </div>
             <div class="col-12 mt-3 text-center">
-                <h5 class="fw-bold">${c.title}</h5>
+                <h5 class="fw-bold">${c.title || c.category || 'Untitled Complaint'}</h5>
                 <p class="p-3 bg-light rounded">${c.description}</p>
             </div>
-            ${c.complaintPhoto ? `
-            <div class="col-12 text-center">
-                <img src="${API.replace('/api', '')}/uploads/${c.complaintPhoto}" class="img-fluid rounded border" style="max-height: 300px;">
-            </div>` : ''}
+            ${imageUrl ? `
+            <div class="col-12 text-center mt-3">
+                <h6 class="text-uppercase small fw-bold text-muted mb-2">Evidence Image</h6>
+                <img src="${imageUrl}" class="img-fluid rounded border shadow-sm" style="max-height: 350px; object-fit: contain;" onerror="this.src='https://placehold.co/600x400?text=Image+Not+Found'">
+            </div>` : `
+            <div class="col-12 text-center mt-3 text-muted small">
+                <i class="bi bi-image fs-1 d-block mb-1"></i> No Evidence Image Provided
+            </div>`}
         </div>
     `;
     new bootstrap.Modal(document.getElementById("viewDetailsModal")).show();

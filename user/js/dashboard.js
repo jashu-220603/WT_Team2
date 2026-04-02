@@ -219,12 +219,8 @@ if (complaintForm) {
 ========================= */
 
 function logout(){
-
-    sessionStorage.removeItem("jwt");
-    sessionStorage.removeItem("role");
-
+    sessionStorage.clear();
     window.location.href = "../index.html";
-
 }
 // store pending section in sessionStorage so target page can scroll to it
 if (typeof pendingSection !== 'undefined' && pendingSection) {

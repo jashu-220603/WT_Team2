@@ -265,7 +265,7 @@ router.put('/profile', protect, upload.single('profilePhoto'), async (req, res) 
     // Add profile photo update if file is uploaded
     if (req.file) {
       // If using Cloudinary, path is the secure URL. If local, use only filename.
-      user.profilePhoto = req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename;
+      user.profilePhoto = req.file.secure_url || req.file.url || (req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename);
     }
     
     if (password) {

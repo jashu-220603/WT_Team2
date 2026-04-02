@@ -2,6 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
+const cloudinaryStorage = require('multer-storage-cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Configure Cloudinary
@@ -15,14 +16,25 @@ let storage;
 
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
   // Use Cloudinary for persistent storage (Production/Render)
-  storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
+  if (CloudinaryStorage) {
+    storage = new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+        folder: 'citizen_portal_uploads',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'pdf'],
+        public_id: (req, file) => Date.now() + '-' + Math.round(Math.random() * 1E9),
+      },
+    });
+  } else {
+    storage = cloudinaryStorage({
+      cloudinary: require('cloudinary'),
       folder: 'citizen_portal_uploads',
-      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'pdf'],
-      public_id: (req, file) => Date.now() + '-' + Math.round(Math.random() * 1E9),
-    },
-  });
+      allowedFormats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'pdf'],
+      filename: function (req, file, cb) {
+        cb(undefined, Date.now() + '-' + Math.round(Math.random() * 1E9));
+      }
+    });
+  }
   console.log('Using Cloudinary for file storage.');
 } else {
   // Fallback to local storage (Development) - Warning: Wipe on redeploy!
